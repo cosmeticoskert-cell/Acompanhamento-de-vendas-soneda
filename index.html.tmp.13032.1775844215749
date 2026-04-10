@@ -1,0 +1,2627 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)https://lariantunez.github.io/Painel-Estoque-e-Vendas-Soneda/ -->
+<html lang="pt-BR" data-qb-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soneda · Dashboard de Vendas</title>
+<script src="./Soneda · Dashboard de Vendas_files/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Soneda · Dashboard de Vendas_files/css2" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #141720;
+    --surface2: #1c2030;
+    --border:   #252a3a;
+    --accent:   #c8f135;
+    --accent2:  #4fffb0;
+    --muted:    #5a6080;
+    --text:     #e8ecf5;
+    --text-dim: #8891aa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Figtree', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .logo { font-family: 'DM Serif Display', serif; font-size: 1.6rem; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .badge { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+
+  main { max-width: 1300px; margin: 0 auto; padding: 36px 40px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 1.9rem; font-style: italic; margin-bottom: 6px; }
+  .section-sub { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 28px; font-family: 'DM Mono', monospace; }
+
+  /* FILTERS */
+  .filters-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 28px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+  .filter-group label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+  .filter-group select,
+  .filter-group input[type="date"] {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 14px; border-radius: 8px; font-family: 'Figtree', sans-serif; font-size: 0.9rem;
+    cursor: pointer; transition: border-color .2s; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .filter-group input[type="date"] { background-image: none; padding-right: 14px; color-scheme: dark; }
+  .filter-group select:focus,
+  .filter-group input[type="date"]:focus { outline: none; border-color: var(--accent); }
+  .btn-clear { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.78rem; letter-spacing: .5px; transition: all .2s; white-space: nowrap; align-self: flex-end; }
+  .btn-clear:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; position: relative; overflow: hidden; transition: border-color .2s; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-card:hover { border-color: var(--accent); }
+  .kpi-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--accent); line-height: 1; }
+  .kpi-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+  /* CHART */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .chart-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
+  .chart-subtitle { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+  .chart-wrap { position: relative; height: 420px; }
+
+  /* TABLE */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 20px; }
+  .table-head { padding: 20px 24px 12px; border-bottom: 1px solid var(--border); }
+  .table-head-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { font-family: 'DM Mono', monospace; font-size: 0.63rem; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); padding: 9px 18px; text-align: left; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  thead th:hover { color: var(--text); }
+  thead th.sort-asc::after  { content: ' ↑'; color: var(--accent); }
+  thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+  thead th.sort-asc, thead th.sort-desc { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 9px 18px; font-size: 0.82rem; }
+  .td-loja { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+  .td-nome { font-weight: 500; }
+  .td-qty { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2); }
+  .td-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .td-bar { height: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; min-width: 4px; }
+
+  /* TABS */
+  .tabs-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 40px; }
+  .tab-btn { font-family: 'DM Mono', monospace; font-size: 0.78rem; letter-spacing: 0.5px; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; padding: 16px 24px; cursor: pointer; transition: color .2s, border-color .2s; white-space: nowrap; margin-bottom: -1px; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* STATES */
+  .state-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 340px; gap: 14px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.82rem; text-align: center; line-height: 1.8; }
+  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .no-data { display: flex; align-items: center; justify-content: center; height: 180px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.8rem; }
+  .err { color: #ff6b6b; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Soneda<span>.</span></div>
+  <div class="badge">ACOMPANHAMENTO DE VENDAS E ESTOQUE</div>
+</header>
+
+<nav class="tabs-nav">
+  <button class="tab-btn active" onclick="trocarAba(&#39;loja&#39;)">Vendas por Loja</button>
+  <button class="tab-btn" onclick="trocarAba(&#39;dia&#39;)">Venda por Dia</button>
+  <button class="tab-btn" onclick="trocarAba(&#39;estoque&#39;)">Estoque</button>
+</nav>
+
+<!-- ABA 1: VENDAS POR LOJA -->
+<div id="tab-loja" class="tab-panel active">
+<main>
+  <h1 class="section-title">Vendas por Loja</h1>
+  <p class="section-sub" id="status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+
+  <!-- FILTROS -->
+  <div class="filters-row">
+    <div class="filter-group">
+      <label>Ano</label>
+      <select id="f-ano"><option value="">Todos</option><option>2026</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Mês</label>
+      <select id="f-mes"><option value="">Todos</option><option>Mar</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Data início</label>
+      <input type="date" id="f-di">
+    </div>
+    <div class="filter-group">
+      <label>Data fim</label>
+      <input type="date" id="f-df">
+    </div>
+    <div class="filter-group">
+      <label>Loja</label>
+      <select id="f-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Categoria</label>
+      <select id="f-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+    </div>
+    <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Geral (Qtd)</div>
+      <div class="kpi-value" id="kpi-total">33.818</div>
+      <div class="kpi-sub">unidades vendidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Lojas com Venda</div>
+      <div class="kpi-value" id="kpi-lojas">49</div>
+      <div class="kpi-sub">filiais ativas no período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Maior Filial</div>
+      <div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">Filial 23</div>
+      <div class="kpi-sub" id="kpi-top-sub">2.831 un.</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Quantidade Vendida por Filial</div>
+        <div class="chart-subtitle" id="chart-sub">Todos os períodos</div>
+        <div id="loja-ativa" style="display:none;align-items:center;margin-top:10px;gap:6px"></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="kpi-label">Total do período</div>
+        <div class="kpi-value" id="chart-total-val" style="font-size:2.2rem">33.818</div>
+        <div class="kpi-sub">unidades vendidas</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chart-wrap">
+      <div class="state-msg" id="chart-state" style="display: none;">
+        <div class="spinner"></div>
+        Carregando dados...
+      </div>
+    <canvas id="myChart" style="display: block; box-sizing: border-box; height: 420px; width: 1154px; cursor: pointer;" width="1154" height="420"></canvas></div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card">
+    <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div>
+    <div id="table-body"><table>
+    <thead><tr>
+      <th onclick="t1OrdenarPor(&#39;loja&#39;)">Filial</th><th onclick="t1OrdenarPor(&#39;nome&#39;)">Nome Fantasia</th><th class="sort-desc" onclick="t1OrdenarPor(&#39;qty&#39;)">Qtd Vendida</th><th>Participação</th>
+    </tr></thead>
+    <tbody><tr>
+      <td class="td-loja">#23</td>
+      <td class="td-nome">Filial 23</td>
+      <td class="td-qty">2.831</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">8.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#4</td>
+      <td class="td-nome">Filial 4</td>
+      <td class="td-qty">2.608</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:92.1%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">7.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#12</td>
+      <td class="td-nome">Filial 12</td>
+      <td class="td-qty">1.487</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:52.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#48</td>
+      <td class="td-nome">Filial 48</td>
+      <td class="td-qty">1.464</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:51.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#15</td>
+      <td class="td-nome">Filial 15</td>
+      <td class="td-qty">1.461</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:51.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#5</td>
+      <td class="td-nome">Filial 5</td>
+      <td class="td-qty">1.396</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:49.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#11</td>
+      <td class="td-nome">Filial 11</td>
+      <td class="td-qty">1.377</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:48.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#6</td>
+      <td class="td-nome">Filial 6</td>
+      <td class="td-qty">1.307</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:46.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#18</td>
+      <td class="td-nome">Filial 18</td>
+      <td class="td-qty">1.229</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:43.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#37</td>
+      <td class="td-nome">Filial 37</td>
+      <td class="td-qty">1.192</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:42.1%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#20</td>
+      <td class="td-nome">Filial 20</td>
+      <td class="td-qty">1.191</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:42.1%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#14</td>
+      <td class="td-nome">Filial 14</td>
+      <td class="td-qty">1.098</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:38.8%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.2%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#40</td>
+      <td class="td-nome">Filial 40</td>
+      <td class="td-qty">992</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:35.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#38</td>
+      <td class="td-nome">Filial 38</td>
+      <td class="td-qty">980</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:34.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#34</td>
+      <td class="td-nome">Filial 34</td>
+      <td class="td-qty">860</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:30.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#1</td>
+      <td class="td-nome">Filial 1</td>
+      <td class="td-qty">840</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:29.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#8</td>
+      <td class="td-nome">Filial 8</td>
+      <td class="td-qty">803</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:28.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#16</td>
+      <td class="td-nome">Filial 16</td>
+      <td class="td-qty">759</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:26.8%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.2%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#32</td>
+      <td class="td-nome">Filial 32</td>
+      <td class="td-qty">746</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:26.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.2%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#10</td>
+      <td class="td-nome">Filial 10</td>
+      <td class="td-qty">704</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:24.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#26</td>
+      <td class="td-nome">Filial 26</td>
+      <td class="td-qty">696</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:24.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#33</td>
+      <td class="td-nome">Filial 33</td>
+      <td class="td-qty">692</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:24.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#29</td>
+      <td class="td-nome">Filial 29</td>
+      <td class="td-qty">690</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:24.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#9</td>
+      <td class="td-nome">Filial 9</td>
+      <td class="td-qty">550</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:19.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#2</td>
+      <td class="td-nome">Filial 2</td>
+      <td class="td-qty">529</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:18.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#21</td>
+      <td class="td-nome">Filial 21</td>
+      <td class="td-qty">477</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:16.8%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#3</td>
+      <td class="td-nome">Filial 3</td>
+      <td class="td-qty">475</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:16.8%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#13</td>
+      <td class="td-nome">Filial 13</td>
+      <td class="td-qty">450</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:15.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#28</td>
+      <td class="td-nome">Filial 28</td>
+      <td class="td-qty">443</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:15.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#57</td>
+      <td class="td-nome">Filial 57</td>
+      <td class="td-qty">293</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:10.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#7</td>
+      <td class="td-nome">Filial 7</td>
+      <td class="td-qty">288</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:10.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#56</td>
+      <td class="td-nome">Filial 56</td>
+      <td class="td-qty">282</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:10.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#30</td>
+      <td class="td-nome">Filial 30</td>
+      <td class="td-qty">269</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:9.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#51</td>
+      <td class="td-nome">Filial 51</td>
+      <td class="td-qty">262</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:9.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#50</td>
+      <td class="td-nome">Filial 50</td>
+      <td class="td-qty">258</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:9.1%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#58</td>
+      <td class="td-nome">Filial 58</td>
+      <td class="td-qty">245</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:8.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#59</td>
+      <td class="td-nome">Filial 59</td>
+      <td class="td-qty">243</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:8.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#42</td>
+      <td class="td-nome">Filial 42</td>
+      <td class="td-qty">234</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:8.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#43</td>
+      <td class="td-nome">Filial 43</td>
+      <td class="td-qty">234</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:8.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#54</td>
+      <td class="td-nome">Filial 54</td>
+      <td class="td-qty">191</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:6.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#52</td>
+      <td class="td-nome">Filial 52</td>
+      <td class="td-qty">186</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:6.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#55</td>
+      <td class="td-nome">Filial 55</td>
+      <td class="td-qty">180</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:6.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#36</td>
+      <td class="td-nome">Filial 36</td>
+      <td class="td-qty">159</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:5.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#41</td>
+      <td class="td-nome">Filial 41</td>
+      <td class="td-qty">74</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:2.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.2%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#31</td>
+      <td class="td-nome">Filial 31</td>
+      <td class="td-qty">42</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:1.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#60</td>
+      <td class="td-nome">Filial 60</td>
+      <td class="td-qty">37</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:1.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#45</td>
+      <td class="td-nome">Filial 45</td>
+      <td class="td-qty">12</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#22</td>
+      <td class="td-nome">Filial 22</td>
+      <td class="td-qty">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#44</td>
+      <td class="td-nome">Filial 44</td>
+      <td class="td-qty">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#46</td>
+      <td class="td-nome">Filial 46</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#61</td>
+      <td class="td-nome">Filial 61</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#800</td>
+      <td class="td-nome">Filial 800</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#997</td>
+      <td class="td-nome">Filial 997</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr><tr style="background:var(--surface2)">
+    <td class="td-loja">—</td>
+    <td class="td-nome" style="font-weight:600;color:var(--accent)">TOTAL GERAL</td>
+    <td class="td-qty" style="color:var(--accent)">33.818</td>
+    <td><span style="font-size:.78rem;color:var(--accent);font-family:&#39;DM Mono&#39;,monospace">100%</span></td>
+  </tr></tbody>
+  </table></div>
+  </div>
+
+  <!-- GRÁFICO CATEGORIAS -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Categorias Mais Vendidas</div>
+        <div class="chart-subtitle" id="cat1-sub">Todos os períodos</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="cat1-wrap" style="height:360px">
+      <div class="state-msg" id="cat1-state" style="display: none;"><div class="spinner"></div>Carregando...</div>
+    <canvas id="cat1-canvas" style="display: block; box-sizing: border-box; height: 360px; width: 1154px;" width="1154" height="360"></canvas></div>
+  </div>
+
+  <!-- TABELA CATEGORIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
+    <div id="cat1-table-body"><table>
+    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody><tr>
+      <td class="td-nome">COLORACAO#</td>
+      <td class="td-qty">27.900</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">82.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-nome">CAPILAR@</td>
+      <td class="td-qty">5.918</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:21.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">17.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-nome">BELEZA LIMPA@</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr></tbody>
+  </table></div>
+  </div>
+</main>
+</div>
+<!-- /ABA 1 -->
+
+<!-- ABA 2: VENDA POR DIA -->
+<div id="tab-dia" class="tab-panel">
+<main>
+  <h1 class="section-title">Venda por Dia</h1>
+  <p class="section-sub" id="d2-status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+
+  <!-- FILTROS -->
+  <div class="filters-row">
+    <div class="filter-group">
+      <label>Ano</label>
+      <select id="d2-ano"><option value="">Todos</option><option>2026</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Mês</label>
+      <select id="d2-mes"><option value="">Todos</option><option>Mar</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Data início</label>
+      <input type="date" id="d2-di">
+    </div>
+    <div class="filter-group">
+      <label>Data fim</label>
+      <input type="date" id="d2-df">
+    </div>
+    <div class="filter-group">
+      <label>Loja</label>
+      <select id="d2-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Categoria</label>
+      <select id="d2-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+    </div>
+    <button class="btn-clear" onclick="d2LimparFiltros()">↺ Limpar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total do Período (Qtd)</div>
+      <div class="kpi-value" id="d2-kpi-total">33.818</div>
+      <div class="kpi-sub">unidades vendidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Dias com Venda</div>
+      <div class="kpi-value" id="d2-kpi-dias">31</div>
+      <div class="kpi-sub">dias no período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Média Diária</div>
+      <div class="kpi-value" id="d2-kpi-media">1.091</div>
+      <div class="kpi-sub">unidades / dia</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Melhor Dia</div>
+      <div class="kpi-value" id="d2-kpi-top" style="font-size:1.1rem;padding-top:6px">07/03/2026</div>
+      <div class="kpi-sub" id="d2-kpi-top-sub">2.393 un.</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Quantidade Vendida por Dia</div>
+        <div class="chart-subtitle" id="d2-chart-sub">Todos os períodos · Todas as lojas</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="d2-chart-wrap" style="height:420px">
+      <div class="state-msg" id="d2-chart-state" style="display: none;">
+        <div class="spinner"></div>
+        Carregando dados...
+      </div>
+    <canvas id="d2-myChart" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Dia</div></div>
+    <div id="d2-table-body"><table>
+    <thead><tr><th onclick="t2OrdenarPor(&#39;data&#39;)">Data</th><th onclick="t2OrdenarPor(&#39;dia&#39;)">Dia</th><th class="sort-desc" onclick="t2OrdenarPor(&#39;qty&#39;)">Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody><tr>
+      <td class="td-loja">07/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
+      <td class="td-qty">2.393</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">7.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">14/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
+      <td class="td-qty">2.128</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:88.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">6.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">06/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Sex</td>
+      <td class="td-qty">2.104</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:87.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">6.2%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">13/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Sex</td>
+      <td class="td-qty">1.785</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:74.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">5.3%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">05/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qui</td>
+      <td class="td-qty">1.739</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:72.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">5.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">21/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
+      <td class="td-qty">1.525</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:63.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">04/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qua</td>
+      <td class="td-qty">1.513</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:63.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">20/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Sex</td>
+      <td class="td-qty">1.381</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:57.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">03/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Ter</td>
+      <td class="td-qty">1.273</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:53.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.8%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">11/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qua</td>
+      <td class="td-qty">1.253</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:52.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">10/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Ter</td>
+      <td class="td-qty">1.202</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:50.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">28/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
+      <td class="td-qty">1.190</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:49.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">02/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Seg</td>
+      <td class="td-qty">1.147</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:47.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">12/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qui</td>
+      <td class="td-qty">1.143</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:47.8%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">16/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Seg</td>
+      <td class="td-qty">1.136</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:47.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">19/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qui</td>
+      <td class="td-qty">1.026</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:42.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">09/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Seg</td>
+      <td class="td-qty">1.010</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:42.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">17/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Ter</td>
+      <td class="td-qty">1.010</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:42.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">27/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Sex</td>
+      <td class="td-qty">979</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:40.9%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">18/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qua</td>
+      <td class="td-qty">922</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:38.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">23/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Seg</td>
+      <td class="td-qty">871</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:36.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.6%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">24/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Ter</td>
+      <td class="td-qty">845</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:35.3%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">26/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qui</td>
+      <td class="td-qty">829</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:34.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">25/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Qua</td>
+      <td class="td-qty">823</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:34.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.4%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">31/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Ter</td>
+      <td class="td-qty">710</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:29.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">30/03/2026</td>
+      <td class="td-loja" style="color:var(--muted)">Seg</td>
+      <td class="td-qty">591</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:24.7%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">08/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Dom</td>
+      <td class="td-qty">338</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:14.1%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.0%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">15/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Dom</td>
+      <td class="td-qty">316</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:13.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">22/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Dom</td>
+      <td class="td-qty">251</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:10.5%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">01/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Dom</td>
+      <td class="td-qty">250</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:10.4%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">29/03/2026</td>
+      <td class="td-loja" style="color:#ff9f6b">Dom</td>
+      <td class="td-qty">135</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:5.6%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.4%</span>
+      </div></td>
+    </tr><tr style="background:var(--surface2)">
+    <td class="td-loja" style="color:var(--accent)">TOTAL</td>
+    <td class="td-qty" style="color:var(--accent)">33.818</td>
+    <td><span style="font-size:.78rem;color:var(--accent);font-family:&#39;DM Mono&#39;,monospace">100%</span></td>
+  </tr></tbody>
+  </table></div>
+  </div>
+
+  <!-- GRÁFICO CATEGORIAS POR DIA -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Vendas por Categoria ao Longo do Tempo</div>
+        <div class="chart-subtitle" id="cat2-sub">Todos os períodos · Todas as lojas</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="cat2-wrap" style="height:380px">
+      <div class="state-msg" id="cat2-state" style="display: none;"><div class="spinner"></div>Carregando...</div>
+    <canvas id="cat2-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+  </div>
+
+  <!-- TABELA CATEGORIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
+    <div id="cat2-table-body"><table>
+    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody><tr>
+      <td class="td-nome">COLORACAO#</td>
+      <td class="td-qty">27.900</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">82.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-nome">CAPILAR@</td>
+      <td class="td-qty">5.918</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:21.2%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">17.5%</span>
+      </div></td>
+    </tr><tr>
+      <td class="td-nome">BELEZA LIMPA@</td>
+      <td class="td-qty">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
+      </div></td>
+    </tr></tbody>
+  </table></div>
+  </div>
+</main>
+</div>
+<!-- /ABA 2 -->
+
+<!-- ABA 3: ESTOQUE -->
+<div id="tab-estoque" class="tab-panel">
+<main>
+  <h1 class="section-title">Estoque</h1>
+  <p class="section-sub" id="d3-status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+
+  <!-- FILTROS -->
+  <div class="filters-row">
+    <div class="filter-group">
+      <label>Ano</label>
+      <select id="d3-ano"><option value="">Todos</option><option>2026</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Mês</label>
+      <select id="d3-mes"><option value="">Todos</option><option>Mar</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Data início</label>
+      <input type="date" id="d3-di">
+    </div>
+    <div class="filter-group">
+      <label>Data fim</label>
+      <input type="date" id="d3-df">
+    </div>
+    <div class="filter-group">
+      <label>Loja</label>
+      <select id="d3-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Categoria</label>
+      <select id="d3-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+    </div>
+    <button class="btn-clear" onclick="d3LimparFiltros()">↺ Limpar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Estoque Total (Qtd)</div>
+      <div class="kpi-value" id="d3-kpi-total">263</div>
+      <div class="kpi-sub">unidades em estoque</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Lojas com Estoque</div>
+      <div class="kpi-value" id="d3-kpi-lojas">49</div>
+      <div class="kpi-sub">filiais com saldo positivo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Maior Estoque</div>
+      <div class="kpi-value" id="d3-kpi-top" style="font-size:1.1rem;padding-top:6px">Filial 31</div>
+      <div class="kpi-sub" id="d3-kpi-top-sub">26 un.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Menor Estoque</div>
+      <div class="kpi-value" id="d3-kpi-bot" style="font-size:1.1rem;padding-top:6px">Filial 52</div>
+      <div class="kpi-sub" id="d3-kpi-bot-sub">1 un.</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO ESTOQUE POR LOJA -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Estoque Diário por Loja</div>
+        <div class="chart-subtitle" id="d3-chart-sub">Todos os períodos · Todas as lojas</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="d3-chart-wrap" style="height:420px">
+      <div class="state-msg" id="d3-chart-state" style="display: none;"><div class="spinner"></div>Carregando dados...</div>
+    <canvas id="d3-bar-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+  </div>
+
+  <!-- GRÁFICO ESTOQUE POR DIA (linha temporal) -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Evolução do Estoque ao Longo do Tempo</div>
+        <div class="chart-subtitle" id="d3-line-sub">Todos os períodos · Todas as lojas</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="d3-line-wrap" style="height:380px">
+      <div class="state-msg" id="d3-line-state" style="display: none;"><div class="spinner"></div>Carregando dados...</div>
+    <canvas id="d3-line-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento de Estoque por Filial</div></div>
+    <div id="d3-table-body"><table><thead><tr><th onclick="t3OrdenarPor(&#39;loja&#39;)">Filial</th><th onclick="t3OrdenarPor(&#39;nome&#39;)">Nome Fantasia</th><th class="sort-desc" onclick="t3OrdenarPor(&#39;qty&#39;)">Estoque Atual</th><th>Volume</th></tr></thead><tbody><tr>
+      <td class="td-loja">#31</td>
+      <td class="td-nome">Filial 31</td>
+      <td class="td-qty" style="color:var(--accent2)">26</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:100.0%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#40</td>
+      <td class="td-nome">Filial 40</td>
+      <td class="td-qty" style="color:var(--accent2)">21</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:80.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#50</td>
+      <td class="td-nome">Filial 50</td>
+      <td class="td-qty" style="color:var(--accent2)">17</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:65.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#41</td>
+      <td class="td-nome">Filial 41</td>
+      <td class="td-qty" style="color:var(--accent2)">15</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:57.7%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#2</td>
+      <td class="td-nome">Filial 2</td>
+      <td class="td-qty" style="color:var(--accent2)">11</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:42.3%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#7</td>
+      <td class="td-nome">Filial 7</td>
+      <td class="td-qty" style="color:var(--accent2)">10</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:38.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#43</td>
+      <td class="td-nome">Filial 43</td>
+      <td class="td-qty" style="color:var(--accent2)">10</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:38.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#15</td>
+      <td class="td-nome">Filial 15</td>
+      <td class="td-qty" style="color:var(--accent2)">9</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:34.6%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#21</td>
+      <td class="td-nome">Filial 21</td>
+      <td class="td-qty" style="color:var(--accent2)">8</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#23</td>
+      <td class="td-nome">Filial 23</td>
+      <td class="td-qty" style="color:var(--accent2)">8</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#37</td>
+      <td class="td-nome">Filial 37</td>
+      <td class="td-qty" style="color:var(--accent2)">8</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#36</td>
+      <td class="td-nome">Filial 36</td>
+      <td class="td-qty" style="color:var(--accent2)">7</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:26.9%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#55</td>
+      <td class="td-nome">Filial 55</td>
+      <td class="td-qty" style="color:var(--accent2)">6</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#58</td>
+      <td class="td-nome">Filial 58</td>
+      <td class="td-qty" style="color:var(--accent2)">6</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#61</td>
+      <td class="td-nome">Filial 61</td>
+      <td class="td-qty" style="color:var(--accent2)">6</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#800</td>
+      <td class="td-nome">Filial 800</td>
+      <td class="td-qty" style="color:var(--accent2)">6</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#60</td>
+      <td class="td-nome">Filial 60</td>
+      <td class="td-qty" style="color:var(--accent2)">5</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:19.2%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#3</td>
+      <td class="td-nome">Filial 3</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#14</td>
+      <td class="td-nome">Filial 14</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#26</td>
+      <td class="td-nome">Filial 26</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#30</td>
+      <td class="td-nome">Filial 30</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#32</td>
+      <td class="td-nome">Filial 32</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#33</td>
+      <td class="td-nome">Filial 33</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#42</td>
+      <td class="td-nome">Filial 42</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#56</td>
+      <td class="td-nome">Filial 56</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#57</td>
+      <td class="td-nome">Filial 57</td>
+      <td class="td-qty" style="color:var(--accent2)">4</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#8</td>
+      <td class="td-nome">Filial 8</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#11</td>
+      <td class="td-nome">Filial 11</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#18</td>
+      <td class="td-nome">Filial 18</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#20</td>
+      <td class="td-nome">Filial 20</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#22</td>
+      <td class="td-nome">Filial 22</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#28</td>
+      <td class="td-nome">Filial 28</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#29</td>
+      <td class="td-nome">Filial 29</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#44</td>
+      <td class="td-nome">Filial 44</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#46</td>
+      <td class="td-nome">Filial 46</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#51</td>
+      <td class="td-nome">Filial 51</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#54</td>
+      <td class="td-nome">Filial 54</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#59</td>
+      <td class="td-nome">Filial 59</td>
+      <td class="td-qty" style="color:var(--accent2)">3</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#10</td>
+      <td class="td-nome">Filial 10</td>
+      <td class="td-qty" style="color:var(--accent2)">2</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:7.7%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#12</td>
+      <td class="td-nome">Filial 12</td>
+      <td class="td-qty" style="color:var(--accent2)">2</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:7.7%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#5</td>
+      <td class="td-nome">Filial 5</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#6</td>
+      <td class="td-nome">Filial 6</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#9</td>
+      <td class="td-nome">Filial 9</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#13</td>
+      <td class="td-nome">Filial 13</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#16</td>
+      <td class="td-nome">Filial 16</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#34</td>
+      <td class="td-nome">Filial 34</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#45</td>
+      <td class="td-nome">Filial 45</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#48</td>
+      <td class="td-nome">Filial 48</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#52</td>
+      <td class="td-nome">Filial 52</td>
+      <td class="td-qty" style="color:var(--accent2)">1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#1</td>
+      <td class="td-nome">Filial 1</td>
+      <td class="td-qty" style="color:var(--accent2)">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#4</td>
+      <td class="td-nome">Filial 4</td>
+      <td class="td-qty" style="color:var(--accent2)">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#38</td>
+      <td class="td-nome">Filial 38</td>
+      <td class="td-qty" style="color:var(--accent2)">0</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
+      </div></td>
+    </tr><tr>
+      <td class="td-loja">#997</td>
+      <td class="td-nome">Filial 997</td>
+      <td class="td-qty" style="color:var(--accent2)">-1</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:-3.8%;max-width:150px"></div>
+      </div></td>
+    </tr></tbody></table></div>
+  </div>
+</main>
+</div>
+<!-- /ABA 3 -->
+
+<script>
+// ── CONFIGURAÇÃO ──────────────────────────────────────────────────────────────
+const PUBLISHED_ID = '2PACX-1vQnD-TDSWC76DBgeWdu3Jvi_AqfzSRca9Isub0y9ic0wT1JOOmIzxDhmnh-tT9b6UFHfvMlnJK1Ua4k';
+const GID_BRUTOS   = '594179647';
+const GID_DEPARA   = '742565184';
+const GID_CAT      = '1807120713';
+
+let rawData      = [];
+let deParaMap    = {};
+let catMap       = {}; // código categoria → nome
+let chartInst    = null;
+let cat1Chart    = null;
+let cat2Chart    = null;
+let d3BarChart   = null;
+let d3LineChart  = null;
+let lojaFiltrada = null;
+let t1Sort       = { col: 'qty', dir: 'desc' };
+let t2Sort       = { col: 'qty', dir: 'desc' };
+let t3Sort       = { col: 'qty', dir: 'desc' };
+
+// paleta multi-série
+const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
+
+// ── CSV PARSER ────────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n');
+
+  function splitLine(line) {
+    const out = []; let cur = '', q = false;
+    for (const ch of line) {
+      if (ch === '"') { q = !q; }
+      else if (ch === ',' && !q) { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
+  // Encontra a linha de cabeçalho real: primeira linha com mais de 5 colunas preenchidas
+  let hi = 0;
+  for (let i = 0; i < Math.min(lines.length, 6); i++) {
+    if (splitLine(lines[i]).filter(c => c !== '').length > 5) { hi = i; break; }
+  }
+
+  const headers = splitLine(lines[hi]).map(h => h.replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = hi + 1; i < lines.length; i++) {
+    const vals = splitLine(lines[i]);
+    if (vals.every(v => v === '')) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+// ── FETCH CSV ─────────────────────────────────────────────────────────────────
+async function fetchCSV(gid) {
+  const url = `https://docs.google.com/spreadsheets/d/e/${PUBLISHED_ID}/pub?gid=${gid}&single=true&output=csv`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} — verifique se a planilha está publicada na web (Arquivo → Publicar na web).`);
+  return res.text();
+}
+
+// ── INICIALIZAÇÃO ─────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    // 1. DE-PARA LOJAS
+    try {
+      const csv  = await fetchCSV(GID_DEPARA);
+      const rows = parseCSV(csv);
+      rows.forEach(r => {
+        const vals = Object.values(r).filter(v => v !== '');
+        if (vals.length >= 2) deParaMap[String(vals[0]).trim()] = String(vals[1]).trim();
+      });
+    } catch(e) { console.warn('De-Para não carregado:', e.message); }
+
+    // 1b. CATEGORIAS
+    try {
+      const csv  = await fetchCSV(GID_CAT);
+      const rows = parseCSV(csv);
+      rows.forEach(r => {
+        const vals = Object.values(r).filter(v => v !== '');
+        if (vals.length >= 2) catMap[String(vals[0]).trim()] = String(vals[1]).trim();
+        else if (vals.length === 1) catMap[String(vals[0]).trim()] = String(vals[0]).trim();
+      });
+    } catch(e) { console.warn('Categorias não carregadas:', e.message); }
+
+    // 2. DADOS BRUTOS
+    const csv = await fetchCSV(GID_BRUTOS);
+    const todas = parseCSV(csv);
+    console.log('Colunas encontradas:', Object.keys(todas[0] || {}));
+    console.log('Primeiras linhas:', todas.slice(0,3));
+
+    // Filtra apenas linhas com Ano válido (4 dígitos)
+    rawData = todas.filter(r => /^\d{4}$/.test(col(r, 'Ano')));
+
+    if (rawData.length === 0) {
+      // Tenta mostrar o que veio para diagnóstico
+      throw new Error(`Nenhuma linha válida encontrada. Colunas detectadas: ${Object.keys(todas[0]||{}).join(', ')}`);
+    }
+
+    document.getElementById('status-msg').textContent =
+      `${rawData.length.toLocaleString('pt-BR')} registros carregados · ${Object.keys(deParaMap).length} lojas no de-para`;
+
+    construirFiltros();
+    renderizar();
+    d2ConstruirFiltros();
+    d2Renderizar();
+    d3ConstruirFiltros();
+    d3Renderizar();
+
+  } catch(err) {
+    console.error(err);
+    setEstado(`<span class="err">⚠ Erro ao carregar dados:<br>${err.message}</span>`);
+    document.getElementById('status-msg').textContent = 'Erro ao carregar dados.';
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function col(row, ...nomes) {
+  for (const n of nomes) {
+    if (row[n] !== undefined && row[n] !== '') return row[n];
+  }
+  return '';
+}
+
+function setEstado(html) {
+  const el = document.getElementById('chart-state');
+  if (el) { el.style.display = 'flex'; el.innerHTML = html; }
+}
+
+function ocultarEstado() {
+  const el = document.getElementById('chart-state');
+  if (el) el.style.display = 'none';
+}
+
+// ── FILTROS ───────────────────────────────────────────────────────────────────
+function construirFiltros() {
+  const anos  = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
+  const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
+  const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
+
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+
+  const sA = document.getElementById('f-ano');
+  const sM = document.getElementById('f-mes');
+  const sL = document.getElementById('f-loja');
+  const sC = document.getElementById('f-cat');
+  sA.innerHTML = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  sM.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  sL.innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
+    const nome = deParaMap[l] || `Filial ${l}`;
+    return `<option value="${l}">#${l} · ${nome}</option>`;
+  }).join('');
+  sC.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderizar)
+  );
+}
+
+function limparFiltros() {
+  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat'].forEach(id => document.getElementById(id).value = '');
+  renderizar();
+}
+
+function filtrar() {
+  const ano  = document.getElementById('f-ano').value;
+  const mes  = document.getElementById('f-mes').value;
+  const di   = document.getElementById('f-di').value;
+  const df   = document.getElementById('f-df').value;
+  const loja = document.getElementById('f-loja').value;
+  const cat  = document.getElementById('f-cat').value;
+
+  return rawData.filter(r => {
+    if (ano  && col(r,'Ano') !== ano) return false;
+    if (mes  && col(r,'Mês','Mes') !== mes) return false;
+    if (loja && col(r,'Loja','loja') !== loja) return false;
+    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (di || df) {
+      const raw = col(r,'Data','data');
+      if (raw) {
+        // Google Sheets exporta como M/D/YYYY
+        const p = raw.split('/');
+        const dt = p.length === 3
+          ? new Date(+p[2], +p[0]-1, +p[1])
+          : new Date(raw);
+        if (!isNaN(dt)) {
+          const s = dt.toISOString().split('T')[0];
+          if (di && s < di) return false;
+          if (df && s > df) return false;
+        }
+      }
+    }
+    return true;
+  });
+}
+
+// ── AGGREGATE ─────────────────────────────────────────────────────────────────
+function agruparPorLoja(data) {
+  const map = {};
+  data.forEach(r => {
+    // Coluna N = "Loja" (número da filial do cliente)
+    const loja = col(r,'Loja','loja');
+    if (!loja) return;
+    // Coluna AE = "Venda (Qtd)"
+    const raw = col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade');
+    const qty = parseFloat(raw.replace(/\./g,'').replace(',','.')) || 0;
+    const key = loja.trim();
+    if (!map[key]) {
+      map[key] = {
+        loja: key,
+        nome: deParaMap[key] || `Filial ${key}`,
+        qty: 0
+      };
+    }
+    map[key].qty += qty;
+  });
+  return Object.values(map).sort((a,b) => b.qty - a.qty);
+}
+
+// ── RENDER PRINCIPAL ──────────────────────────────────────────────────────────
+function renderizar() {
+  const dadosTodos = filtrar();
+  const byLojaAll  = agruparPorLoja(dadosTodos);
+
+  const ano = document.getElementById('f-ano').value;
+  const mes = document.getElementById('f-mes').value;
+  document.getElementById('chart-sub').textContent =
+    [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  // Indicador de loja ativa
+  const lojaAtivaEl = document.getElementById('loja-ativa');
+  if (lojaFiltrada) {
+    const info = byLojaAll.find(r => r.loja === lojaFiltrada);
+    lojaAtivaEl.style.display = 'flex';
+    lojaAtivaEl.innerHTML = `
+      <span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:.5px">
+        ▶ FILTRANDO: #${lojaFiltrada}${info ? ' · ' + info.nome : ''}
+      </span>
+      <button onclick="limparFiltroLoja()" style="background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:0.68rem;padding:2px 10px;border-radius:20px;margin-left:6px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕ limpar</button>`;
+  } else {
+    lojaAtivaEl.style.display = 'none';
+  }
+
+  // KPIs e tabela filtram pela loja selecionada; gráfico mostra todas
+  const byLojaFiltrada = lojaFiltrada
+    ? byLojaAll.filter(r => r.loja === lojaFiltrada)
+    : byLojaAll;
+
+  renderKPIs(byLojaFiltrada);
+  renderGrafico(byLojaAll);
+  renderTabela(byLojaFiltrada);
+  renderCat1(filtrar());
+}
+
+function limparFiltroLoja() {
+  lojaFiltrada = null;
+  renderizar();
+}
+
+function renderKPIs(byLoja) {
+  const total  = byLoja.reduce((s,r) => s + r.qty, 0);
+  const ativas = byLoja.filter(r => r.qty > 0).length;
+  const top    = byLoja[0];
+  document.getElementById('kpi-total').textContent     = total.toLocaleString('pt-BR');
+  document.getElementById('kpi-lojas').textContent     = ativas;
+  document.getElementById('kpi-top').textContent       = top ? top.nome : '—';
+  document.getElementById('kpi-top-sub').textContent   = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
+}
+
+function renderGrafico(byLoja) {
+  const total = byLoja.reduce((s,r) => s + r.qty, 0);
+  document.getElementById('chart-total-val').textContent = total.toLocaleString('pt-BR');
+
+  if (byLoja.length === 0) {
+    setEstado('Nenhum dado para os filtros selecionados.');
+    return;
+  }
+  ocultarEstado();
+
+  let canvas = document.getElementById('myChart');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'myChart';
+    document.getElementById('chart-wrap').appendChild(canvas);
+  }
+
+  const labels = byLoja.map(r => r.nome);
+  const values = byLoja.map(r => r.qty);
+  const n      = byLoja.length;
+
+  const bgColors = byLoja.map((r, i) => {
+    if (lojaFiltrada) {
+      return r.loja === lojaFiltrada ? 'rgba(200,241,53,0.95)' : 'rgba(37,42,58,0.45)';
+    }
+    const t = n > 1 ? i/(n-1) : 0;
+    return `rgba(${Math.round(200-t*80)},${Math.round(241-t*100)},${Math.round(53+t*100)},0.85)`;
+  });
+
+  const borderColors = byLoja.map((r, i) => {
+    if (lojaFiltrada) {
+      return r.loja === lojaFiltrada ? 'rgba(200,241,53,1)' : 'rgba(37,42,58,0.2)';
+    }
+    const t = n > 1 ? i/(n-1) : 0;
+    return `rgba(${Math.round(200-t*80)},${Math.round(241-t*100)},${Math.round(53+t*100)},1)`;
+  });
+
+  if (chartInst) chartInst.destroy();
+
+  chartInst = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Qtd Vendida',
+        data: values,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1.5,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cursor: 'pointer',
+      onClick: (evt, elements) => {
+        if (elements.length > 0) {
+          const idx  = elements[0].index;
+          const loja = byLoja[idx].loja;
+          lojaFiltrada = lojaFiltrada === loja ? null : loja;
+          renderizar();
+        }
+      },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2030', borderColor: '#252a3a', borderWidth: 1,
+          titleColor: '#c8f135', bodyColor: '#e8ecf5',
+          titleFont: { family: 'DM Mono', size: 11 },
+          bodyFont: { family: 'Figtree', size: 13 },
+          padding: 14,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} unidades vendidas`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: ctx => {
+              if (!lojaFiltrada) return '#8891aa';
+              return byLoja[ctx.index]?.loja === lojaFiltrada ? '#c8f135' : '#3a4060';
+            },
+            font: { family: 'DM Mono', size: 9 },
+            maxRotation: 45,
+            minRotation: 45,
+            autoSkip: false,
+          },
+          grid: { color: '#1c2030' }
+        },
+        y: {
+          ticks: { color: '#8891aa', font: { family: 'DM Mono', size: 11 }, callback: v => v.toLocaleString('pt-BR') },
+          grid: { color: '#252a3a' }
+        }
+      }
+    }
+  });
+
+  canvas.style.cursor = 'pointer';
+}
+
+function agruparPorCategoria(data) {
+  const map = {};
+  data.forEach(r => {
+    const cat = col(r,'Categoria','categoria','Kert','kert') || 'Sem categoria';
+    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(',','.')) || 0;
+    if (!map[cat]) map[cat] = { cat, qty: 0 };
+    map[cat].qty += qty;
+  });
+  return Object.values(map).sort((a,b) => b.qty - a.qty);
+}
+
+function renderCat1(data) {
+  const byCat = agruparPorCategoria(data);
+  const total = byCat.reduce((s,r) => s + r.qty, 0);
+  const n     = byCat.length;
+
+  const ano = document.getElementById('f-ano').value;
+  const mes = document.getElementById('f-mes').value;
+  document.getElementById('cat1-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const state = document.getElementById('cat1-state');
+  if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
+  if (state) state.style.display = 'none';
+
+  let canvas = document.getElementById('cat1-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'cat1-canvas';
+    document.getElementById('cat1-wrap').appendChild(canvas);
+  }
+  if (cat1Chart) cat1Chart.destroy();
+
+  cat1Chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byCat.map(r => r.cat),
+      datasets: [{
+        data: byCat.map(r => r.qty),
+        backgroundColor: byCat.map((_,i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor:     byCat.map((_,i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1.5, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
+          titleColor:'#c8f135', bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
+          callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} unidades` }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+      }
+    }
+  });
+
+  // tabela categorias aba1
+  const maxQ = byCat[0]?.qty || 1;
+  const linhas = byCat.map(r => {
+    const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
+    const barW = ((r.qty/maxQ)*100).toFixed(1);
+    return `<tr>
+      <td class="td-nome">${r.cat}</td>
+      <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('cat1-table-body').innerHTML = `<table>
+    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function t1OrdenarPor(coluna) {
+  t1Sort.dir = t1Sort.col === coluna && t1Sort.dir === 'desc' ? 'asc' : 'desc';
+  t1Sort.col = coluna;
+  renderizar();
+}
+
+function renderTabela(byLoja) {
+  const container = document.getElementById('table-body');
+  const total = byLoja.reduce((s,r) => s+r.qty, 0);
+
+  if (byLoja.length === 0) {
+    container.innerHTML = '<div class="no-data">Nenhum dado para os filtros selecionados</div>';
+    return;
+  }
+
+  const sorted = [...byLoja].sort((a,b) => {
+    let va, vb;
+    if (t1Sort.col === 'loja') { va = +a.loja; vb = +b.loja; }
+    else if (t1Sort.col === 'nome') { va = a.nome.toLowerCase(); vb = b.nome.toLowerCase(); }
+    else { va = a.qty; vb = b.qty; }
+    if (va < vb) return t1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return t1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const maxQ = Math.max(...sorted.map(r => r.qty), 1);
+
+  const th = (label, key) => {
+    const cls = t1Sort.col === key ? ` class="sort-${t1Sort.dir}"` : '';
+    return `<th${cls} onclick="t1OrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = sorted.map(r => {
+    const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
+    const barW = ((r.qty/maxQ)*100).toFixed(1);
+    return `<tr>
+      <td class="td-loja">#${r.loja}</td>
+      <td class="td-nome">${r.nome}</td>
+      <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const totalLinha = `<tr style="background:var(--surface2)">
+    <td class="td-loja">—</td>
+    <td class="td-nome" style="font-weight:600;color:var(--accent)">TOTAL GERAL</td>
+    <td class="td-qty" style="color:var(--accent)">${total.toLocaleString('pt-BR')}</td>
+    <td><span style="font-size:.78rem;color:var(--accent);font-family:'DM Mono',monospace">100%</span></td>
+  </tr>`;
+
+  container.innerHTML = `<table>
+    <thead><tr>
+      ${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Qtd Vendida','qty')}<th>Participação</th>
+    </tr></thead>
+    <tbody>${linhas}${totalLinha}</tbody>
+  </table>`;
+}
+
+// ── ABA 2: VENDA POR DIA ──────────────────────────────────────────────────────
+let d2Chart = null;
+
+function d2ConstruirFiltros() {
+  const anos  = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
+  const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
+  const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
+
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+
+  document.getElementById('d2-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('d2-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('d2-loja').innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
+    const nome = deParaMap[l] || `Filial ${l}`;
+    return `<option value="${l}">#${l} · ${nome}</option>`;
+  }).join('');
+  document.getElementById('d2-cat').innerHTML  = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat'].forEach(id =>
+    document.getElementById(id).addEventListener('change', d2Renderizar)
+  );
+
+  document.getElementById('d2-status-msg').textContent =
+    document.getElementById('status-msg').textContent;
+}
+
+function d2LimparFiltros() {
+  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat'].forEach(id => document.getElementById(id).value = '');
+  d2Renderizar();
+}
+
+function d2Filtrar() {
+  const ano  = document.getElementById('d2-ano').value;
+  const mes  = document.getElementById('d2-mes').value;
+  const di   = document.getElementById('d2-di').value;
+  const df   = document.getElementById('d2-df').value;
+  const loja = document.getElementById('d2-loja').value;
+  const cat  = document.getElementById('d2-cat').value;
+
+  return rawData.filter(r => {
+    if (ano  && col(r,'Ano') !== ano) return false;
+    if (mes  && col(r,'Mês','Mes') !== mes) return false;
+    if (loja && col(r,'Loja','loja') !== loja) return false;
+    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (di || df) {
+      const raw = col(r,'Data','data');
+      if (raw) {
+        const p  = raw.split('/');
+        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
+        if (!isNaN(dt)) {
+          const s = dt.toISOString().split('T')[0];
+          if (di && s < di) return false;
+          if (df && s > df) return false;
+        }
+      }
+    }
+    return true;
+  });
+}
+
+function d2ParseData(raw) {
+  if (!raw) return null;
+  const p = raw.split('/');
+  if (p.length === 3) {
+    const d = new Date(+p[2], +p[0]-1, +p[1]);
+    return isNaN(d) ? null : d;
+  }
+  const d = new Date(raw);
+  return isNaN(d) ? null : d;
+}
+
+function d2AgruparPorDia(data) {
+  const map = {};
+  data.forEach(r => {
+    const dt = d2ParseData(col(r,'Data','data'));
+    if (!dt) return;
+    const key = dt.toISOString().split('T')[0]; // YYYY-MM-DD
+    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(',','.')) || 0;
+    if (!map[key]) map[key] = { data: key, qty: 0 };
+    map[key].qty += qty;
+  });
+  return Object.values(map).sort((a,b) => a.data.localeCompare(b.data));
+}
+
+function d2FormatarData(iso) {
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function d2DiaSemana(iso) {
+  const [y,m,d] = iso.split('-');
+  const dt = new Date(+y, +m-1, +d);
+  return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()];
+}
+
+function d2Renderizar() {
+  const dados  = d2Filtrar();
+  const porDia = d2AgruparPorDia(dados);
+
+  const ano  = document.getElementById('d2-ano').value;
+  const mes  = document.getElementById('d2-mes').value;
+  const loja = document.getElementById('d2-loja').value;
+  const nomeLoja = loja ? (document.getElementById('d2-loja').selectedOptions[0]?.text || '') : 'Todas as lojas';
+
+  document.getElementById('d2-chart-sub').textContent =
+    ([ano, mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
+
+  // KPIs
+  const total = porDia.reduce((s,r) => s + r.qty, 0);
+  const dias  = porDia.filter(r => r.qty > 0).length;
+  const media = dias > 0 ? (total / dias) : 0;
+  const top   = porDia.reduce((a,b) => b.qty > (a?.qty||0) ? b : a, null);
+
+  document.getElementById('d2-kpi-total').textContent   = total.toLocaleString('pt-BR');
+  document.getElementById('d2-kpi-dias').textContent    = dias;
+  document.getElementById('d2-kpi-media').textContent   = Math.round(media).toLocaleString('pt-BR');
+  document.getElementById('d2-kpi-top').textContent     = top ? d2FormatarData(top.data) : '—';
+  document.getElementById('d2-kpi-top-sub').textContent = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
+
+  // Gráfico
+  const d2State = document.getElementById('d2-chart-state');
+  if (porDia.length === 0) {
+    if (d2State) { d2State.style.display='flex'; d2State.innerHTML='Nenhum dado para os filtros selecionados.'; }
+    if (d2Chart) { d2Chart.destroy(); d2Chart = null; }
+    document.getElementById('d2-table-body').innerHTML = '<div class="no-data">Nenhum dado para os filtros selecionados</div>';
+    return;
+  }
+  if (d2State) d2State.style.display = 'none';
+
+  let canvas = document.getElementById('d2-myChart');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'd2-myChart';
+    document.getElementById('d2-chart-wrap').appendChild(canvas);
+  }
+
+  const labels = porDia.map(r => d2FormatarData(r.data));
+  const values = porDia.map(r => r.qty);
+
+  if (d2Chart) d2Chart.destroy();
+
+  d2Chart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Qtd Vendida',
+        data: values,
+        borderColor: 'rgba(200,241,53,0.9)',
+        backgroundColor: 'rgba(200,241,53,0.08)',
+        borderWidth: 2,
+        pointRadius: porDia.length <= 60 ? 3 : 0,
+        pointHoverRadius: 5,
+        pointBackgroundColor: 'rgba(200,241,53,1)',
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2030', borderColor: '#252a3a', borderWidth: 1,
+          titleColor: '#c8f135', bodyColor: '#e8ecf5',
+          titleFont: { family: 'DM Mono', size: 11 },
+          bodyFont: { family: 'Figtree', size: 13 },
+          padding: 14,
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} unidades vendidas`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#8891aa',
+            font: { family: 'DM Mono', size: 9 },
+            maxRotation: 45,
+            minRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: 40,
+          },
+          grid: { color: '#1c2030' }
+        },
+        y: {
+          ticks: { color: '#8891aa', font: { family: 'DM Mono', size: 11 }, callback: v => v.toLocaleString('pt-BR') },
+          grid: { color: '#252a3a' }
+        }
+      }
+    }
+  });
+
+  // Tabela
+  const sorted2 = [...porDia].sort((a,b) => {
+    let va, vb;
+    const ORD_DIA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    if (t2Sort.col === 'data') { va = a.data; vb = b.data; }
+    else if (t2Sort.col === 'dia') { va = ORD_DIA.indexOf(d2DiaSemana(a.data)); vb = ORD_DIA.indexOf(d2DiaSemana(b.data)); }
+    else { va = a.qty; vb = b.qty; }
+    if (va < vb) return t2Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return t2Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const maxQ2 = Math.max(...porDia.map(r => r.qty), 1);
+
+  const th2 = (label, key) => {
+    const cls = t2Sort.col === key ? ` class="sort-${t2Sort.dir}"` : '';
+    return `<th${cls} onclick="t2OrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = sorted2.map(r => {
+    const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
+    const barW = ((r.qty/maxQ2)*100).toFixed(1);
+    const dia  = d2DiaSemana(r.data);
+    const fds  = dia === 'Sáb' || dia === 'Dom';
+    return `<tr>
+      <td class="td-loja">${d2FormatarData(r.data)}</td>
+      <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
+      <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const totalLinha = `<tr style="background:var(--surface2)">
+    <td class="td-loja" style="color:var(--accent)">TOTAL</td>
+    <td class="td-loja" style="color:var(--accent)">—</td>
+    <td class="td-qty" style="color:var(--accent)">${total.toLocaleString('pt-BR')}</td>
+    <td><span style="font-size:.78rem;color:var(--accent);font-family:'DM Mono',monospace">100%</span></td>
+  </tr>`;
+
+  document.getElementById('d2-table-body').innerHTML = `<table>
+    <thead><tr>${th2('Data','data')}${th2('Dia','dia')}${th2('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
+    <tbody>${linhas}${totalLinha}</tbody>
+  </table>`;
+
+  renderCat2(dados);
+}
+
+function renderCat2(data) {
+  const cat  = document.getElementById('d2-cat').value;
+  const loja = document.getElementById('d2-loja').value;
+  const ano  = document.getElementById('d2-ano').value;
+  const mes  = document.getElementById('d2-mes').value;
+  const nomeLoja = loja ? (document.getElementById('d2-loja').selectedOptions[0]?.text || '') : 'Todas as lojas';
+  document.getElementById('cat2-sub').textContent = ([ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
+
+  // agrupa por categoria → por dia
+  const cats = [...new Set(data.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+  const dias  = [...new Set(data.map(r => {
+    const dt = d2ParseData(col(r,'Data','data'));
+    return dt ? dt.toISOString().split('T')[0] : null;
+  }).filter(Boolean))].sort();
+
+  const state2 = document.getElementById('cat2-state');
+  if (cats.length === 0 || dias.length === 0) {
+    if(state2) { state2.style.display='flex'; state2.innerHTML='Nenhum dado.'; }
+    document.getElementById('cat2-table-body').innerHTML = '<div class="no-data">Nenhum dado</div>';
+    return;
+  }
+  if(state2) state2.style.display = 'none';
+
+  const mapCatDia = {};
+  data.forEach(r => {
+    const c  = col(r,'Categoria','categoria','Kert','kert'); if (!c) return;
+    const dt = d2ParseData(col(r,'Data','data')); if (!dt) return;
+    const dk = dt.toISOString().split('T')[0];
+    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(',','.')) || 0;
+    if (!mapCatDia[c]) mapCatDia[c] = {};
+    mapCatDia[c][dk] = (mapCatDia[c][dk] || 0) + qty;
+  });
+
+  let canvas2 = document.getElementById('cat2-canvas');
+  if (!canvas2) {
+    canvas2 = document.createElement('canvas');
+    canvas2.id = 'cat2-canvas';
+    document.getElementById('cat2-wrap').appendChild(canvas2);
+  }
+  if (cat2Chart) cat2Chart.destroy();
+
+  cat2Chart = new Chart(canvas2, {
+    type: 'line',
+    data: {
+      labels: dias.map(d2FormatarData),
+      datasets: cats.map((c, i) => ({
+        label: c,
+        data: dias.map(d => mapCatDia[c]?.[d] || 0),
+        borderColor: PALETTE[i % PALETTE.length],
+        backgroundColor: PALETTE[i % PALETTE.length] + '22',
+        borderWidth: 2, pointRadius: dias.length <= 60 ? 2 : 0,
+        pointHoverRadius: 4, tension: 0.3, fill: false,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 } },
+        tooltip: {
+          backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
+          titleColor:'#c8f135', bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:12}, padding:12,
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:true, maxTicksLimit:30 }, grid:{color:'#1c2030'} },
+        y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+      }
+    }
+  });
+
+  // tabela resumo por categoria
+  const totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.qty-a.qty);
+  const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
+  const maxQ = totCat[0]?.qty || 1;
+  const linhas = totCat.map(r => {
+    const pct  = totalGeral > 0 ? ((r.qty/totalGeral)*100).toFixed(1) : 0;
+    const barW = ((r.qty/maxQ)*100).toFixed(1);
+    return `<tr>
+      <td class="td-nome">${r.cat}</td>
+      <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('cat2-table-body').innerHTML = `<table>
+    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function t2OrdenarPor(coluna) {
+  t2Sort.dir = t2Sort.col === coluna && t2Sort.dir === 'desc' ? 'asc' : 'desc';
+  t2Sort.col = coluna;
+  d2Renderizar();
+}
+
+// ── ABA 3: ESTOQUE ────────────────────────────────────────────────────────────
+function d3ConstruirFiltros() {
+  const anos  = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
+  const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
+  const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+
+  document.getElementById('d3-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('d3-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('d3-loja').innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
+    const nome = deParaMap[l] || `Filial ${l}`;
+    return `<option value="${l}">#${l} · ${nome}</option>`;
+  }).join('');
+  document.getElementById('d3-cat').innerHTML  = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat'].forEach(id =>
+    document.getElementById(id).addEventListener('change', d3Renderizar)
+  );
+  document.getElementById('d3-status-msg').textContent = document.getElementById('status-msg').textContent;
+}
+
+function d3LimparFiltros() {
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat'].forEach(id => document.getElementById(id).value = '');
+  d3Renderizar();
+}
+
+function d3Filtrar() {
+  const ano  = document.getElementById('d3-ano').value;
+  const mes  = document.getElementById('d3-mes').value;
+  const di   = document.getElementById('d3-di').value;
+  const df   = document.getElementById('d3-df').value;
+  const loja = document.getElementById('d3-loja').value;
+  const cat  = document.getElementById('d3-cat').value;
+
+  return rawData.filter(r => {
+    if (ano  && col(r,'Ano') !== ano) return false;
+    if (mes  && col(r,'Mês','Mes') !== mes) return false;
+    if (loja && col(r,'Loja','loja') !== loja) return false;
+    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (di || df) {
+      const raw = col(r,'Data','data');
+      if (raw) {
+        const p  = raw.split('/');
+        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
+        if (!isNaN(dt)) {
+          const s = dt.toISOString().split('T')[0];
+          if (di && s < di) return false;
+          if (df && s > df) return false;
+        }
+      }
+    }
+    return true;
+  });
+}
+
+function d3Renderizar() {
+  const dados = d3Filtrar();
+  const ano   = document.getElementById('d3-ano').value;
+  const mes   = document.getElementById('d3-mes').value;
+  const loja  = document.getElementById('d3-loja').value;
+  const nomeLoja = loja ? (document.getElementById('d3-loja').selectedOptions[0]?.text || '') : 'Todas as lojas';
+  const periodo  = ([ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
+  document.getElementById('d3-chart-sub').textContent = periodo;
+  document.getElementById('d3-line-sub').textContent  = periodo;
+
+  // agrupa estoque por loja (último valor do período)
+  const mapLoja = {};
+  dados.forEach(r => {
+    const l   = col(r,'Loja','loja'); if (!l) return;
+    const est = parseFloat(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque').replace(',','.')) || 0;
+    const dt  = d2ParseData(col(r,'Data','data'));
+    const key = l.trim();
+    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0, dt: null };
+    // usa o valor mais recente
+    if (!mapLoja[key].dt || (dt && dt > mapLoja[key].dt)) {
+      mapLoja[key].qty = est;
+      mapLoja[key].dt  = dt;
+    }
+  });
+
+  const byLoja = Object.values(mapLoja).sort((a,b) => b.qty - a.qty);
+  const total  = byLoja.reduce((s,r) => s + r.qty, 0);
+  const ativas = byLoja.filter(r => r.qty > 0).length;
+  const top    = byLoja[0];
+  const bot    = byLoja.filter(r => r.qty > 0).slice(-1)[0];
+
+  // KPIs
+  document.getElementById('d3-kpi-total').textContent   = total.toLocaleString('pt-BR');
+  document.getElementById('d3-kpi-lojas').textContent   = ativas;
+  document.getElementById('d3-kpi-top').textContent     = top ? top.nome : '—';
+  document.getElementById('d3-kpi-top-sub').textContent = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
+  document.getElementById('d3-kpi-bot').textContent     = bot ? bot.nome : '—';
+  document.getElementById('d3-kpi-bot-sub').textContent = bot ? `${bot.qty.toLocaleString('pt-BR')} un.` : '—';
+
+  // Gráfico barras por loja
+  const barState = document.getElementById('d3-chart-state');
+  if (byLoja.length === 0) {
+    if(barState) { barState.style.display='flex'; barState.innerHTML='Nenhum dado.'; }
+  } else {
+    if(barState) barState.style.display = 'none';
+    let c1 = document.getElementById('d3-bar-canvas');
+    if (!c1) { c1 = document.createElement('canvas'); c1.id = 'd3-bar-canvas'; document.getElementById('d3-chart-wrap').appendChild(c1); }
+    if (d3BarChart) d3BarChart.destroy();
+    const n = byLoja.length;
+    d3BarChart = new Chart(c1, {
+      type: 'bar',
+      data: {
+        labels: byLoja.map(r => r.nome),
+        datasets: [{
+          data: byLoja.map(r => r.qty),
+          backgroundColor: byLoja.map((_,i) => { const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},0.85)`; }),
+          borderColor:     byLoja.map((_,i) => { const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},1)`; }),
+          borderWidth: 1.5, borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
+            callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} unidades em estoque` }
+          }
+        },
+        scales: {
+          x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:false }, grid:{color:'#1c2030'} },
+          y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+        }
+      }
+    });
+  }
+
+  // Gráfico linha: evolução estoque por dia (por loja selecionada ou total geral)
+  const dias = [...new Set(dados.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
+  const lojas = loja ? [loja] : [...new Set(dados.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
+
+  const lineState = document.getElementById('d3-line-state');
+  if (dias.length === 0) {
+    if(lineState) { lineState.style.display='flex'; lineState.innerHTML='Nenhum dado.'; }
+  } else {
+    if(lineState) lineState.style.display = 'none';
+    const mapLD = {};
+    dados.forEach(r => {
+      const l   = col(r,'Loja','loja'); if (!l || !lojas.includes(l)) return;
+      const dt  = d2ParseData(col(r,'Data','data')); if (!dt) return;
+      const dk  = dt.toISOString().split('T')[0];
+      const est = parseFloat(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque').replace(',','.')) || 0;
+      if (!mapLD[l]) mapLD[l] = {};
+      mapLD[l][dk] = (mapLD[l][dk] || 0) + est;
+    });
+
+    let c2 = document.getElementById('d3-line-canvas');
+    if (!c2) { c2 = document.createElement('canvas'); c2.id = 'd3-line-canvas'; document.getElementById('d3-line-wrap').appendChild(c2); }
+    if (d3LineChart) d3LineChart.destroy();
+
+    d3LineChart = new Chart(c2, {
+      type: 'line',
+      data: {
+        labels: dias.map(d2FormatarData),
+        datasets: lojas.map((l,i) => ({
+          label: deParaMap[l] || `Filial ${l}`,
+          data: dias.map(d => mapLD[l]?.[d] ?? null),
+          borderColor: PALETTE[i % PALETTE.length],
+          backgroundColor: PALETTE[i % PALETTE.length] + '22',
+          borderWidth: 2, pointRadius: dias.length <= 60 ? 2 : 0,
+          pointHoverRadius: 4, tension: 0.3, fill: false, spanGaps: true,
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 } },
+          tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:12}, padding:12 }
+        },
+        scales: {
+          x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:true, maxTicksLimit:30 }, grid:{color:'#1c2030'} },
+          y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+        }
+      }
+    });
+  }
+
+  // Tabela
+  const maxQ = byLoja[0]?.qty || 1;
+  const th3 = (label, key) => {
+    const cls = t3Sort.col === key ? ` class="sort-${t3Sort.dir}"` : '';
+    return `<th${cls} onclick="t3OrdenarPor('${key}')">${label}</th>`;
+  };
+  const sorted3 = [...byLoja].sort((a,b) => {
+    let va, vb;
+    if (t3Sort.col === 'loja') { va=+a.loja; vb=+b.loja; }
+    else if (t3Sort.col === 'nome') { va=a.nome.toLowerCase(); vb=b.nome.toLowerCase(); }
+    else { va=a.qty; vb=b.qty; }
+    if (va<vb) return t3Sort.dir==='asc'?-1:1;
+    if (va>vb) return t3Sort.dir==='asc'?1:-1;
+    return 0;
+  });
+  const linhas3 = sorted3.map(r => {
+    const barW = ((r.qty/maxQ)*100).toFixed(1);
+    return `<tr>
+      <td class="td-loja">#${r.loja}</td>
+      <td class="td-nome">${r.nome}</td>
+      <td class="td-qty" style="color:var(--accent2)">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:${barW}%;max-width:150px"></div>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('d3-table-body').innerHTML = byLoja.length === 0
+    ? '<div class="no-data">Nenhum dado para os filtros selecionados</div>'
+    : `<table><thead><tr>${th3('Filial','loja')}${th3('Nome Fantasia','nome')}${th3('Estoque Atual','qty')}<th>Volume</th></tr></thead><tbody>${linhas3}</tbody></table>`;
+}
+
+function t3OrdenarPor(coluna) {
+  t3Sort.dir = t3Sort.col === coluna && t3Sort.dir === 'desc' ? 'asc' : 'desc';
+  t3Sort.col = coluna;
+  d3Renderizar();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function trocarAba(aba) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + aba).classList.add('active');
+  document.querySelector(`.tab-btn[onclick="trocarAba('${aba}')"]`).classList.add('active');
+}
+
+// ── START ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+
+
+</body></html>
