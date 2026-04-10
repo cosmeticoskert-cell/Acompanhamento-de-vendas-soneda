@@ -540,6 +540,14 @@ function parseBR(raw) {
   return parseFloat((raw || '').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
+function getCat(r) {
+  // Usa o GTIN/PLU do dado bruto para fazer de-para na aba de categorias
+  const ean = col(r, 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'GTIN', 'PLU', 'Ean', 'EAN');
+  if (ean && catMap[ean]) return catMap[ean];
+  // Fallback: lê a coluna de categoria diretamente (se existir)
+  return col(r, 'Categoria', 'categoria', 'Kert', 'kert');
+}
+
 function setEstado(html) {
   const el = document.getElementById('chart-state');
   if (el) { el.style.display = 'flex'; el.innerHTML = html; }
@@ -558,7 +566,7 @@ function construirFiltros() {
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
   const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
-  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+  const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const sA = document.getElementById('f-ano');
   const sM = document.getElementById('f-mes');
@@ -594,7 +602,7 @@ function filtrar() {
     if (ano  && col(r,'Ano') !== ano) return false;
     if (mes  && col(r,'Mês','Mes') !== mes) return false;
     if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (cat  && getCat(r) !== cat) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -783,7 +791,7 @@ function renderGrafico(byLoja) {
 function agruparPorCategoria(data) {
   const map = {};
   data.forEach(r => {
-    const cat = col(r,'Categoria','categoria','Kert','kert') || 'Sem categoria';
+    const cat = getCat(r) || 'Sem categoria';
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[cat]) map[cat] = { cat, qty: 0 };
     map[cat].qty += qty;
@@ -928,7 +936,7 @@ function d2ConstruirFiltros() {
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
   const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
-  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+  const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   document.getElementById('d2-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
   document.getElementById('d2-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
@@ -963,7 +971,7 @@ function d2Filtrar() {
     if (ano  && col(r,'Ano') !== ano) return false;
     if (mes  && col(r,'Mês','Mes') !== mes) return false;
     if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (cat  && getCat(r) !== cat) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1164,7 +1172,7 @@ function renderCat2(data) {
   const nomeLoja = loja ? (document.getElementById('d2-loja').selectedOptions[0]?.text || '') : 'Todas as lojas';
   document.getElementById('cat2-sub').textContent = ([ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
 
-  const cats = [...new Set(data.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+  const cats = [...new Set(data.map(r => getCat(r)).filter(Boolean))].sort();
   const dias  = [...new Set(data.map(r => {
     const dt = d2ParseData(col(r,'Data','data'));
     return dt ? dt.toISOString().split('T')[0] : null;
@@ -1180,7 +1188,7 @@ function renderCat2(data) {
 
   const mapCatDia = {};
   data.forEach(r => {
-    const c  = col(r,'Categoria','categoria','Kert','kert'); if (!c) return;
+    const c  = getCat(r); if (!c) return;
     const dt = d2ParseData(col(r,'Data','data')); if (!dt) return;
     const dk = dt.toISOString().split('T')[0];
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
@@ -1261,7 +1269,7 @@ function d3ConstruirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
   const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
-  const cats  = [...new Set(rawData.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
+  const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   document.getElementById('d3-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
   document.getElementById('d3-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
@@ -1294,7 +1302,7 @@ function d3Filtrar() {
     if (ano  && col(r,'Ano') !== ano) return false;
     if (mes  && col(r,'Mês','Mes') !== mes) return false;
     if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && col(r,'Categoria','categoria','Kert','kert') !== cat) return false;
+    if (cat  && getCat(r) !== cat) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
