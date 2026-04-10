@@ -1333,13 +1333,9 @@ function d3Renderizar() {
   dados.forEach(r => {
     const l   = col(r,'Loja','loja'); if (!l) return;
     const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
-    const dt  = d2ParseData(col(r,'Data','data'));
     const key = l.trim();
-    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0, dt: null };
-    if (!mapLoja[key].dt || (dt && dt > mapLoja[key].dt)) {
-      mapLoja[key].qty = est;
-      mapLoja[key].dt  = dt;
-    }
+    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
+    mapLoja[key].qty += est;
   });
 
   const byLoja = Object.values(mapLoja).sort((a,b) => b.qty - a.qty);
