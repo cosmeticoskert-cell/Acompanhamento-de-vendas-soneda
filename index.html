@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- saved from url=(0061)https://lariantunez.github.io/Painel-Estoque-e-Vendas-Soneda/ -->
-<html lang="pt-BR" data-qb-installed="true"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Soneda · Dashboard de Vendas</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link href="./Soneda · Dashboard de Vendas_files/css2" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg:       #0d0f14;
@@ -109,26 +109,26 @@
 </header>
 
 <nav class="tabs-nav">
-  <button class="tab-btn active" onclick="trocarAba(&#39;loja&#39;)">Vendas por Loja</button>
-  <button class="tab-btn" onclick="trocarAba(&#39;dia&#39;)">Venda por Dia</button>
-  <button class="tab-btn" onclick="trocarAba(&#39;estoque&#39;)">Estoque</button>
+  <button class="tab-btn active" onclick="trocarAba('loja')">Vendas por Loja</button>
+  <button class="tab-btn" onclick="trocarAba('dia')">Venda por Dia</button>
+  <button class="tab-btn" onclick="trocarAba('estoque')">Estoque</button>
 </nav>
 
 <!-- ABA 1: VENDAS POR LOJA -->
 <div id="tab-loja" class="tab-panel active">
 <main>
   <h1 class="section-title">Vendas por Loja</h1>
-  <p class="section-sub" id="status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+  <p class="section-sub" id="status-msg">Carregando dados da planilha...</p>
 
   <!-- FILTROS -->
   <div class="filters-row">
     <div class="filter-group">
       <label>Ano</label>
-      <select id="f-ano"><option value="">Todos</option><option>2026</option></select>
+      <select id="f-ano"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Mês</label>
-      <select id="f-mes"><option value="">Todos</option><option>Mar</option></select>
+      <select id="f-mes"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Data início</label>
@@ -140,11 +140,11 @@
     </div>
     <div class="filter-group">
       <label>Loja</label>
-      <select id="f-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+      <select id="f-loja"><option value="">Todas</option></select>
     </div>
     <div class="filter-group">
       <label>Categoria</label>
-      <select id="f-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+      <select id="f-cat"><option value="">Todas</option></select>
     </div>
     <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
   </div>
@@ -153,18 +153,18 @@
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">Total Geral (Qtd)</div>
-      <div class="kpi-value" id="kpi-total">33.818</div>
+      <div class="kpi-value" id="kpi-total">—</div>
       <div class="kpi-sub">unidades vendidas</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Lojas com Venda</div>
-      <div class="kpi-value" id="kpi-lojas">49</div>
+      <div class="kpi-value" id="kpi-lojas">—</div>
       <div class="kpi-sub">filiais ativas no período</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Maior Filial</div>
-      <div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">Filial 23</div>
-      <div class="kpi-sub" id="kpi-top-sub">2.831 un.</div>
+      <div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="kpi-top-sub">—</div>
     </div>
   </div>
 
@@ -178,456 +178,22 @@
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="kpi-label">Total do período</div>
-        <div class="kpi-value" id="chart-total-val" style="font-size:2.2rem">33.818</div>
+        <div class="kpi-value" id="chart-total-val" style="font-size:2.2rem">—</div>
         <div class="kpi-sub">unidades vendidas</div>
       </div>
     </div>
     <div class="chart-wrap" id="chart-wrap">
-      <div class="state-msg" id="chart-state" style="display: none;">
+      <div class="state-msg" id="chart-state">
         <div class="spinner"></div>
         Carregando dados...
       </div>
-    <canvas id="myChart" style="display: block; box-sizing: border-box; height: 420px; width: 1154px; cursor: pointer;" width="1154" height="420"></canvas></div>
+    </div>
   </div>
 
   <!-- TABELA -->
   <div class="table-card">
     <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div>
-    <div id="table-body"><table>
-    <thead><tr>
-      <th onclick="t1OrdenarPor(&#39;loja&#39;)">Filial</th><th onclick="t1OrdenarPor(&#39;nome&#39;)">Nome Fantasia</th><th class="sort-desc" onclick="t1OrdenarPor(&#39;qty&#39;)">Qtd Vendida</th><th>Participação</th>
-    </tr></thead>
-    <tbody><tr>
-      <td class="td-loja">#23</td>
-      <td class="td-nome">Filial 23</td>
-      <td class="td-qty">2.831</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">8.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#4</td>
-      <td class="td-nome">Filial 4</td>
-      <td class="td-qty">2.608</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:92.1%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">7.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#12</td>
-      <td class="td-nome">Filial 12</td>
-      <td class="td-qty">1.487</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:52.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#48</td>
-      <td class="td-nome">Filial 48</td>
-      <td class="td-qty">1.464</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:51.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#15</td>
-      <td class="td-nome">Filial 15</td>
-      <td class="td-qty">1.461</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:51.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#5</td>
-      <td class="td-nome">Filial 5</td>
-      <td class="td-qty">1.396</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:49.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#11</td>
-      <td class="td-nome">Filial 11</td>
-      <td class="td-qty">1.377</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:48.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#6</td>
-      <td class="td-nome">Filial 6</td>
-      <td class="td-qty">1.307</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:46.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#18</td>
-      <td class="td-nome">Filial 18</td>
-      <td class="td-qty">1.229</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:43.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#37</td>
-      <td class="td-nome">Filial 37</td>
-      <td class="td-qty">1.192</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:42.1%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#20</td>
-      <td class="td-nome">Filial 20</td>
-      <td class="td-qty">1.191</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:42.1%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#14</td>
-      <td class="td-nome">Filial 14</td>
-      <td class="td-qty">1.098</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:38.8%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.2%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#40</td>
-      <td class="td-nome">Filial 40</td>
-      <td class="td-qty">992</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:35.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#38</td>
-      <td class="td-nome">Filial 38</td>
-      <td class="td-qty">980</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:34.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#34</td>
-      <td class="td-nome">Filial 34</td>
-      <td class="td-qty">860</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:30.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#1</td>
-      <td class="td-nome">Filial 1</td>
-      <td class="td-qty">840</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:29.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#8</td>
-      <td class="td-nome">Filial 8</td>
-      <td class="td-qty">803</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:28.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#16</td>
-      <td class="td-nome">Filial 16</td>
-      <td class="td-qty">759</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:26.8%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.2%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#32</td>
-      <td class="td-nome">Filial 32</td>
-      <td class="td-qty">746</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:26.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.2%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#10</td>
-      <td class="td-nome">Filial 10</td>
-      <td class="td-qty">704</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:24.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#26</td>
-      <td class="td-nome">Filial 26</td>
-      <td class="td-qty">696</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:24.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#33</td>
-      <td class="td-nome">Filial 33</td>
-      <td class="td-qty">692</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:24.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#29</td>
-      <td class="td-nome">Filial 29</td>
-      <td class="td-qty">690</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:24.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#9</td>
-      <td class="td-nome">Filial 9</td>
-      <td class="td-qty">550</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:19.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#2</td>
-      <td class="td-nome">Filial 2</td>
-      <td class="td-qty">529</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:18.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#21</td>
-      <td class="td-nome">Filial 21</td>
-      <td class="td-qty">477</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:16.8%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#3</td>
-      <td class="td-nome">Filial 3</td>
-      <td class="td-qty">475</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:16.8%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#13</td>
-      <td class="td-nome">Filial 13</td>
-      <td class="td-qty">450</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:15.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#28</td>
-      <td class="td-nome">Filial 28</td>
-      <td class="td-qty">443</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:15.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#57</td>
-      <td class="td-nome">Filial 57</td>
-      <td class="td-qty">293</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:10.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#7</td>
-      <td class="td-nome">Filial 7</td>
-      <td class="td-qty">288</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:10.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#56</td>
-      <td class="td-nome">Filial 56</td>
-      <td class="td-qty">282</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:10.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#30</td>
-      <td class="td-nome">Filial 30</td>
-      <td class="td-qty">269</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:9.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#51</td>
-      <td class="td-nome">Filial 51</td>
-      <td class="td-qty">262</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:9.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#50</td>
-      <td class="td-nome">Filial 50</td>
-      <td class="td-qty">258</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:9.1%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.8%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#58</td>
-      <td class="td-nome">Filial 58</td>
-      <td class="td-qty">245</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:8.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#59</td>
-      <td class="td-nome">Filial 59</td>
-      <td class="td-qty">243</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:8.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#42</td>
-      <td class="td-nome">Filial 42</td>
-      <td class="td-qty">234</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:8.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#43</td>
-      <td class="td-nome">Filial 43</td>
-      <td class="td-qty">234</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:8.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#54</td>
-      <td class="td-nome">Filial 54</td>
-      <td class="td-qty">191</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:6.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#52</td>
-      <td class="td-nome">Filial 52</td>
-      <td class="td-qty">186</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:6.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#55</td>
-      <td class="td-nome">Filial 55</td>
-      <td class="td-qty">180</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:6.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#36</td>
-      <td class="td-nome">Filial 36</td>
-      <td class="td-qty">159</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:5.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#41</td>
-      <td class="td-nome">Filial 41</td>
-      <td class="td-qty">74</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:2.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.2%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#31</td>
-      <td class="td-nome">Filial 31</td>
-      <td class="td-qty">42</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:1.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#60</td>
-      <td class="td-nome">Filial 60</td>
-      <td class="td-qty">37</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:1.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#45</td>
-      <td class="td-nome">Filial 45</td>
-      <td class="td-qty">12</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#22</td>
-      <td class="td-nome">Filial 22</td>
-      <td class="td-qty">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#44</td>
-      <td class="td-nome">Filial 44</td>
-      <td class="td-qty">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#46</td>
-      <td class="td-nome">Filial 46</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#61</td>
-      <td class="td-nome">Filial 61</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#800</td>
-      <td class="td-nome">Filial 800</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#997</td>
-      <td class="td-nome">Filial 997</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr><tr style="background:var(--surface2)">
-    <td class="td-loja">—</td>
-    <td class="td-nome" style="font-weight:600;color:var(--accent)">TOTAL GERAL</td>
-    <td class="td-qty" style="color:var(--accent)">33.818</td>
-    <td><span style="font-size:.78rem;color:var(--accent);font-family:&#39;DM Mono&#39;,monospace">100%</span></td>
-  </tr></tbody>
-  </table></div>
+    <div id="table-body"><div class="no-data">Carregando...</div></div>
   </div>
 
   <!-- GRÁFICO CATEGORIAS -->
@@ -639,38 +205,14 @@
       </div>
     </div>
     <div class="chart-wrap" id="cat1-wrap" style="height:360px">
-      <div class="state-msg" id="cat1-state" style="display: none;"><div class="spinner"></div>Carregando...</div>
-    <canvas id="cat1-canvas" style="display: block; box-sizing: border-box; height: 360px; width: 1154px;" width="1154" height="360"></canvas></div>
+      <div class="state-msg" id="cat1-state"><div class="spinner"></div>Carregando...</div>
+    </div>
   </div>
 
   <!-- TABELA CATEGORIAS -->
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
-    <div id="cat1-table-body"><table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
-    <tbody><tr>
-      <td class="td-nome">COLORACAO#</td>
-      <td class="td-qty">27.900</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">82.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-nome">CAPILAR@</td>
-      <td class="td-qty">5.918</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:21.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">17.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-nome">BELEZA LIMPA@</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr></tbody>
-  </table></div>
+    <div id="cat1-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
 </div>
@@ -680,17 +222,17 @@
 <div id="tab-dia" class="tab-panel">
 <main>
   <h1 class="section-title">Venda por Dia</h1>
-  <p class="section-sub" id="d2-status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+  <p class="section-sub" id="d2-status-msg">Carregando dados...</p>
 
   <!-- FILTROS -->
   <div class="filters-row">
     <div class="filter-group">
       <label>Ano</label>
-      <select id="d2-ano"><option value="">Todos</option><option>2026</option></select>
+      <select id="d2-ano"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Mês</label>
-      <select id="d2-mes"><option value="">Todos</option><option>Mar</option></select>
+      <select id="d2-mes"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Data início</label>
@@ -702,11 +244,11 @@
     </div>
     <div class="filter-group">
       <label>Loja</label>
-      <select id="d2-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+      <select id="d2-loja"><option value="">Todas</option></select>
     </div>
     <div class="filter-group">
       <label>Categoria</label>
-      <select id="d2-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+      <select id="d2-cat"><option value="">Todas</option></select>
     </div>
     <button class="btn-clear" onclick="d2LimparFiltros()">↺ Limpar</button>
   </div>
@@ -715,23 +257,23 @@
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">Total do Período (Qtd)</div>
-      <div class="kpi-value" id="d2-kpi-total">33.818</div>
+      <div class="kpi-value" id="d2-kpi-total">—</div>
       <div class="kpi-sub">unidades vendidas</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Dias com Venda</div>
-      <div class="kpi-value" id="d2-kpi-dias">31</div>
+      <div class="kpi-value" id="d2-kpi-dias">—</div>
       <div class="kpi-sub">dias no período</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Média Diária</div>
-      <div class="kpi-value" id="d2-kpi-media">1.091</div>
+      <div class="kpi-value" id="d2-kpi-media">—</div>
       <div class="kpi-sub">unidades / dia</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Melhor Dia</div>
-      <div class="kpi-value" id="d2-kpi-top" style="font-size:1.1rem;padding-top:6px">07/03/2026</div>
-      <div class="kpi-sub" id="d2-kpi-top-sub">2.393 un.</div>
+      <div class="kpi-value" id="d2-kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="d2-kpi-top-sub">—</div>
     </div>
   </div>
 
@@ -744,272 +286,17 @@
       </div>
     </div>
     <div class="chart-wrap" id="d2-chart-wrap" style="height:420px">
-      <div class="state-msg" id="d2-chart-state" style="display: none;">
+      <div class="state-msg" id="d2-chart-state">
         <div class="spinner"></div>
         Carregando dados...
       </div>
-    <canvas id="d2-myChart" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+    </div>
   </div>
 
   <!-- TABELA -->
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Dia</div></div>
-    <div id="d2-table-body"><table>
-    <thead><tr><th onclick="t2OrdenarPor(&#39;data&#39;)">Data</th><th onclick="t2OrdenarPor(&#39;dia&#39;)">Dia</th><th class="sort-desc" onclick="t2OrdenarPor(&#39;qty&#39;)">Qtd Vendida</th><th>Participação</th></tr></thead>
-    <tbody><tr>
-      <td class="td-loja">07/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
-      <td class="td-qty">2.393</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">7.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">14/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
-      <td class="td-qty">2.128</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:88.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">6.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">06/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Sex</td>
-      <td class="td-qty">2.104</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:87.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">6.2%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">13/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Sex</td>
-      <td class="td-qty">1.785</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:74.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">5.3%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">05/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qui</td>
-      <td class="td-qty">1.739</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:72.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">5.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">21/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
-      <td class="td-qty">1.525</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:63.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">04/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qua</td>
-      <td class="td-qty">1.513</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:63.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">20/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Sex</td>
-      <td class="td-qty">1.381</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:57.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">4.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">03/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Ter</td>
-      <td class="td-qty">1.273</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:53.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.8%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">11/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qua</td>
-      <td class="td-qty">1.253</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:52.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">10/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Ter</td>
-      <td class="td-qty">1.202</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:50.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">28/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Sáb</td>
-      <td class="td-qty">1.190</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:49.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">02/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Seg</td>
-      <td class="td-qty">1.147</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:47.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">12/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qui</td>
-      <td class="td-qty">1.143</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:47.8%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">16/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Seg</td>
-      <td class="td-qty">1.136</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:47.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">19/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qui</td>
-      <td class="td-qty">1.026</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:42.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">09/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Seg</td>
-      <td class="td-qty">1.010</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:42.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">17/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Ter</td>
-      <td class="td-qty">1.010</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:42.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">3.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">27/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Sex</td>
-      <td class="td-qty">979</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:40.9%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">18/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qua</td>
-      <td class="td-qty">922</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:38.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">23/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Seg</td>
-      <td class="td-qty">871</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:36.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.6%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">24/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Ter</td>
-      <td class="td-qty">845</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:35.3%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">26/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qui</td>
-      <td class="td-qty">829</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:34.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">25/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Qua</td>
-      <td class="td-qty">823</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:34.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.4%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">31/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Ter</td>
-      <td class="td-qty">710</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:29.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">2.1%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">30/03/2026</td>
-      <td class="td-loja" style="color:var(--muted)">Seg</td>
-      <td class="td-qty">591</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:24.7%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">08/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Dom</td>
-      <td class="td-qty">338</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:14.1%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">1.0%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">15/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Dom</td>
-      <td class="td-qty">316</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:13.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.9%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">22/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Dom</td>
-      <td class="td-qty">251</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:10.5%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">01/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Dom</td>
-      <td class="td-qty">250</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:10.4%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.7%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">29/03/2026</td>
-      <td class="td-loja" style="color:#ff9f6b">Dom</td>
-      <td class="td-qty">135</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:5.6%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.4%</span>
-      </div></td>
-    </tr><tr style="background:var(--surface2)">
-    <td class="td-loja" style="color:var(--accent)">TOTAL</td>
-    <td class="td-qty" style="color:var(--accent)">33.818</td>
-    <td><span style="font-size:.78rem;color:var(--accent);font-family:&#39;DM Mono&#39;,monospace">100%</span></td>
-  </tr></tbody>
-  </table></div>
+    <div id="d2-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 
   <!-- GRÁFICO CATEGORIAS POR DIA -->
@@ -1021,38 +308,14 @@
       </div>
     </div>
     <div class="chart-wrap" id="cat2-wrap" style="height:380px">
-      <div class="state-msg" id="cat2-state" style="display: none;"><div class="spinner"></div>Carregando...</div>
-    <canvas id="cat2-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+      <div class="state-msg" id="cat2-state"><div class="spinner"></div>Carregando...</div>
+    </div>
   </div>
 
   <!-- TABELA CATEGORIAS -->
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
-    <div id="cat2-table-body"><table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
-    <tbody><tr>
-      <td class="td-nome">COLORACAO#</td>
-      <td class="td-qty">27.900</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:100.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">82.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-nome">CAPILAR@</td>
-      <td class="td-qty">5.918</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:21.2%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">17.5%</span>
-      </div></td>
-    </tr><tr>
-      <td class="td-nome">BELEZA LIMPA@</td>
-      <td class="td-qty">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="width:0.0%;max-width:150px"></div>
-        <span style="font-size:.78rem;color:var(--text-dim);font-family:&#39;DM Mono&#39;,monospace">0.0%</span>
-      </div></td>
-    </tr></tbody>
-  </table></div>
+    <div id="cat2-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
 </div>
@@ -1062,17 +325,17 @@
 <div id="tab-estoque" class="tab-panel">
 <main>
   <h1 class="section-title">Estoque</h1>
-  <p class="section-sub" id="d3-status-msg">253.241 registros carregados · 0 lojas no de-para</p>
+  <p class="section-sub" id="d3-status-msg">Carregando dados...</p>
 
   <!-- FILTROS -->
   <div class="filters-row">
     <div class="filter-group">
       <label>Ano</label>
-      <select id="d3-ano"><option value="">Todos</option><option>2026</option></select>
+      <select id="d3-ano"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Mês</label>
-      <select id="d3-mes"><option value="">Todos</option><option>Mar</option></select>
+      <select id="d3-mes"><option value="">Todos</option></select>
     </div>
     <div class="filter-group">
       <label>Data início</label>
@@ -1084,11 +347,11 @@
     </div>
     <div class="filter-group">
       <label>Loja</label>
-      <select id="d3-loja"><option value="">Todas</option><option value="1">#1 · Filial 1</option><option value="2">#2 · Filial 2</option><option value="3">#3 · Filial 3</option><option value="4">#4 · Filial 4</option><option value="5">#5 · Filial 5</option><option value="6">#6 · Filial 6</option><option value="7">#7 · Filial 7</option><option value="8">#8 · Filial 8</option><option value="9">#9 · Filial 9</option><option value="10">#10 · Filial 10</option><option value="11">#11 · Filial 11</option><option value="12">#12 · Filial 12</option><option value="13">#13 · Filial 13</option><option value="14">#14 · Filial 14</option><option value="15">#15 · Filial 15</option><option value="16">#16 · Filial 16</option><option value="18">#18 · Filial 18</option><option value="20">#20 · Filial 20</option><option value="21">#21 · Filial 21</option><option value="22">#22 · Filial 22</option><option value="23">#23 · Filial 23</option><option value="26">#26 · Filial 26</option><option value="28">#28 · Filial 28</option><option value="29">#29 · Filial 29</option><option value="30">#30 · Filial 30</option><option value="31">#31 · Filial 31</option><option value="32">#32 · Filial 32</option><option value="33">#33 · Filial 33</option><option value="34">#34 · Filial 34</option><option value="36">#36 · Filial 36</option><option value="37">#37 · Filial 37</option><option value="38">#38 · Filial 38</option><option value="40">#40 · Filial 40</option><option value="41">#41 · Filial 41</option><option value="42">#42 · Filial 42</option><option value="43">#43 · Filial 43</option><option value="44">#44 · Filial 44</option><option value="45">#45 · Filial 45</option><option value="46">#46 · Filial 46</option><option value="48">#48 · Filial 48</option><option value="50">#50 · Filial 50</option><option value="51">#51 · Filial 51</option><option value="52">#52 · Filial 52</option><option value="54">#54 · Filial 54</option><option value="55">#55 · Filial 55</option><option value="56">#56 · Filial 56</option><option value="57">#57 · Filial 57</option><option value="58">#58 · Filial 58</option><option value="59">#59 · Filial 59</option><option value="60">#60 · Filial 60</option><option value="61">#61 · Filial 61</option><option value="800">#800 · Filial 800</option><option value="997">#997 · Filial 997</option></select>
+      <select id="d3-loja"><option value="">Todas</option></select>
     </div>
     <div class="filter-group">
       <label>Categoria</label>
-      <select id="d3-cat"><option value="">Todas</option><option value="BELEZA LIMPA@">BELEZA LIMPA@</option><option value="CAPILAR@">CAPILAR@</option><option value="COLORACAO#">COLORACAO#</option></select>
+      <select id="d3-cat"><option value="">Todas</option></select>
     </div>
     <button class="btn-clear" onclick="d3LimparFiltros()">↺ Limpar</button>
   </div>
@@ -1097,23 +360,23 @@
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">Estoque Total (Qtd)</div>
-      <div class="kpi-value" id="d3-kpi-total">263</div>
+      <div class="kpi-value" id="d3-kpi-total">—</div>
       <div class="kpi-sub">unidades em estoque</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Lojas com Estoque</div>
-      <div class="kpi-value" id="d3-kpi-lojas">49</div>
+      <div class="kpi-value" id="d3-kpi-lojas">—</div>
       <div class="kpi-sub">filiais com saldo positivo</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Maior Estoque</div>
-      <div class="kpi-value" id="d3-kpi-top" style="font-size:1.1rem;padding-top:6px">Filial 31</div>
-      <div class="kpi-sub" id="d3-kpi-top-sub">26 un.</div>
+      <div class="kpi-value" id="d3-kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="d3-kpi-top-sub">—</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Menor Estoque</div>
-      <div class="kpi-value" id="d3-kpi-bot" style="font-size:1.1rem;padding-top:6px">Filial 52</div>
-      <div class="kpi-sub" id="d3-kpi-bot-sub">1 un.</div>
+      <div class="kpi-value" id="d3-kpi-bot" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="d3-kpi-bot-sub">—</div>
     </div>
   </div>
 
@@ -1126,8 +389,8 @@
       </div>
     </div>
     <div class="chart-wrap" id="d3-chart-wrap" style="height:420px">
-      <div class="state-msg" id="d3-chart-state" style="display: none;"><div class="spinner"></div>Carregando dados...</div>
-    <canvas id="d3-bar-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+      <div class="state-msg" id="d3-chart-state"><div class="spinner"></div>Carregando dados...</div>
+    </div>
   </div>
 
   <!-- GRÁFICO ESTOQUE POR DIA (linha temporal) -->
@@ -1139,385 +402,14 @@
       </div>
     </div>
     <div class="chart-wrap" id="d3-line-wrap" style="height:380px">
-      <div class="state-msg" id="d3-line-state" style="display: none;"><div class="spinner"></div>Carregando dados...</div>
-    <canvas id="d3-line-canvas" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" height="0" width="0"></canvas></div>
+      <div class="state-msg" id="d3-line-state"><div class="spinner"></div>Carregando dados...</div>
+    </div>
   </div>
 
   <!-- TABELA -->
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento de Estoque por Filial</div></div>
-    <div id="d3-table-body"><table><thead><tr><th onclick="t3OrdenarPor(&#39;loja&#39;)">Filial</th><th onclick="t3OrdenarPor(&#39;nome&#39;)">Nome Fantasia</th><th class="sort-desc" onclick="t3OrdenarPor(&#39;qty&#39;)">Estoque Atual</th><th>Volume</th></tr></thead><tbody><tr>
-      <td class="td-loja">#31</td>
-      <td class="td-nome">Filial 31</td>
-      <td class="td-qty" style="color:var(--accent2)">26</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:100.0%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#40</td>
-      <td class="td-nome">Filial 40</td>
-      <td class="td-qty" style="color:var(--accent2)">21</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:80.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#50</td>
-      <td class="td-nome">Filial 50</td>
-      <td class="td-qty" style="color:var(--accent2)">17</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:65.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#41</td>
-      <td class="td-nome">Filial 41</td>
-      <td class="td-qty" style="color:var(--accent2)">15</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:57.7%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#2</td>
-      <td class="td-nome">Filial 2</td>
-      <td class="td-qty" style="color:var(--accent2)">11</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:42.3%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#7</td>
-      <td class="td-nome">Filial 7</td>
-      <td class="td-qty" style="color:var(--accent2)">10</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:38.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#43</td>
-      <td class="td-nome">Filial 43</td>
-      <td class="td-qty" style="color:var(--accent2)">10</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:38.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#15</td>
-      <td class="td-nome">Filial 15</td>
-      <td class="td-qty" style="color:var(--accent2)">9</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:34.6%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#21</td>
-      <td class="td-nome">Filial 21</td>
-      <td class="td-qty" style="color:var(--accent2)">8</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#23</td>
-      <td class="td-nome">Filial 23</td>
-      <td class="td-qty" style="color:var(--accent2)">8</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#37</td>
-      <td class="td-nome">Filial 37</td>
-      <td class="td-qty" style="color:var(--accent2)">8</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:30.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#36</td>
-      <td class="td-nome">Filial 36</td>
-      <td class="td-qty" style="color:var(--accent2)">7</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:26.9%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#55</td>
-      <td class="td-nome">Filial 55</td>
-      <td class="td-qty" style="color:var(--accent2)">6</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#58</td>
-      <td class="td-nome">Filial 58</td>
-      <td class="td-qty" style="color:var(--accent2)">6</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#61</td>
-      <td class="td-nome">Filial 61</td>
-      <td class="td-qty" style="color:var(--accent2)">6</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#800</td>
-      <td class="td-nome">Filial 800</td>
-      <td class="td-qty" style="color:var(--accent2)">6</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:23.1%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#60</td>
-      <td class="td-nome">Filial 60</td>
-      <td class="td-qty" style="color:var(--accent2)">5</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:19.2%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#3</td>
-      <td class="td-nome">Filial 3</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#14</td>
-      <td class="td-nome">Filial 14</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#26</td>
-      <td class="td-nome">Filial 26</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#30</td>
-      <td class="td-nome">Filial 30</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#32</td>
-      <td class="td-nome">Filial 32</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#33</td>
-      <td class="td-nome">Filial 33</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#42</td>
-      <td class="td-nome">Filial 42</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#56</td>
-      <td class="td-nome">Filial 56</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#57</td>
-      <td class="td-nome">Filial 57</td>
-      <td class="td-qty" style="color:var(--accent2)">4</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:15.4%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#8</td>
-      <td class="td-nome">Filial 8</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#11</td>
-      <td class="td-nome">Filial 11</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#18</td>
-      <td class="td-nome">Filial 18</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#20</td>
-      <td class="td-nome">Filial 20</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#22</td>
-      <td class="td-nome">Filial 22</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#28</td>
-      <td class="td-nome">Filial 28</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#29</td>
-      <td class="td-nome">Filial 29</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#44</td>
-      <td class="td-nome">Filial 44</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#46</td>
-      <td class="td-nome">Filial 46</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#51</td>
-      <td class="td-nome">Filial 51</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#54</td>
-      <td class="td-nome">Filial 54</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#59</td>
-      <td class="td-nome">Filial 59</td>
-      <td class="td-qty" style="color:var(--accent2)">3</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:11.5%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#10</td>
-      <td class="td-nome">Filial 10</td>
-      <td class="td-qty" style="color:var(--accent2)">2</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:7.7%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#12</td>
-      <td class="td-nome">Filial 12</td>
-      <td class="td-qty" style="color:var(--accent2)">2</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:7.7%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#5</td>
-      <td class="td-nome">Filial 5</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#6</td>
-      <td class="td-nome">Filial 6</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#9</td>
-      <td class="td-nome">Filial 9</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#13</td>
-      <td class="td-nome">Filial 13</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#16</td>
-      <td class="td-nome">Filial 16</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#34</td>
-      <td class="td-nome">Filial 34</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#45</td>
-      <td class="td-nome">Filial 45</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#48</td>
-      <td class="td-nome">Filial 48</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#52</td>
-      <td class="td-nome">Filial 52</td>
-      <td class="td-qty" style="color:var(--accent2)">1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:3.8%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#1</td>
-      <td class="td-nome">Filial 1</td>
-      <td class="td-qty" style="color:var(--accent2)">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#4</td>
-      <td class="td-nome">Filial 4</td>
-      <td class="td-qty" style="color:var(--accent2)">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#38</td>
-      <td class="td-nome">Filial 38</td>
-      <td class="td-qty" style="color:var(--accent2)">0</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:0.0%;max-width:150px"></div>
-      </div></td>
-    </tr><tr>
-      <td class="td-loja">#997</td>
-      <td class="td-nome">Filial 997</td>
-      <td class="td-qty" style="color:var(--accent2)">-1</td>
-      <td><div class="td-bar-wrap">
-        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:-3.8%;max-width:150px"></div>
-      </div></td>
-    </tr></tbody></table></div>
+    <div id="d3-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
 </div>
@@ -1532,7 +424,7 @@ const GID_CAT      = '1807120713';
 
 let rawData      = [];
 let deParaMap    = {};
-let catMap       = {}; // código categoria → nome
+let catMap       = {};
 let chartInst    = null;
 let d2Chart      = null;
 let cat1Chart    = null;
@@ -1544,7 +436,6 @@ let t1Sort       = { col: 'qty', dir: 'desc' };
 let t2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort       = { col: 'qty', dir: 'desc' };
 
-// paleta multi-série
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
 
 // ── CSV PARSER ────────────────────────────────────────────────────────────────
@@ -1562,7 +453,6 @@ function parseCSV(text) {
     return out;
   }
 
-  // Encontra a linha de cabeçalho real: primeira linha com mais de 5 colunas preenchidas
   let hi = 0;
   for (let i = 0; i < Math.min(lines.length, 6); i++) {
     if (splitLine(lines[i]).filter(c => c !== '').length > 5) { hi = i; break; }
@@ -1591,7 +481,6 @@ async function fetchCSV(gid) {
 // ── INICIALIZAÇÃO ─────────────────────────────────────────────────────────────
 async function init() {
   try {
-    // 1. DE-PARA LOJAS
     try {
       const csv  = await fetchCSV(GID_DEPARA);
       const rows = parseCSV(csv);
@@ -1601,7 +490,6 @@ async function init() {
       });
     } catch(e) { console.warn('De-Para não carregado:', e.message); }
 
-    // 1b. CATEGORIAS
     try {
       const csv  = await fetchCSV(GID_CAT);
       const rows = parseCSV(csv);
@@ -1612,17 +500,14 @@ async function init() {
       });
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
-    // 2. DADOS BRUTOS
     const csv = await fetchCSV(GID_BRUTOS);
     const todas = parseCSV(csv);
     console.log('Colunas encontradas:', Object.keys(todas[0] || {}));
     console.log('Primeiras linhas:', todas.slice(0,3));
 
-    // Filtra apenas linhas com Ano válido (4 dígitos)
     rawData = todas.filter(r => /^\d{4}$/.test(col(r, 'Ano')));
 
     if (rawData.length === 0) {
-      // Tenta mostrar o que veio para diagnóstico
       throw new Error(`Nenhuma linha válida encontrada. Colunas detectadas: ${Object.keys(todas[0]||{}).join(', ')}`);
     }
 
@@ -1649,6 +534,10 @@ function col(row, ...nomes) {
     if (row[n] !== undefined && row[n] !== '') return row[n];
   }
   return '';
+}
+
+function parseBR(raw) {
+  return parseFloat((raw || '').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
 function setEstado(html) {
@@ -1709,7 +598,6 @@ function filtrar() {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        // Google Sheets exporta como M/D/YYYY
         const p = raw.split('/');
         const dt = p.length === 3
           ? new Date(+p[2], +p[0]-1, +p[1])
@@ -1729,19 +617,12 @@ function filtrar() {
 function agruparPorLoja(data) {
   const map = {};
   data.forEach(r => {
-    // Coluna N = "Loja" (número da filial do cliente)
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    // Coluna AE = "Venda (Qtd)"
-    const raw = col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade');
-    const qty = parseFloat(raw.replace(/\./g,'').replace(',','.')) || 0;
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     const key = loja.trim();
     if (!map[key]) {
-      map[key] = {
-        loja: key,
-        nome: deParaMap[key] || `Filial ${key}`,
-        qty: 0
-      };
+      map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
     }
     map[key].qty += qty;
   });
@@ -1758,7 +639,6 @@ function renderizar() {
   document.getElementById('chart-sub').textContent =
     [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
 
-  // Indicador de loja ativa
   const lojaAtivaEl = document.getElementById('loja-ativa');
   if (lojaFiltrada) {
     const info = byLojaAll.find(r => r.loja === lojaFiltrada);
@@ -1772,7 +652,6 @@ function renderizar() {
     lojaAtivaEl.style.display = 'none';
   }
 
-  // KPIs e tabela filtram pela loja selecionada; gráfico mostra todas
   const byLojaFiltrada = lojaFiltrada
     ? byLojaAll.filter(r => r.loja === lojaFiltrada)
     : byLojaAll;
@@ -1792,10 +671,10 @@ function renderKPIs(byLoja) {
   const total  = byLoja.reduce((s,r) => s + r.qty, 0);
   const ativas = byLoja.filter(r => r.qty > 0).length;
   const top    = byLoja[0];
-  document.getElementById('kpi-total').textContent     = total.toLocaleString('pt-BR');
-  document.getElementById('kpi-lojas').textContent     = ativas;
-  document.getElementById('kpi-top').textContent       = top ? top.nome : '—';
-  document.getElementById('kpi-top-sub').textContent   = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
+  document.getElementById('kpi-total').textContent   = total.toLocaleString('pt-BR');
+  document.getElementById('kpi-lojas').textContent   = ativas;
+  document.getElementById('kpi-top').textContent     = top ? top.nome : '—';
+  document.getElementById('kpi-top-sub').textContent = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
 }
 
 function renderGrafico(byLoja) {
@@ -1853,7 +732,6 @@ function renderGrafico(byLoja) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cursor: 'pointer',
       onClick: (evt, elements) => {
         if (elements.length > 0) {
           const idx  = elements[0].index;
@@ -1906,7 +784,7 @@ function agruparPorCategoria(data) {
   const map = {};
   data.forEach(r => {
     const cat = col(r,'Categoria','categoria','Kert','kert') || 'Sem categoria';
-    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(/\./g,'').replace(',','.')) || 0;
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[cat]) map[cat] = { cat, qty: 0 };
     map[cat].qty += qty;
   });
@@ -1916,7 +794,6 @@ function agruparPorCategoria(data) {
 function renderCat1(data) {
   const byCat = agruparPorCategoria(data);
   const total = byCat.reduce((s,r) => s + r.qty, 0);
-  const n     = byCat.length;
 
   const ano = document.getElementById('f-ano').value;
   const mes = document.getElementById('f-mes').value;
@@ -1963,7 +840,6 @@ function renderCat1(data) {
     }
   });
 
-  // tabela categorias aba1
   const maxQ = byCat[0]?.qty || 1;
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
@@ -2120,8 +996,8 @@ function d2AgruparPorDia(data) {
   data.forEach(r => {
     const dt = d2ParseData(col(r,'Data','data'));
     if (!dt) return;
-    const key = dt.toISOString().split('T')[0]; // YYYY-MM-DD
-    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(/\./g,'').replace(',','.')) || 0;
+    const key = dt.toISOString().split('T')[0];
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[key]) map[key] = { data: key, qty: 0 };
     map[key].qty += qty;
   });
@@ -2151,7 +1027,6 @@ function d2Renderizar() {
   document.getElementById('d2-chart-sub').textContent =
     ([ano, mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
 
-  // KPIs
   const total = porDia.reduce((s,r) => s + r.qty, 0);
   const dias  = porDia.filter(r => r.qty > 0).length;
   const media = dias > 0 ? (total / dias) : 0;
@@ -2163,7 +1038,6 @@ function d2Renderizar() {
   document.getElementById('d2-kpi-top').textContent     = top ? d2FormatarData(top.data) : '—';
   document.getElementById('d2-kpi-top-sub').textContent = top ? `${top.qty.toLocaleString('pt-BR')} un.` : '—';
 
-  // Gráfico
   const d2State = document.getElementById('d2-chart-state');
   if (porDia.length === 0) {
     if (d2State) { d2State.style.display='flex'; d2State.innerHTML='Nenhum dado para os filtros selecionados.'; }
@@ -2180,18 +1054,15 @@ function d2Renderizar() {
     document.getElementById('d2-chart-wrap').appendChild(canvas);
   }
 
-  const labels = porDia.map(r => d2FormatarData(r.data));
-  const values = porDia.map(r => r.qty);
-
   if (d2Chart) d2Chart.destroy();
 
   d2Chart = new Chart(canvas, {
     type: 'line',
     data: {
-      labels,
+      labels: porDia.map(r => d2FormatarData(r.data)),
       datasets: [{
         label: 'Qtd Vendida',
-        data: values,
+        data: porDia.map(r => r.qty),
         borderColor: 'rgba(200,241,53,0.9)',
         backgroundColor: 'rgba(200,241,53,0.08)',
         borderWidth: 2,
@@ -2224,10 +1095,8 @@ function d2Renderizar() {
           ticks: {
             color: '#8891aa',
             font: { family: 'DM Mono', size: 9 },
-            maxRotation: 45,
-            minRotation: 45,
-            autoSkip: true,
-            maxTicksLimit: 40,
+            maxRotation: 45, minRotation: 45,
+            autoSkip: true, maxTicksLimit: 40,
           },
           grid: { color: '#1c2030' }
         },
@@ -2239,7 +1108,6 @@ function d2Renderizar() {
     }
   });
 
-  // Tabela
   const sorted2 = [...porDia].sort((a,b) => {
     let va, vb;
     const ORD_DIA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -2258,7 +1126,7 @@ function d2Renderizar() {
     return `<th${cls} onclick="t2OrdenarPor('${key}')">${label}</th>`;
   };
 
-  const linhas = sorted2.map(r => {
+  const linhas2 = sorted2.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
@@ -2274,7 +1142,7 @@ function d2Renderizar() {
     </tr>`;
   }).join('');
 
-  const totalLinha = `<tr style="background:var(--surface2)">
+  const totalLinha2 = `<tr style="background:var(--surface2)">
     <td class="td-loja" style="color:var(--accent)">TOTAL</td>
     <td class="td-loja" style="color:var(--accent)">—</td>
     <td class="td-qty" style="color:var(--accent)">${total.toLocaleString('pt-BR')}</td>
@@ -2283,21 +1151,19 @@ function d2Renderizar() {
 
   document.getElementById('d2-table-body').innerHTML = `<table>
     <thead><tr>${th2('Data','data')}${th2('Dia','dia')}${th2('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
-    <tbody>${linhas}${totalLinha}</tbody>
+    <tbody>${linhas2}${totalLinha2}</tbody>
   </table>`;
 
   renderCat2(dados);
 }
 
 function renderCat2(data) {
-  const cat  = document.getElementById('d2-cat').value;
   const loja = document.getElementById('d2-loja').value;
   const ano  = document.getElementById('d2-ano').value;
   const mes  = document.getElementById('d2-mes').value;
   const nomeLoja = loja ? (document.getElementById('d2-loja').selectedOptions[0]?.text || '') : 'Todas as lojas';
   document.getElementById('cat2-sub').textContent = ([ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos') + ' · ' + nomeLoja;
 
-  // agrupa por categoria → por dia
   const cats = [...new Set(data.map(r => col(r,'Categoria','categoria','Kert','kert')).filter(Boolean))].sort();
   const dias  = [...new Set(data.map(r => {
     const dt = d2ParseData(col(r,'Data','data'));
@@ -2317,7 +1183,7 @@ function renderCat2(data) {
     const c  = col(r,'Categoria','categoria','Kert','kert'); if (!c) return;
     const dt = d2ParseData(col(r,'Data','data')); if (!dt) return;
     const dk = dt.toISOString().split('T')[0];
-    const qty = parseFloat(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade').replace(/\./g,'').replace(',','.')) || 0;
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!mapCatDia[c]) mapCatDia[c] = {};
     mapCatDia[c][dk] = (mapCatDia[c][dk] || 0) + qty;
   });
@@ -2361,7 +1227,6 @@ function renderCat2(data) {
     }
   });
 
-  // tabela resumo por categoria
   const totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.qty-a.qty);
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
   const maxQ = totCat[0]?.qty || 1;
@@ -2456,15 +1321,13 @@ function d3Renderizar() {
   document.getElementById('d3-chart-sub').textContent = periodo;
   document.getElementById('d3-line-sub').textContent  = periodo;
 
-  // agrupa estoque por loja (último valor do período)
   const mapLoja = {};
   dados.forEach(r => {
     const l   = col(r,'Loja','loja'); if (!l) return;
-    const est = parseFloat(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque').replace(/\./g,'').replace(',','.')) || 0;
+    const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
     const dt  = d2ParseData(col(r,'Data','data'));
     const key = l.trim();
     if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0, dt: null };
-    // usa o valor mais recente
     if (!mapLoja[key].dt || (dt && dt > mapLoja[key].dt)) {
       mapLoja[key].qty = est;
       mapLoja[key].dt  = dt;
@@ -2477,7 +1340,6 @@ function d3Renderizar() {
   const top    = byLoja[0];
   const bot    = byLoja.filter(r => r.qty > 0).slice(-1)[0];
 
-  // KPIs
   document.getElementById('d3-kpi-total').textContent   = total.toLocaleString('pt-BR');
   document.getElementById('d3-kpi-lojas').textContent   = ativas;
   document.getElementById('d3-kpi-top').textContent     = top ? top.nome : '—';
@@ -2485,7 +1347,6 @@ function d3Renderizar() {
   document.getElementById('d3-kpi-bot').textContent     = bot ? bot.nome : '—';
   document.getElementById('d3-kpi-bot-sub').textContent = bot ? `${bot.qty.toLocaleString('pt-BR')} un.` : '—';
 
-  // Gráfico barras por loja
   const barState = document.getElementById('d3-chart-state');
   if (byLoja.length === 0) {
     if(barState) { barState.style.display='flex'; barState.innerHTML='Nenhum dado.'; }
@@ -2522,7 +1383,6 @@ function d3Renderizar() {
     });
   }
 
-  // Gráfico linha: evolução estoque por dia (por loja selecionada ou total geral)
   const dias = [...new Set(dados.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
   const lojas = loja ? [loja] : [...new Set(dados.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
@@ -2536,7 +1396,7 @@ function d3Renderizar() {
       const l   = col(r,'Loja','loja'); if (!l || !lojas.includes(l)) return;
       const dt  = d2ParseData(col(r,'Data','data')); if (!dt) return;
       const dk  = dt.toISOString().split('T')[0];
-      const est = parseFloat(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque').replace(/\./g,'').replace(',','.')) || 0;
+      const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
       if (!mapLD[l]) mapLD[l] = {};
       mapLD[l][dk] = (mapLD[l][dk] || 0) + est;
     });
@@ -2573,7 +1433,6 @@ function d3Renderizar() {
     });
   }
 
-  // Tabela
   const maxQ = byLoja[0]?.qty || 1;
   const th3 = (label, key) => {
     const cls = t3Sort.col === key ? ` class="sort-${t3Sort.dir}"` : '';
@@ -2615,12 +1474,12 @@ function trocarAba(aba) {
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + aba).classList.add('active');
-  document.querySelector(`.tab-btn[onclick="trocarAba('${aba}')"]`).classList.add('active');
+  event.currentTarget.classList.add('active');
 }
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
 </script>
 
-
-</body></html>
+</body>
+</html>
