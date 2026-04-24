@@ -109,15 +109,16 @@
 </header>
 
 <nav class="tabs-nav">
-  <button class="tab-btn active" onclick="trocarAba('loja')">Vendas por Loja</button>
+  <button class="tab-btn active" onclick="trocarAba('loja')">Vendas Sell Out</button>
+  <button class="tab-btn" onclick="trocarAba('valor')">Venda Valor</button>
   <button class="tab-btn" onclick="trocarAba('dia')">Venda por Dia</button>
   <button class="tab-btn" onclick="trocarAba('estoque')">Estoque</button>
 </nav>
 
-<!-- ABA 1: VENDAS POR LOJA -->
+<!-- ABA 1: VENDAS SELL OUT -->
 <div id="tab-loja" class="tab-panel active">
 <main>
-  <h1 class="section-title">Vendas por Loja</h1>
+  <h1 class="section-title">Vendas Sell Out</h1>
   <p class="section-sub" id="status-msg">Carregando dados da planilha...</p>
 
   <!-- FILTROS -->
@@ -217,6 +218,110 @@
 </main>
 </div>
 <!-- /ABA 1 -->
+
+<!-- ABA VALOR: VENDA VALOR (R$) -->
+<div id="tab-valor" class="tab-panel">
+<main>
+  <h1 class="section-title">Venda Valor</h1>
+  <p class="section-sub" id="v-status-msg">Carregando dados da planilha...</p>
+
+  <!-- FILTROS -->
+  <div class="filters-row">
+    <div class="filter-group">
+      <label>Ano</label>
+      <select id="v-ano"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Mês</label>
+      <select id="v-mes"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Data início</label>
+      <input type="date" id="v-di">
+    </div>
+    <div class="filter-group">
+      <label>Data fim</label>
+      <input type="date" id="v-df">
+    </div>
+    <div class="filter-group">
+      <label>Loja</label>
+      <select id="v-loja"><option value="">Todas</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Categoria</label>
+      <select id="v-cat"><option value="">Todas</option></select>
+    </div>
+    <button class="btn-clear" onclick="vLimparFiltros()">↺ Limpar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Geral (R$)</div>
+      <div class="kpi-value" id="v-kpi-total">—</div>
+      <div class="kpi-sub">em valor vendido</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Lojas com Venda</div>
+      <div class="kpi-value" id="v-kpi-lojas">—</div>
+      <div class="kpi-sub">filiais ativas no período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Maior Filial</div>
+      <div class="kpi-value" id="v-kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="v-kpi-top-sub">—</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Valor Vendido por Filial (R$)</div>
+        <div class="chart-subtitle" id="v-chart-sub">Todos os períodos</div>
+        <div id="v-loja-ativa" style="display:none;align-items:center;margin-top:10px;gap:6px"></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="kpi-label">Total do período</div>
+        <div class="kpi-value" id="v-chart-total-val" style="font-size:2.2rem">—</div>
+        <div class="kpi-sub">em valor vendido</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="v-chart-wrap">
+      <div class="state-msg" id="v-chart-state">
+        <div class="spinner"></div>
+        Carregando dados...
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card">
+    <div class="table-head"><div class="table-head-title">Detalhamento de Valor Vendido por Filial (R$)</div></div>
+    <div id="v-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
+
+  <!-- GRÁFICO CATEGORIAS -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Categorias com Maior Receita</div>
+        <div class="chart-subtitle" id="v-cat1-sub">Todos os períodos</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="v-cat1-wrap" style="height:360px">
+      <div class="state-msg" id="v-cat1-state"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- TABELA CATEGORIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Categoria (R$)</div></div>
+    <div id="v-cat1-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
+</main>
+</div>
+<!-- /ABA VALOR -->
 
 <!-- ABA 2: VENDA POR DIA -->
 <div id="tab-dia" class="tab-panel">
