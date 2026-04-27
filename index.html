@@ -566,17 +566,21 @@ let rawData      = [];
 let deParaMap    = {};
 let catMap       = {};
 let familiaMap   = {};
-let chartInst    = null;
-let d2Chart      = null;
-let cat1Chart    = null;
-let fam1Chart    = null;
-let cat2Chart    = null;
-let d3BarChart   = null;
-let d3LineChart  = null;
-let lojaFiltrada = null;
-let t1Sort       = { col: 'qty', dir: 'desc' };
-let t2Sort       = { col: 'qty', dir: 'desc' };
-let t3Sort       = { col: 'qty', dir: 'desc' };
+let chartInst      = null;
+let vChartInst     = null;
+let d2Chart        = null;
+let cat1Chart      = null;
+let fam1Chart      = null;
+let vCat1Chart     = null;
+let cat2Chart      = null;
+let d3BarChart     = null;
+let d3LineChart    = null;
+let lojaFiltrada   = null;
+let vLojaFiltrada  = null;
+let t1Sort         = { col: 'qty', dir: 'desc' };
+let vt1Sort        = { col: 'val', dir: 'desc' };
+let t2Sort         = { col: 'qty', dir: 'desc' };
+let t3Sort         = { col: 'qty', dir: 'desc' };
 
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
 
@@ -664,6 +668,7 @@ async function init() {
     construirFiltros();
     renderizar();
     vConstruirFiltros();
+    vRenderizar();
     d2ConstruirFiltros();
     d2Renderizar();
     d3ConstruirFiltros();
@@ -1724,7 +1729,7 @@ function t3OrdenarPor(coluna) {
   d3Renderizar();
 }
 
-// ── ABA VALOR: VENDA VALOR (stubs — selects + limpar) ────────────────────────
+// ── ABA VALOR: VENDA VALOR (R$) ───────────────────────────────────────────────
 function vConstruirFiltros() {
   const anos     = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
   const meses    = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
@@ -1743,11 +1748,292 @@ function vConstruirFiltros() {
   document.getElementById('v-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
   document.getElementById('v-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
 
+  ['v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia'].forEach(id =>
+    document.getElementById(id).addEventListener('change', vRenderizar)
+  );
   document.getElementById('v-status-msg').textContent = document.getElementById('status-msg').textContent;
 }
 
 function vLimparFiltros() {
   ['v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia'].forEach(id => document.getElementById(id).value = '');
+  vLojaFiltrada = null;
+  vRenderizar();
+}
+
+function vFiltrar() {
+  const ano     = document.getElementById('v-ano').value;
+  const mes     = document.getElementById('v-mes').value;
+  const di      = document.getElementById('v-di').value;
+  const df      = document.getElementById('v-df').value;
+  const loja    = document.getElementById('v-loja').value;
+  const cat     = document.getElementById('v-cat').value;
+  const familia = document.getElementById('v-familia').value;
+
+  return rawData.filter(r => {
+    if (ano     && col(r,'Ano') !== ano) return false;
+    if (mes     && col(r,'Mês','Mes') !== mes) return false;
+    if (loja    && col(r,'Loja','loja') !== loja) return false;
+    if (cat     && getCat(r) !== cat) return false;
+    if (familia && getFamilia(r) !== familia) return false;
+    if (di || df) {
+      const raw = col(r,'Data','data');
+      if (raw) {
+        const p  = raw.split('/');
+        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
+        if (!isNaN(dt)) {
+          const s = dt.toISOString().split('T')[0];
+          if (di && s < di) return false;
+          if (df && s > df) return false;
+        }
+      }
+    }
+    return true;
+  });
+}
+
+function vAgruparPorLoja(data) {
+  const map = {};
+  data.forEach(r => {
+    const loja = col(r,'Loja','loja');
+    if (!loja) return;
+    const val = parseBR(col(r,'Venda (R$)','Venda R$','Venda Valor','venda_valor'));
+    const key = loja.trim();
+    if (!map[key]) map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, val: 0 };
+    map[key].val += val;
+  });
+  return Object.values(map).sort((a,b) => b.val - a.val);
+}
+
+function vFmtR(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function vRenderKPIs(byLoja) {
+  const total  = byLoja.reduce((s,r) => s + r.val, 0);
+  const ativas = byLoja.filter(r => r.val > 0).length;
+  const top    = byLoja[0];
+  document.getElementById('v-kpi-total').textContent   = vFmtR(total);
+  document.getElementById('v-kpi-lojas').textContent   = ativas;
+  document.getElementById('v-kpi-top').textContent     = top ? top.nome : '—';
+  document.getElementById('v-kpi-top-sub').textContent = top ? vFmtR(top.val) : '—';
+}
+
+function vRenderGrafico(byLoja) {
+  const total = byLoja.reduce((s,r) => s + r.val, 0);
+  document.getElementById('v-chart-total-val').textContent = vFmtR(total);
+
+  const stateEl = document.getElementById('v-chart-state');
+  if (byLoja.length === 0) {
+    if (stateEl) { stateEl.style.display = 'flex'; stateEl.innerHTML = 'Nenhum dado para os filtros selecionados.'; }
+    return;
+  }
+  if (stateEl) stateEl.style.display = 'none';
+
+  let canvas = document.getElementById('v-myChart');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'v-myChart';
+    document.getElementById('v-chart-wrap').appendChild(canvas);
+  }
+
+  const n = byLoja.length;
+  const bgColors = byLoja.map((r, i) => {
+    if (vLojaFiltrada) return r.loja === vLojaFiltrada ? 'rgba(79,255,176,0.95)' : 'rgba(37,42,58,0.45)';
+    const t = n > 1 ? i/(n-1) : 0;
+    return `rgba(${Math.round(79+t*121)},${Math.round(255-t*100)},${Math.round(176-t*50)},0.85)`;
+  });
+  const borderColors = byLoja.map((r, i) => {
+    if (vLojaFiltrada) return r.loja === vLojaFiltrada ? 'rgba(79,255,176,1)' : 'rgba(37,42,58,0.2)';
+    const t = n > 1 ? i/(n-1) : 0;
+    return `rgba(${Math.round(79+t*121)},${Math.round(255-t*100)},${Math.round(176-t*50)},1)`;
+  });
+
+  if (vChartInst) vChartInst.destroy();
+  vChartInst = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byLoja.map(r => r.nome),
+      datasets: [{ label: 'Valor Vendido (R$)', data: byLoja.map(r => r.val), backgroundColor: bgColors, borderColor: borderColors, borderWidth: 1.5, borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) {
+          const loja = byLoja[elements[0].index].loja;
+          vLojaFiltrada = vLojaFiltrada === loja ? null : loja;
+          vRenderizar();
+        }
+      },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
+          titleColor:'#4fffb0', bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
+          callbacks: { title: ctx => ctx[0].label, label: ctx => ' ' + vFmtR(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: ctx => { if (!vLojaFiltrada) return '#8891aa'; return byLoja[ctx.index]?.loja === vLojaFiltrada ? '#4fffb0' : '#3a4060'; },
+            font: { family: 'DM Mono', size: 9 }, maxRotation: 45, minRotation: 45, autoSkip: false
+          },
+          grid: { color: '#1c2030' }
+        },
+        y: {
+          ticks: { color: '#8891aa', font: { family: 'DM Mono', size: 11 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') },
+          grid: { color: '#252a3a' }
+        }
+      }
+    }
+  });
+  canvas.style.cursor = 'pointer';
+}
+
+function vRenderTabela(byLoja) {
+  const container = document.getElementById('v-table-body');
+  const total = byLoja.reduce((s,r) => s + r.val, 0);
+  if (byLoja.length === 0) { container.innerHTML = '<div class="no-data">Nenhum dado para os filtros selecionados</div>'; return; }
+
+  const sorted = [...byLoja].sort((a,b) => {
+    let va, vb;
+    if (vt1Sort.col === 'loja') { va = +a.loja; vb = +b.loja; }
+    else if (vt1Sort.col === 'nome') { va = a.nome.toLowerCase(); vb = b.nome.toLowerCase(); }
+    else { va = a.val; vb = b.val; }
+    if (va < vb) return vt1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return vt1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const maxV = Math.max(...sorted.map(r => r.val), 1);
+  const th = (label, key) => {
+    const cls = vt1Sort.col === key ? ` class="sort-${vt1Sort.dir}"` : '';
+    return `<th${cls} onclick="vt1OrdenarPor('${key}')">${label}</th>`;
+  };
+  const linhas = sorted.map(r => {
+    const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
+    const barW = ((r.val/maxV)*100).toFixed(1);
+    return `<tr>
+      <td class="td-loja">#${r.loja}</td>
+      <td class="td-nome">${r.nome}</td>
+      <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const totalLinha = `<tr style="background:var(--surface2)">
+    <td class="td-loja">—</td>
+    <td class="td-nome" style="font-weight:600;color:var(--accent2)">TOTAL GERAL</td>
+    <td class="td-qty" style="color:var(--accent2)">${vFmtR(total)}</td>
+    <td><span style="font-size:.78rem;color:var(--accent2);font-family:'DM Mono',monospace">100%</span></td>
+  </tr>`;
+  container.innerHTML = `<table><thead><tr>${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Valor Vendido','val')}<th>Participação</th></tr></thead><tbody>${linhas}${totalLinha}</tbody></table>`;
+}
+
+function vt1OrdenarPor(coluna) {
+  vt1Sort.dir = vt1Sort.col === coluna && vt1Sort.dir === 'desc' ? 'asc' : 'desc';
+  vt1Sort.col = coluna;
+  vRenderizar();
+}
+
+function vRenderCat1(data) {
+  const map = {};
+  data.forEach(r => {
+    const cat = getCat(r) || 'Sem categoria';
+    const val = parseBR(col(r,'Venda (R$)','Venda R$','Venda Valor','venda_valor'));
+    if (!map[cat]) map[cat] = { cat, val: 0 };
+    map[cat].val += val;
+  });
+  const byCat = Object.values(map).sort((a,b) => b.val - a.val);
+  const total = byCat.reduce((s,r) => s + r.val, 0);
+
+  const ano = document.getElementById('v-ano').value;
+  const mes = document.getElementById('v-mes').value;
+  document.getElementById('v-cat1-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const state = document.getElementById('v-cat1-state');
+  if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
+  if (state) state.style.display = 'none';
+
+  let canvas = document.getElementById('v-cat1-canvas');
+  if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'v-cat1-canvas'; document.getElementById('v-cat1-wrap').appendChild(canvas); }
+  if (vCat1Chart) vCat1Chart.destroy();
+
+  vCat1Chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byCat.map(r => r.cat),
+      datasets: [{ data: byCat.map(r => r.val), backgroundColor: byCat.map((_,i) => PALETTE[i%PALETTE.length]+'cc'), borderColor: byCat.map((_,i) => PALETTE[i%PALETTE.length]), borderWidth:1.5, borderRadius:6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
+          callbacks: { label: ctx => ' ' + vFmtR(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback: v => 'R$ '+v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+      }
+    }
+  });
+
+  const maxV = byCat[0]?.val || 1;
+  const linhas = byCat.map(r => {
+    const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
+    const barW = ((r.val/maxV)*100).toFixed(1);
+    return `<tr>
+      <td class="td-nome">${r.cat}</td>
+      <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('v-cat1-table-body').innerHTML = `<table>
+    <thead><tr><th>Categoria</th><th>Valor Vendido</th><th>Participação</th></tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function vRenderizar() {
+  const dadosTodos = vFiltrar();
+  const byLojaAll  = vAgruparPorLoja(dadosTodos);
+
+  const ano = document.getElementById('v-ano').value;
+  const mes = document.getElementById('v-mes').value;
+  document.getElementById('v-chart-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const lojaAtivaEl = document.getElementById('v-loja-ativa');
+  if (vLojaFiltrada) {
+    const info = byLojaAll.find(r => r.loja === vLojaFiltrada);
+    lojaAtivaEl.style.display = 'flex';
+    lojaAtivaEl.innerHTML = `
+      <span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:.5px">
+        ▶ FILTRANDO: #${vLojaFiltrada}${info ? ' · ' + info.nome : ''}
+      </span>
+      <button onclick="vLimparFiltroLoja()" style="background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:0.68rem;padding:2px 10px;border-radius:20px;margin-left:6px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕ limpar</button>`;
+  } else {
+    lojaAtivaEl.style.display = 'none';
+  }
+
+  const byLojaFiltrada = vLojaFiltrada ? byLojaAll.filter(r => r.loja === vLojaFiltrada) : byLojaAll;
+  vRenderKPIs(byLojaFiltrada);
+  vRenderGrafico(byLojaAll);
+  vRenderTabela(byLojaFiltrada);
+  vRenderCat1(vFiltrar());
+}
+
+function vLimparFiltroLoja() {
+  vLojaFiltrada = null;
+  vRenderizar();
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
