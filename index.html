@@ -107,40 +107,6 @@
   tbody tr.clickable-row:hover { background:var(--surface2); }
   tbody tr.row-active { background:rgba(200,241,53,0.07) !important; outline:1px solid var(--accent); outline-offset:-1px; }
 
-  /* UPDATE NOTICE */
-  .update-notice {
-    position: fixed;
-    right: 24px;
-    top: 88px;
-    z-index: 9999;
-    display: none;
-    align-items: center;
-    gap: 14px;
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    color: var(--text);
-    padding: 14px 16px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    font-family: 'DM Mono', monospace;
-    font-size: .74rem;
-    max-width: 430px;
-  }
-  .update-notice strong { color: var(--accent); font-weight: 600; }
-  .update-notice span { color: var(--text-dim); line-height: 1.5; }
-  .update-notice button {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: .72rem;
-    white-space: nowrap;
-  }
-  .update-notice button:hover { filter: brightness(1.08); }
-
 </style>
 </head>
 <body>
@@ -162,202 +128,7 @@
 </div>
 </header>
 
-<div id="update-notice" class="update-notice">
-  <div>
-    <strong>Dados atualizados</strong><br>
-    <span id="update-notice-text">Existe uma nova atualização disponível.</span>
-  </div>
-  <button onclick="location.reload()">Recarregar</button>
-</div>
-
-
-<nav class="tabs-nav">
-  <button class="tab-btn active" onclick="trocarAba('loja')">Vendas Sell Out</button>
-  <button class="tab-btn" onclick="trocarAba('sellestoque')">Sell Out x Estoque</button>
-  <button class="tab-btn" onclick="trocarAba('valor')">Venda Valor</button>
-  <button class="tab-btn" onclick="trocarAba('dia')">Venda por Dia</button>
-  <button class="tab-btn" onclick="trocarAba('estoque')">Estoque</button>
-</nav>
-
-<!-- ABA 1: VENDAS SELL OUT -->
-<div id="tab-loja" class="tab-panel active">
-<main>
-  <h1 class="section-title">Vendas Sell Out</h1>
-  <p class="section-sub" id="status-msg">Carregando dados da planilha...</p>
-
-  <!-- FILTROS -->
-  <div class="filters-row">
-    <div class="filter-group">
-      <label>Ano</label>
-      <select id="f-ano"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Mês</label>
-      <select id="f-mes"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Data início</label>
-      <input type="date" id="f-di">
-    </div>
-    <div class="filter-group">
-      <label>Data fim</label>
-      <input type="date" id="f-df">
-    </div>
-    <div class="filter-group">
-      <label>Loja</label>
-      <select id="f-loja"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Categoria</label>
-      <select id="f-cat"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Família</label>
-      <select id="f-familia"><option value="">Todas</option></select>
-    </div>
-    <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
-  </div>
-  <div id="f-active-banner" class="active-banner" style="display:none"></div>
-
-  <!-- KPIs -->
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">Total Geral (Qtd)</div>
-      <div class="kpi-value" id="kpi-total">—</div>
-      <div class="kpi-sub">unidades vendidas</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Lojas com Venda</div>
-      <div class="kpi-value" id="kpi-lojas">—</div>
-      <div class="kpi-sub">filiais ativas no período</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Maior Filial</div>
-      <div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
-      <div class="kpi-sub" id="kpi-top-sub">—</div>
-    </div>
-  </div>
-
-  <!-- GRÁFICO -->
-  <div class="chart-card">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Quantidade Vendida por Filial</div>
-        <div class="chart-subtitle" id="chart-sub">Todos os períodos</div>
-        <div id="loja-ativa" style="display:none;align-items:center;margin-top:10px;gap:6px"></div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div class="kpi-label">Total do período</div>
-        <div class="kpi-value" id="chart-total-val" style="font-size:2.2rem">—</div>
-        <div class="kpi-sub">unidades vendidas</div>
-      </div>
-    </div>
-    <div class="chart-wrap" id="chart-wrap">
-      <div class="state-msg" id="chart-state">
-        <div class="spinner"></div>
-        Carregando dados...
-      </div>
-    </div>
-  </div>
-
-  <!-- TABELA -->
-  <div class="table-card">
-    <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div>
-    <div id="table-body"><div class="no-data">Carregando...</div></div>
-  </div>
-
-  <!-- GRÁFICO CATEGORIAS -->
-  <div class="chart-card" style="margin-top:20px">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Categorias Mais Vendidas</div>
-        <div class="chart-subtitle" id="cat1-sub">Todos os períodos</div>
-      </div>
-    </div>
-    <div class="chart-wrap" id="cat1-wrap" style="height:360px">
-      <div class="state-msg" id="cat1-state"><div class="spinner"></div>Carregando...</div>
-    </div>
-  </div>
-
-  <!-- TABELA CATEGORIAS -->
-  <div class="table-card" style="margin-top:20px">
-    <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
-    <div id="cat1-table-body"><div class="no-data">Carregando...</div></div>
-  </div>
-
-  <!-- GRÁFICO FAMÍLIAS -->
-  <div class="chart-card" style="margin-top:20px">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Famílias Mais Vendidas</div>
-        <div class="chart-subtitle" id="fam1-sub">Todos os períodos</div>
-      </div>
-    </div>
-    <div class="chart-wrap" id="fam1-wrap" style="height:360px">
-      <div class="state-msg" id="fam1-state"><div class="spinner"></div>Carregando...</div>
-    </div>
-  </div>
-
-  <!-- TABELA FAMÍLIAS -->
-  <div class="table-card" style="margin-top:20px">
-    <div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div>
-    <div id="fam1-table-body"><div class="no-data">Carregando...</div></div>
-  </div>
-</main>
-</div>
-<!-- /ABA 1 -->
-
-<!-- ABA SELL OUT X ESTOQUE -->
-<div id="tab-sellestoque" class="tab-panel">
-<main>
-  <h1 class="section-title">Sell Out x Estoque</h1>
-  <p class="section-sub" id="se-status-msg">Análise comparativa entre venda sell out e estoque diário.</p>
-
-  <div class="filters-row">
-    <div class="filter-group">
-      <label>Ano</label>
-      <select id="se-ano"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Mês</label>
-      <select id="se-mes"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Data início</label>
-      <input type="date" id="se-di">
-    </div>
-    <div class="filter-group">
-      <label>Data fim</label>
-      <input type="date" id="se-df">
-    </div>
-    <div class="filter-group">
-      <label>Loja</label>
-      <select id="se-loja"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Categoria</label>
-      <select id="se-cat"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Família</label>
-      <select id="se-familia"><option value="">Todas</option></select>
-    </div>
-    <button class="btn-clear" onclick="seLimparFiltros()">↺ Limpar</button>
-  </div>
-
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">Sell Out Total</div>
-      <div class="kpi-value" id="se-kpi-sellout">—</div>
-      <div class="kpi-sub">unidades vendidas</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Estoque Total</div>
-      <div class="kpi-value" id="se-kpi-estoque">—</div>
-      <div class="kpi-sub">unidades em estoque</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Cobertura Média</div>
+    
       <div class="kpi-value" id="se-kpi-cobertura">—</div>
       <div class="kpi-sub">estoque ÷ sell out</div>
     </div>
@@ -2133,8 +1904,8 @@ function seAgruparPorLoja(data) {
   });
 
   return Object.values(map).map(r => {
-    r.cobertura = r.sellout > 0 ? r.estoque / r.sellout : 0;
-    r.giro = r.estoque > 0 ? r.sellout / r.estoque : 0;
+    
+    
 
     if (r.sellout > 0 && r.estoque <= 0) r.risco = 'Ruptura';
     else if (r.sellout > 0 && r.cobertura < 1) r.risco = 'Alto';
@@ -2195,7 +1966,7 @@ function seRenderizar() {
 
   document.getElementById('se-kpi-sellout').textContent = totalSellout.toLocaleString('pt-BR');
   document.getElementById('se-kpi-estoque').textContent = totalEstoque.toLocaleString('pt-BR');
-  document.getElementById('se-kpi-cobertura').textContent = cobertura.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'x';
+  
   document.getElementById('se-kpi-risco').textContent = risco ? risco.nome : '—';
   document.getElementById('se-kpi-risco-sub').textContent = risco ? `${risco.cobertura.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}x cobertura` : '—';
 
@@ -2309,7 +2080,7 @@ function seRenderTabela(byLoja) {
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
-      <td class="td-qty">${r.cobertura.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}x</td>
+      
       <td class="td-loja">${r.risco}</td>
     </tr>
   `).join('');
@@ -2320,7 +2091,7 @@ function seRenderTabela(byLoja) {
       ${th('Nome Fantasia','nome')}
       ${th('Sell Out','sellout')}
       ${th('Estoque','estoque')}
-      ${th('Cobertura','cobertura')}
+      ${}
       ${th('Risco','risco')}
     </tr></thead>
     <tbody>${linhas}</tbody>
@@ -2349,7 +2120,7 @@ function seRenderRiskTabela(byLoja) {
       <td class="td-loja">${r.risco}</td>
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
-      <td class="td-qty">${r.cobertura.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}x</td>
+      
     </tr>
   `).join('');
 
@@ -2360,7 +2131,7 @@ function seRenderRiskTabela(byLoja) {
       ${th('Risco','risco')}
       ${th('Sell Out','sellout')}
       ${th('Estoque','estoque')}
-      ${th('Cobertura','cobertura')}
+      ${}
     </tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
@@ -2695,167 +2466,23 @@ function trocarAba(aba) {
 }
 
 
-async function atualizarStatusAtualizacao() {
+function atualizarStatusAtualizacao() {
   const el = document.getElementById('status-update');
   if (!el) return;
 
   const agora = new Date();
-  const sheetData = agora.toLocaleDateString('pt-BR');
-  const sheetHora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const data = agora.toLocaleDateString('pt-BR');
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  const gitRawUrl = "https://raw.githubusercontent.com/cosmeticoskert-cell/Acompanhamento-de-vendas-soneda/main/index.html";
-
-  let gitTexto = "indisponível";
-
-  try {
-    const res = await fetch(`${gitRawUrl}?t=${Date.now()}`, {
-      method: 'HEAD',
-      cache: 'no-store'
-    });
-
-    if (res.ok) {
-      const lastModified = res.headers.get('last-modified');
-      if (lastModified) {
-        const dt = new Date(lastModified);
-        const gitData = dt.toLocaleDateString('pt-BR');
-        const gitHora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        gitTexto = `${gitData} ${gitHora}`;
-      }
-    }
-
-    el.innerHTML = `
-      <span style="color: var(--accent)">●</span>
-      Sheets: ${sheetData} ${sheetHora}
-      &nbsp;|&nbsp;
-      Git: ${gitTexto}
-    `;
-  } catch (err) {
-    el.innerHTML = `
-      <span style="color: var(--accent)">●</span>
-      Sheets: ${sheetData} ${sheetHora}
-      &nbsp;|&nbsp;
-      Git: indisponível
-    `;
-  }
+  el.innerHTML = `
+    <span style="color: var(--accent)">●</span>
+    Atualizado em: ${data} ${hora}
+  `;
 }
 
 
-// ── AUTO UPDATE CONTROLADO (SHEETS + GIT) ─────────────────────────────────
-let lastGitUpdate = null;
-let lastSheetsSignature = null;
-let updateNoticeVisible = false;
-let monitorInicializado = false;
-
-function gerarHashTexto(txt) {
-  // Hash leve para detectar alteração real em qualquer ponto do CSV.
-  txt = String(txt || '');
-  let h = 0;
-  for (let i = 0; i < txt.length; i++) {
-    h = ((h << 5) - h) + txt.charCodeAt(i);
-    h |= 0;
-  }
-  return `${txt.length}|${h}`;
-}
-
-function getSheetsSignature(csvText) {
-  return gerarHashTexto(csvText);
-}
-
-function filtrosEmUso() {
-  const ids = [
-    'f-ano','f-mes','f-di','f-df','f-loja','f-cat','f-familia',
-    'v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia',
-    'd2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat','d2-familia',
-    'd3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia',
-    'se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'
-  ];
-
-  const temFiltroCampo = ids.some(id => {
-    const el = document.getElementById(id);
-    return el && el.value;
-  });
-
-  const temFiltroInterativo =
-    (f_active?.val) || (v_active?.val) || (d2_active?.val) || (d3_active?.val);
-
-  return Boolean(temFiltroCampo || temFiltroInterativo);
-}
-
-function mostrarAvisoAtualizacao(origem) {
-  const box = document.getElementById('update-notice');
-  const txt = document.getElementById('update-notice-text');
-  if (!box || !txt) return;
-
-  updateNoticeVisible = true;
-
-  const complemento = filtrosEmUso()
-    ? 'Você está usando filtros. Para não interromper sua análise, a página não será recarregada automaticamente.'
-    : 'Clique em recarregar para atualizar o painel.';
-
-  txt.textContent = `${origem} foi atualizado. ${complemento}`;
-  box.style.display = 'flex';
-}
-
-async function verificarAtualizacao(forcarAviso = false) {
-  try {
-    let houveAtualizacaoGit = false;
-    let houveAtualizacaoSheets = false;
-
-    // 🔹 VERIFICA GIT
-    const owner = "cosmeticoskert-cell";
-    const repo  = "Acompanhamento-de-vendas-soneda";
-
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&t=${Date.now()}`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      const commitDate = data[0]?.commit?.author?.date;
-
-      if (commitDate) {
-        if (lastGitUpdate === null) {
-          lastGitUpdate = commitDate;
-        } else if (commitDate !== lastGitUpdate) {
-          houveAtualizacaoGit = true;
-          lastGitUpdate = commitDate;
-        }
-      }
-    }
-
-    // 🔹 VERIFICA SHEETS
-    const csv = await fetchCSV(GID_BRUTOS);
-    const sheetsSignature = getSheetsSignature(csv);
-
-    if (sheetsSignature) {
-      if (lastSheetsSignature === null) {
-        lastSheetsSignature = sheetsSignature;
-      } else if (sheetsSignature !== lastSheetsSignature) {
-        houveAtualizacaoSheets = true;
-        lastSheetsSignature = sheetsSignature;
-      }
-    }
-
-    monitorInicializado = true;
-
-    if (forcarAviso || houveAtualizacaoGit || houveAtualizacaoSheets) {
-      const origem = forcarAviso
-        ? 'Monitor de atualização'
-        : houveAtualizacaoGit && houveAtualizacaoSheets
-          ? 'Git e Google Sheets'
-          : houveAtualizacaoGit
-            ? 'Git'
-            : 'Google Sheets';
-
-      mostrarAvisoAtualizacao(origem);
-    }
-
-  } catch (err) {
-    console.warn("Erro ao verificar atualização:", err);
-  }
-}
-
-// Primeira execução apenas cria a base de comparação.
-// Depois disso, o aviso só aparece quando Git ou Sheets mudarem de verdade.
-setTimeout(() => verificarAtualizacao(false), 3000);
-setInterval(() => verificarAtualizacao(false), 60000);
+// ── AUTO UPDATE DESATIVADO ───────────────────────────────────────────────
+// Monitoramento automático removido para evitar popups, tentativas externas e recarregamentos inesperados.
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
