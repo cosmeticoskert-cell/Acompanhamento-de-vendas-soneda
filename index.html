@@ -112,7 +112,20 @@
 
 <header>
   <div class="logo">Soneda<span>.</span></div>
+  <div style="display:flex; align-items:center; gap:16px">
   <div class="badge">ACOMPANHAMENTO DE VENDAS E ESTOQUE</div>
+  <div id="status-update" style="
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--bg);
+  ">
+    Atualizando...
+  </div>
+</div>
 </header>
 
 <nav class="tabs-nav">
@@ -591,8 +604,12 @@ let v_active       = { dim: null, val: null };
 let d2_active      = { dim: null, val: null };
 let d3_active      = { dim: null, val: null };
 let t1Sort         = { col: 'qty', dir: 'desc' };
+let cat1Sort       = { col: 'qty', dir: 'desc' };
+let fam1Sort       = { col: 'qty', dir: 'desc' };
 let vt1Sort        = { col: 'val', dir: 'desc' };
+let vCat1Sort      = { col: 'val', dir: 'desc' };
 let t2Sort         = { col: 'qty', dir: 'desc' };
+let cat2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
@@ -761,7 +778,7 @@ function construirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const sA = document.getElementById('f-ano');
@@ -802,8 +819,6 @@ function filtrar(excl) {
   const familia = document.getElementById('f-familia').value;
 
   return rawData.filter(r => {
-    const lojaBase = col(r,'Loja','loja').trim();
-    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -838,12 +853,9 @@ function agruparPorLoja(data) {
   data.forEach(r => {
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    const key = loja.trim();
-
-    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
-    if (!deParaMap[key]) return;
-
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
+    const key = loja.trim();
+    if (!deParaMap[key]) return;
     if (!map[key]) {
       map[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     }
@@ -991,7 +1003,7 @@ function agruparPorCategoria(data) {
 }
 
 function renderCat1(data) {
-  const byCat = agruparPorCategoria(data);
+  let byCat = agruparPorCategoria(data);
   const total = byCat.reduce((s,r) => s + r.qty, 0);
 
   const ano = document.getElementById('f-ano').value;
@@ -1001,6 +1013,14 @@ function renderCat1(data) {
   const state = document.getElementById('cat1-state');
   if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byCat = [...byCat].sort((a,b) => {
+    let va = cat1Sort.col === 'cat' ? a.cat.toLowerCase() : a.qty;
+    let vb = cat1Sort.col === 'cat' ? b.cat.toLowerCase() : b.qty;
+    if (va < vb) return cat1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return cat1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('cat1-canvas');
   if (!canvas) {
@@ -1017,8 +1037,8 @@ function renderCat1(data) {
       labels: byCat.map(r => r.cat),
       datasets: [{
         data: byCat.map(r => r.qty),
-        backgroundColor: byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
+        backgroundColor: byCat.map((r,i) => selCat ? (r.cat===selCat ? PALETTE[i%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byCat.map((r,i) => selCat ? (r.cat===selCat ? PALETTE[i%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
@@ -1044,7 +1064,11 @@ function renderCat1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxQ = byCat[0]?.qty || 1;
+  const maxQ = Math.max(...byCat.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = cat1Sort.col === key ? ` class="sort-${cat1Sort.dir}"` : '';
+    return `<th${cls} onclick="cat1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
@@ -1059,9 +1083,15 @@ function renderCat1(data) {
     </tr>`;
   }).join('');
   document.getElementById('cat1-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function cat1OrdenarPor(coluna) {
+  cat1Sort.dir = cat1Sort.col === coluna && cat1Sort.dir === 'desc' ? 'asc' : 'desc';
+  cat1Sort.col = coluna;
+  renderizar();
 }
 
 function agruparPorFamilia(data) {
@@ -1076,7 +1106,7 @@ function agruparPorFamilia(data) {
 }
 
 function renderFam1(data) {
-  const byFam = agruparPorFamilia(data);
+  let byFam = agruparPorFamilia(data);
   const total = byFam.reduce((s,r) => s + r.qty, 0);
 
   const ano = document.getElementById('f-ano').value;
@@ -1086,6 +1116,14 @@ function renderFam1(data) {
   const state = document.getElementById('fam1-state');
   if (byFam.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byFam = [...byFam].sort((a,b) => {
+    let va = fam1Sort.col === 'fam' ? a.fam.toLowerCase() : a.qty;
+    let vb = fam1Sort.col === 'fam' ? b.fam.toLowerCase() : b.qty;
+    if (va < vb) return fam1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return fam1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('fam1-canvas');
   if (!canvas) {
@@ -1102,8 +1140,8 @@ function renderFam1(data) {
       labels: byFam.map(r => r.fam),
       datasets: [{
         data: byFam.map(r => r.qty),
-        backgroundColor: byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byFam.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byFam.indexOf(r)%PALETTE.length]),
+        backgroundColor: byFam.map((r,i) => selFam ? (r.fam===selFam ? PALETTE[i%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byFam.map((r,i) => selFam ? (r.fam===selFam ? PALETTE[i%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
@@ -1129,7 +1167,11 @@ function renderFam1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxQ = byFam[0]?.qty || 1;
+  const maxQ = Math.max(...byFam.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = fam1Sort.col === key ? ` class="sort-${fam1Sort.dir}"` : '';
+    return `<th${cls} onclick="fam1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byFam.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
@@ -1144,9 +1186,15 @@ function renderFam1(data) {
     </tr>`;
   }).join('');
   document.getElementById('fam1-table-body').innerHTML = `<table>
-    <thead><tr><th>Família</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Família','fam')}${th('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function fam1OrdenarPor(coluna) {
+  fam1Sort.dir = fam1Sort.col === coluna && fam1Sort.dir === 'desc' ? 'asc' : 'desc';
+  fam1Sort.col = coluna;
+  renderizar();
 }
 
 function t1OrdenarPor(coluna) {
@@ -1219,7 +1267,7 @@ function d2ConstruirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1257,8 +1305,6 @@ function d2Filtrar(excl) {
   const familia = document.getElementById('d2-familia').value;
 
   return rawData.filter(r => {
-    const lojaBase = col(r,'Loja','loja').trim();
-    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1539,9 +1585,22 @@ function renderCat2(data) {
   });
   canvas2.style.cursor = 'pointer';
 
-  const totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.qty-a.qty);
+  let totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) }));
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
-  const maxQ = totCat[0]?.qty || 1;
+
+  totCat = [...totCat].sort((a,b) => {
+    let va = cat2Sort.col === 'cat' ? a.cat.toLowerCase() : a.qty;
+    let vb = cat2Sort.col === 'cat' ? b.cat.toLowerCase() : b.qty;
+    if (va < vb) return cat2Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return cat2Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const maxQ = Math.max(...totCat.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = cat2Sort.col === key ? ` class="sort-${cat2Sort.dir}"` : '';
+    return `<th${cls} onclick="cat2OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = totCat.map(r => {
     const pct  = totalGeral > 0 ? ((r.qty/totalGeral)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
@@ -1556,9 +1615,15 @@ function renderCat2(data) {
     </tr>`;
   }).join('');
   document.getElementById('cat2-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function cat2OrdenarPor(coluna) {
+  cat2Sort.dir = cat2Sort.col === coluna && cat2Sort.dir === 'desc' ? 'asc' : 'desc';
+  cat2Sort.col = coluna;
+  d2Renderizar();
 }
 
 function t2OrdenarPor(coluna) {
@@ -1573,7 +1638,7 @@ function d3ConstruirFiltros() {
   const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1609,8 +1674,6 @@ function d3Filtrar(excl) {
   const familia = document.getElementById('d3-familia').value;
 
   return rawData.filter(r => {
-    const lojaBase = col(r,'Loja','loja').trim();
-    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1651,10 +1714,7 @@ function d3Renderizar() {
     const l   = col(r,'Loja','loja'); if (!l) return;
     const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
     const key = l.trim();
-
-    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
     if (!deParaMap[key]) return;
-
     if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     mapLoja[key].qty += est;
   });
@@ -1715,7 +1775,7 @@ function d3Renderizar() {
 
   const dadosChart = d3Filtrar('loja');
   const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
-  const lojas = loja ? [loja].filter(l => deParaMap[l]) : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b)=>+a-+b).slice(0,10);
+  const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
   if (dias.length === 0) {
@@ -1852,8 +1912,6 @@ function vFiltrar(excl) {
   const familia = document.getElementById('v-familia').value;
 
   return rawData.filter(r => {
-    const lojaBase = col(r,'Loja','loja').trim();
-    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1884,12 +1942,9 @@ function vAgruparPorLoja(data) {
   data.forEach(r => {
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    const key = loja.trim();
-
-    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
-    if (!deParaMap[key]) return;
-
     const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
+    const key = loja.trim();
+    if (!deParaMap[key]) return;
     if (!map[key]) map[key] = { loja: key, nome: deParaMap[key], val: 0 };
     map[key].val += val;
   });
@@ -2039,7 +2094,7 @@ function vRenderCat1(data) {
     if (!map[cat]) map[cat] = { cat, val: 0 };
     map[cat].val += val;
   });
-  const byCat = Object.values(map).sort((a,b) => b.val - a.val);
+  let byCat = Object.values(map);
   const total = byCat.reduce((s,r) => s + r.val, 0);
 
   const ano = document.getElementById('v-ano').value;
@@ -2049,6 +2104,14 @@ function vRenderCat1(data) {
   const state = document.getElementById('v-cat1-state');
   if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byCat = [...byCat].sort((a,b) => {
+    let va = vCat1Sort.col === 'cat' ? a.cat.toLowerCase() : a.val;
+    let vb = vCat1Sort.col === 'cat' ? b.cat.toLowerCase() : b.val;
+    if (va < vb) return vCat1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return vCat1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('v-cat1-canvas');
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'v-cat1-canvas'; document.getElementById('v-cat1-wrap').appendChild(canvas); }
@@ -2060,8 +2123,8 @@ function vRenderCat1(data) {
     data: {
       labels: byCat.map(r => r.cat),
       datasets: [{ data: byCat.map(r => r.val),
-        backgroundColor: byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee':'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]:'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
+        backgroundColor: byCat.map((r,i) => vSelC ? (r.cat===vSelC ? PALETTE[i%PALETTE.length]+'ee':'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byCat.map((r,i) => vSelC ? (r.cat===vSelC ? PALETTE[i%PALETTE.length]:'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth:1.5, borderRadius:6 }]
     },
     options: {
@@ -2083,7 +2146,11 @@ function vRenderCat1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxV = byCat[0]?.val || 1;
+  const maxV = Math.max(...byCat.map(r => r.val), 1);
+  const th = (label, key) => {
+    const cls = vCat1Sort.col === key ? ` class="sort-${vCat1Sort.dir}"` : '';
+    return `<th${cls} onclick="vCat1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
     const barW = ((r.val/maxV)*100).toFixed(1);
@@ -2098,9 +2165,15 @@ function vRenderCat1(data) {
     </tr>`;
   }).join('');
   document.getElementById('v-cat1-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Valor Vendido</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Valor Vendido','val')}<th>Participação</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function vCat1OrdenarPor(coluna) {
+  vCat1Sort.dir = vCat1Sort.col === coluna && vCat1Sort.dir === 'desc' ? 'asc' : 'desc';
+  vCat1Sort.col = coluna;
+  vRenderizar();
 }
 
 function vRenderizar() {
@@ -2127,8 +2200,65 @@ function trocarAba(aba) {
   event.currentTarget.classList.add('active');
 }
 
+
+async function atualizarStatusAtualizacao() {
+  const el = document.getElementById('status-update');
+  if (!el) return;
+
+  try {
+    const owner = "SEU_USUARIO";
+    const repo  = "SEU_REPOSITORIO";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits`);
+    const data = await res.json();
+
+    const commitDate = data[0].commit.author.date;
+    const dt = new Date(commitDate);
+
+    const gitData = dt.toLocaleDateString('pt-BR');
+    const gitHora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const agora = new Date();
+    const sheetData = agora.toLocaleDateString('pt-BR');
+    const sheetHora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    el.innerHTML = `
+      <span style="color: var(--accent)">●</span>
+      Sheets: ${sheetData} ${sheetHora}
+      &nbsp;|&nbsp;
+      Git: ${gitData} ${gitHora}
+    `;
+  } catch (err) {
+    el.innerHTML = `⚠ Erro ao carregar status`;
+    console.error(err);
+  }
+}
+
+
+// SORT HELPER GLOBAL
+function sortTableGeneric(data, sortState, config) {
+  return [...data].sort((a,b) => {
+    let va = a[sortState.col];
+    let vb = b[sortState.col];
+
+    if (config.numeric.includes(sortState.col)) {
+      va = Number(va);
+      vb = Number(vb);
+    } else {
+      va = String(va).toLowerCase();
+      vb = String(vb).toLowerCase();
+    }
+
+    if (va < vb) return sortState.dir === 'asc' ? -1 : 1;
+    if (va > vb) return sortState.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
+setTimeout(atualizarStatusAtualizacao, 1500);
+
 </script>
 
 </body>
