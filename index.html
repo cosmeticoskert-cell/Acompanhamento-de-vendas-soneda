@@ -328,6 +328,25 @@
     <div class="table-head"><div class="table-head-title">Detalhamento por Categoria (R$)</div></div>
     <div id="v-cat1-table-body"><div class="no-data">Carregando...</div></div>
   </div>
+
+  <!-- GRÁFICO FAMÍLIAS -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Famílias com Maior Venda</div>
+        <div class="chart-subtitle" id="v-fam1-sub">Todos os períodos</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="v-fam1-wrap" style="height:360px">
+      <div class="state-msg" id="v-fam1-state"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- TABELA FAMÍLIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div>
+    <div id="v-fam1-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
 </main>
 </div>
 <!-- /ABA VALOR -->
@@ -556,6 +575,7 @@ let d2Chart        = null;
 let cat1Chart      = null;
 let fam1Chart      = null;
 let vCat1Chart     = null;
+let vFam1Chart     = null;
 let cat2Chart      = null;
 let d3BarChart     = null;
 let d3LineChart    = null;
@@ -571,6 +591,7 @@ let cat1Sort       = { col: 'qty', dir: 'desc' };
 let fam1Sort       = { col: 'qty', dir: 'desc' };
 let vt1Sort        = { col: 'val', dir: 'desc' };
 let vCat1Sort      = { col: 'val', dir: 'desc' };
+let vFam1Sort      = { col: 'val', dir: 'desc' };
 let t2Sort         = { col: 'qty', dir: 'desc' };
 let cat2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
@@ -2279,6 +2300,7 @@ function vFiltrar(excl) {
     if (v_active.val && v_active.dim !== excl) {
       if (v_active.dim === 'loja' && col(r,'Loja','loja') !== v_active.val) return false;
       if (v_active.dim === 'cat'  && getCat(r) !== v_active.val) return false;
+      if (v_active.dim === 'familia' && getFamilia(r) !== v_active.val) return false;
     }
     if (di || df) {
       const raw = col(r,'Data','data');
@@ -2537,8 +2559,140 @@ function vCat1OrdenarPor(coluna) {
   vRenderizar();
 }
 
+
+function vRenderFam1(data) {
+  const map = {};
+  data.forEach(r => {
+    const fam = getFamilia(r) || 'Sem família';
+    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
+    if (!map[fam]) map[fam] = { fam, val: 0 };
+    map[fam].val += val;
+  });
+
+  let byFam = Object.values(map);
+  const total = byFam.reduce((s,r) => s + r.val, 0);
+
+  const ano = document.getElementById('v-ano').value;
+  const mes = document.getElementById('v-mes').value;
+  document.getElementById('v-fam1-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const state = document.getElementById('v-fam1-state');
+  if (byFam.length === 0) {
+    if (state) { state.style.display = 'flex'; state.innerHTML = 'Nenhum dado.'; }
+    document.getElementById('v-fam1-table-body').innerHTML = '<div class="no-data">Nenhum dado</div>';
+    if (vFam1Chart) { vFam1Chart.destroy(); vFam1Chart = null; }
+    return;
+  }
+  if (state) state.style.display = 'none';
+
+  byFam = [...byFam].sort((a,b) => {
+    let va, vb;
+    if (vFam1Sort.col === 'fam') { va = a.fam.toLowerCase(); vb = b.fam.toLowerCase(); }
+    else if (vFam1Sort.col === 'pct') { va = total > 0 ? a.val / total : 0; vb = total > 0 ? b.val / total : 0; }
+    else { va = a.val; vb = b.val; }
+
+    if (va < vb) return vFam1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return vFam1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  let canvas = document.getElementById('v-fam1-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'v-fam1-canvas';
+    document.getElementById('v-fam1-wrap').appendChild(canvas);
+  }
+
+  if (vFam1Chart) vFam1Chart.destroy();
+
+  const vSelF = v_active.dim === 'familia' ? v_active.val : null;
+  vFam1Chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byFam.map(r => r.fam),
+      datasets: [{
+        data: byFam.map(r => r.val),
+        backgroundColor: byFam.map((r,i) => vSelF ? (r.fam === vSelF ? PALETTE[i % PALETTE.length] + 'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor: byFam.map((r,i) => vSelF ? (r.fam === vSelF ? PALETTE[i % PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i % PALETTE.length]),
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) vSetFilter('familia', byFam[elements[0].index].fam);
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1c2030',
+          borderColor:'#252a3a',
+          borderWidth:1,
+          titleColor:'#4fffb0',
+          bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11},
+          bodyFont:{family:'Figtree',size:13},
+          padding:14,
+          callbacks: { label: ctx => ' ' + vFmtR(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: ctx => vSelF ? (byFam[ctx.index]?.fam === vSelF ? '#4fffb0' : '#3a4060') : '#8891aa',
+            font:{family:'DM Mono',size:9},
+            maxRotation:35,
+            autoSkip:false
+          },
+          grid:{color:'#1c2030'}
+        },
+        y: {
+          ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback: v => 'R$ ' + v.toLocaleString('pt-BR') },
+          grid:{color:'#252a3a'}
+        }
+      }
+    }
+  });
+
+  canvas.style.cursor = 'pointer';
+
+  const maxV = Math.max(...byFam.map(r => r.val), 1);
+  const th = (label, key) => {
+    const cls = vFam1Sort.col === key ? ` class="sort-${vFam1Sort.dir}"` : '';
+    return `<th${cls} onclick="vFam1OrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = byFam.map(r => {
+    const pct  = total > 0 ? ((r.val / total) * 100).toFixed(1) : 0;
+    const barW = ((r.val / maxV) * 100).toFixed(1);
+    const ativo = normalizeFilterValue(vSelF) === normalizeFilterValue(r.fam) ? ' row-active' : '';
+
+    return `<tr class="clickable-row${ativo}" onclick="vSetFilter('familia',this.dataset.v)" data-v="${r.fam.replace(/"/g,'&quot;')}">
+      <td class="td-nome">${r.fam}</td>
+      <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('v-fam1-table-body').innerHTML = `<table>
+    <thead><tr>${th('Família','fam')}${th('Valor Vendido','val')}${th('Participação','pct')}</tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function vFam1OrdenarPor(coluna) {
+  vFam1Sort.dir = vFam1Sort.col === coluna && vFam1Sort.dir === 'desc' ? 'asc' : 'desc';
+  vFam1Sort.col = coluna;
+  vRenderizar();
+}
+
 function vRenderizar() {
-  mostrarBanner('v-active-banner', v_active, {loja:'FILIAL', cat:'CATEGORIA'}, 'vLimparAtivo');
+  mostrarBanner('v-active-banner', v_active, {loja:'FILIAL', cat:'CATEGORIA', familia:'FAMÍLIA'}, 'vLimparAtivo');
 
   const ano = document.getElementById('v-ano').value;
   const mes = document.getElementById('v-mes').value;
@@ -2551,6 +2705,7 @@ function vRenderizar() {
   vRenderGrafico(byLojaChart);
   vRenderTabela(byLojaChart);
   vRenderCat1(vFiltrar('cat'));
+  vRenderFam1(vFiltrar('familia'));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
