@@ -564,6 +564,8 @@ let f_active       = { dim: null, val: null };
 let v_active       = { dim: null, val: null };
 let d2_active      = { dim: null, val: null };
 let d3_active      = { dim: null, val: null };
+let se_active      = { dim: null, val: null };
+let d2_table_active = { dim: null, val: null };
 let t1Sort         = { col: 'qty', dir: 'desc' };
 let cat1Sort       = { col: 'qty', dir: 'desc' };
 let fam1Sort       = { col: 'qty', dir: 'desc' };
@@ -598,8 +600,9 @@ function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
 function d2FiltrarPorData(iso) {
-  document.getElementById('d2-di').value = iso;
-  document.getElementById('d2-df').value = iso;
+  d2_table_active = (d2_table_active.dim === 'data' && d2_table_active.val === iso)
+    ? { dim: null, val: null }
+    : { dim: 'data', val: iso };
   d2Renderizar();
 }
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
@@ -1479,7 +1482,8 @@ function d2Renderizar() {
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
-    return `<tr class="clickable-row" onclick="d2FiltrarPorData('${r.data}')">
+    const ativoData = d2_table_active.dim === 'data' && d2_table_active.val === r.data ? ' row-active' : '';
+    return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData('${r.data}')">
       <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1912,7 +1916,9 @@ function seLimparFiltros() {
 }
 
 function seFiltrarPorLoja(loja) {
-  document.getElementById('se-loja').value = loja;
+  se_active = (se_active.dim === 'loja' && se_active.val === loja)
+    ? { dim: null, val: null }
+    : { dim: 'loja', val: loja };
   seRenderizar();
 }
 
@@ -2142,15 +2148,18 @@ function seRenderTabela(byLoja) {
     return `<th${cls} onclick="seOrdenarPor('${key}')">${label}</th>`;
   };
 
-  const linhas = sorted.map(r => `
-    <tr class="clickable-row" onclick="seFiltrarPorLoja('${r.loja}')">
+  const linhas = sorted.map(r => {
+    const ativo = se_active.dim === 'loja' && se_active.val === r.loja ? ' row-active' : '';
+    return `
+    <tr class="clickable-row${ativo}" onclick="seFiltrarPorLoja('${r.loja}')">
       <td class="td-loja">#${r.loja}</td>
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
       
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   container.innerHTML = `<table>
     <thead><tr>
