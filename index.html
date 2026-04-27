@@ -219,6 +219,25 @@
     <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
     <div id="cat1-table-body"><div class="no-data">Carregando...</div></div>
   </div>
+
+  <!-- GRÁFICO FAMÍLIAS -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Famílias Mais Vendidas</div>
+        <div class="chart-subtitle" id="fam1-sub">Todos os períodos</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="fam1-wrap" style="height:360px">
+      <div class="state-msg" id="fam1-state"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- TABELA FAMÍLIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div>
+    <div id="fam1-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
 </main>
 </div>
 <!-- /ABA 1 -->
@@ -550,6 +569,7 @@ let familiaMap   = {};
 let chartInst    = null;
 let d2Chart      = null;
 let cat1Chart    = null;
+let fam1Chart    = null;
 let cat2Chart    = null;
 let d3BarChart   = null;
 let d3LineChart  = null;
@@ -809,6 +829,7 @@ function renderizar() {
   renderGrafico(byLojaAll);
   renderTabela(byLojaFiltrada);
   renderCat1(filtrar());
+  renderFam1(filtrar());
 }
 
 function limparFiltroLoja() {
@@ -1004,6 +1025,85 @@ function renderCat1(data) {
   }).join('');
   document.getElementById('cat1-table-body').innerHTML = `<table>
     <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function agruparPorFamilia(data) {
+  const map = {};
+  data.forEach(r => {
+    const fam = getFamilia(r) || 'Sem família';
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
+    if (!map[fam]) map[fam] = { fam, qty: 0 };
+    map[fam].qty += qty;
+  });
+  return Object.values(map).sort((a,b) => b.qty - a.qty);
+}
+
+function renderFam1(data) {
+  const byFam = agruparPorFamilia(data);
+  const total = byFam.reduce((s,r) => s + r.qty, 0);
+
+  const ano = document.getElementById('f-ano').value;
+  const mes = document.getElementById('f-mes').value;
+  document.getElementById('fam1-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const state = document.getElementById('fam1-state');
+  if (byFam.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
+  if (state) state.style.display = 'none';
+
+  let canvas = document.getElementById('fam1-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'fam1-canvas';
+    document.getElementById('fam1-wrap').appendChild(canvas);
+  }
+  if (fam1Chart) fam1Chart.destroy();
+
+  fam1Chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byFam.map(r => r.fam),
+      datasets: [{
+        data: byFam.map(r => r.qty),
+        backgroundColor: byFam.map((_,i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor:     byFam.map((_,i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1.5, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
+          titleColor:'#c8f135', bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
+          callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} unidades` }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
+      }
+    }
+  });
+
+  const maxQ = byFam[0]?.qty || 1;
+  const linhas = byFam.map(r => {
+    const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
+    const barW = ((r.qty/maxQ)*100).toFixed(1);
+    return `<tr>
+      <td class="td-nome">${r.fam}</td>
+      <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('fam1-table-body').innerHTML = `<table>
+    <thead><tr><th>Família</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
 }
