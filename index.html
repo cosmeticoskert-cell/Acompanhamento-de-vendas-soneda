@@ -597,6 +597,11 @@ function mostrarBanner(bannerId, active, labels, limparFn) {
 function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
+function d2FiltrarPorData(iso) {
+  document.getElementById('d2-di').value = iso;
+  document.getElementById('d2-df').value = iso;
+  d2Renderizar();
+}
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
@@ -1474,7 +1479,7 @@ function d2Renderizar() {
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
-    return `<tr>
+    return `<tr class="clickable-row" onclick="d2FiltrarPorData('${r.data}')">
       <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1906,6 +1911,11 @@ function seLimparFiltros() {
   seRenderizar();
 }
 
+function seFiltrarPorLoja(loja) {
+  document.getElementById('se-loja').value = loja;
+  seRenderizar();
+}
+
 function seFiltrar() {
   const ano     = document.getElementById('se-ano').value;
   const mes     = document.getElementById('se-mes').value;
@@ -2083,6 +2093,9 @@ function seRenderGrafico(byLoja) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
+      onClick: (evt, elements) => {
+        if (elements.length > 0) seFiltrarPorLoja(dadosGrafico[elements[0].index].loja);
+      },
       plugins: {
         legend: {
           labels: { color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 }
@@ -2130,7 +2143,7 @@ function seRenderTabela(byLoja) {
   };
 
   const linhas = sorted.map(r => `
-    <tr>
+    <tr class="clickable-row" onclick="seFiltrarPorLoja('${r.loja}')">
       <td class="td-loja">#${r.loja}</td>
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
