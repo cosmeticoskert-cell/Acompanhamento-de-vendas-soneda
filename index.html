@@ -733,20 +733,23 @@ async function init() {
         const ean = normalizarCodigoBarras(r[codKey]);
         if (!ean) return;
 
+        const valido = v => v && v !== '-' && v !== '–' && v !== '—';
         if (famcatKey) {
           // Valor pode ser "FAMILIA/CATEGORIA" — divide na primeira barra
           const val = (r[famcatKey] || '').trim();
           const sep = val.indexOf('/');
           const familia   = sep >= 0 ? val.slice(0, sep).trim()  : val;
           const categoria = sep >= 0 ? val.slice(sep + 1).trim() : val;
-          if (familia)   familiaMap[ean] = familia;
-          if (categoria) catMap[ean]     = categoria;
+          if (valido(familia))   familiaMap[ean] = familia;
+          if (valido(categoria)) catMap[ean]     = categoria;
         } else {
           // Colunas separadas para FAMILIA e CATEGORIA
           const catKey = achar(/categ/);
           const famKey = achar(/famil/);
-          if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
-          if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
+          const vCat = catKey ? (r[catKey] || '').trim() : '';
+          const vFam = famKey ? (r[famKey] || '').trim() : '';
+          if (valido(vCat)) catMap[ean]     = vCat;
+          if (valido(vFam)) familiaMap[ean] = vFam;
         }
       });
       console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para`);
@@ -796,8 +799,10 @@ function parseBR(raw) {
 
 function normalizarCodigoBarras(valor) {
   let s = String(valor ?? '').trim().replace(/^["']|["']$/g, '');
-  // scientific notation (e.g. "7.89E+12")
-  if (/^\d+\.?\d*[eE][+\-]?\d+$/.test(s)) s = String(Math.round(Number(s)));
+  // notação científica com vírgula BR: "7,9E+12" → "7.9E+12"
+  s = s.replace(/^(\d+),(\d*[eE])/, '$1.$2');
+  // notação científica com ponto: "7.9E+12"
+  if (/^\d+\.?\d*[eE][+\-]?\d+$/i.test(s)) s = String(Math.round(Number(s)));
   return s.replace(/\.0+$/, '').replace(/\D/g, '');
 }
 
