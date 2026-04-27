@@ -1321,9 +1321,8 @@ function d2Filtrar(excl) {
     if (d2_active.val && d2_active.dim !== excl) {
       if (d2_active.dim === 'cat' && getCat(r) !== d2_active.val) return false;
       if (d2_active.dim === 'data') {
-        const dtAtiva = d2ParseData(col(r,'Data','data'));
-        const isoAtiva = dtAtiva ? dataParaISO(dtAtiva) : '';
-        if (isoAtiva !== d2_active.val) return false;
+        const dataOriginalAtiva = String(col(r,'Data','data') || '').trim();
+        if (dataOriginalAtiva !== d2_active.val) return false;
       }
     }
     if (di || df) {
@@ -1348,24 +1347,32 @@ function d2ParseData(raw) {
 function d2AgruparPorDia(data) {
   const map = {};
   data.forEach(r => {
-    const dt = d2ParseData(col(r,'Data','data'));
-    if (!dt) return;
-    const key = dataParaISO(dt);
+    const dataOriginal = String(col(r,'Data','data') || '').trim();
+    if (!dataOriginal) return;
+
+    const dt = d2ParseData(dataOriginal);
+    const iso = dt ? dataParaISO(dt) : dataOriginal;
+
+    // A chave segue a DATA ORIGINAL da aba Dados Brutos.
+    // Assim a tabela mostra exatamente o que está na coluna Data, sem converter para ISO.
+    const key = dataOriginal;
+
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
-    if (!map[key]) map[key] = { data: key, qty: 0 };
+    if (!map[key]) map[key] = { data: dataOriginal, iso, qty: 0 };
     map[key].qty += qty;
   });
-  return Object.values(map).sort((a,b) => a.data.localeCompare(b.data));
+
+  return Object.values(map).sort((a,b) => String(a.iso || a.data).localeCompare(String(b.iso || b.data)));
 }
 
-function d2FormatarData(iso) {
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+function d2FormatarData(valor) {
+  // Preserva a data exatamente como veio da coluna Data da aba Dados Brutos.
+  return valor;
 }
 
-function d2DiaSemana(iso) {
-  const [y,m,d] = iso.split('-');
-  const dt = new Date(+y, +m-1, +d);
+function d2DiaSemana(valor) {
+  const dt = d2ParseData(valor);
+  if (!dt) return '';
   return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()];
 }
 
@@ -1467,7 +1474,7 @@ function d2Renderizar() {
   const sorted2 = [...porDiaTabela].sort((a,b) => {
     let va, vb;
     const ORD_DIA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    if (t2Sort.col === 'data') { va = a.data; vb = b.data; }
+    if (t2Sort.col === 'data') { va = a.iso || a.data; vb = b.iso || b.data; }
     else if (t2Sort.col === 'dia') { va = ORD_DIA.indexOf(d2DiaSemana(a.data)); vb = ORD_DIA.indexOf(d2DiaSemana(b.data)); }
     else if (t2Sort.col === 'pct') { va = total > 0 ? a.qty / total : 0; vb = total > 0 ? b.qty / total : 0; }
     else { va = a.qty; vb = b.qty; }
@@ -1490,7 +1497,7 @@ function d2Renderizar() {
     const fds  = dia === 'Sáb' || dia === 'Dom';
     const ativoData = d2_active.dim === 'data' && d2_active.val === r.data ? ' row-active' : '';
     return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData('${r.data}')">
-      <td class="td-loja">${d2FormatarData(r.data)}</td>
+      <td class="td-loja">${r.data}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
