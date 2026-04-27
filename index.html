@@ -675,7 +675,6 @@ async function init() {
         const nome = (r[nomeKey] || '').trim();
         if (cod && nome) deParaMap[cod] = nome;
       });
-      console.log('De-Para lojas carregado:', Object.keys(deParaMap).length, 'entradas', deParaMap);
     } catch(e) { console.warn('De-Para não carregado:', e.message); }
 
     try {
@@ -691,30 +690,12 @@ async function init() {
         if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
         if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
       });
-      console.log('Categorias carregadas:', Object.keys(catMap).length, 'entradas');
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
     const todas = parseCSV(csv);
-    console.log('Colunas dados brutos:', Object.keys(todas[0] || {}));
-    console.log('Amostra dados brutos (3 linhas):', todas.slice(0,3));
 
     rawData = todas.filter(r => /^\d{4}$/.test(col(r, 'Ano')));
-
-    if (rawData.length > 0) {
-      const s = rawData[0];
-      console.log('Diagnóstico Venda (R$):', {
-        'Venda (R$)':        s['Venda (R$)'],
-        'Venda Nf Valor':    s['Venda Nf Valor'],
-        'Venda Pdv Valor':   s['Venda Pdv Valor'],
-        'Venda (Qtd)':       s['Venda (Qtd)'],
-      });
-      // mostra primeiras linhas com venda não-zero
-      const comVenda = rawData.filter(r => parseFloat((r['Venda (R$)']||'').replace(/\./g,'').replace(',','.')) > 0);
-      console.log('Linhas com Venda (R$) > 0:', comVenda.length, '— amostra:', comVenda.slice(0,2).map(r=>r['Venda (R$)']));
-      const comNfValor = rawData.filter(r => parseFloat((r['Venda Nf Valor']||'').replace(/\./g,'').replace(',','.')) > 0);
-      console.log('Linhas com Venda Nf Valor > 0:', comNfValor.length, '— amostra:', comNfValor.slice(0,2).map(r=>r['Venda Nf Valor']));
-    }
 
     if (rawData.length === 0) {
       throw new Error(`Nenhuma linha válida encontrada. Colunas detectadas: ${Object.keys(todas[0]||{}).join(', ')}`);
@@ -748,7 +729,7 @@ function col(row, ...nomes) {
 }
 
 function parseBR(raw) {
-  return parseFloat((raw || '').replace(/\./g, '').replace(',', '.')) || 0;
+  return parseFloat((raw || '').replace(/R\$\s*/i, '').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
 function getCat(r) {
