@@ -147,6 +147,10 @@
       <label>Categoria</label>
       <select id="f-cat"><option value="">Todas</option></select>
     </div>
+    <div class="filter-group">
+      <label>Família</label>
+      <select id="f-familia"><option value="">Todas</option></select>
+    </div>
     <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
   </div>
 
@@ -250,6 +254,10 @@
     <div class="filter-group">
       <label>Categoria</label>
       <select id="v-cat"><option value="">Todas</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Família</label>
+      <select id="v-familia"><option value="">Todas</option></select>
     </div>
     <button class="btn-clear" onclick="vLimparFiltros()">↺ Limpar</button>
   </div>
@@ -355,6 +363,10 @@
       <label>Categoria</label>
       <select id="d2-cat"><option value="">Todas</option></select>
     </div>
+    <div class="filter-group">
+      <label>Família</label>
+      <select id="d2-familia"><option value="">Todas</option></select>
+    </div>
     <button class="btn-clear" onclick="d2LimparFiltros()">↺ Limpar</button>
   </div>
 
@@ -457,6 +469,10 @@
     <div class="filter-group">
       <label>Categoria</label>
       <select id="d3-cat"><option value="">Todas</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Família</label>
+      <select id="d3-familia"><option value="">Todas</option></select>
     </div>
     <button class="btn-clear" onclick="d3LimparFiltros()">↺ Limpar</button>
   </div>
@@ -651,6 +667,10 @@ function getCat(r) {
   if (ean && catMap[ean]) return catMap[ean];
   // Fallback: lê a coluna de categoria diretamente (se existir)
   return col(r, 'Categoria', 'categoria', 'Kert', 'kert');
+}
+
+function getFamilia(r) {
+  return col(r, 'Familia', 'Família', 'familia', 'família', 'FAMILIA', 'FAMÍLIA');
 }
 
 function setEstado(html) {
