@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -713,16 +713,43 @@ async function init() {
     try {
       const csv  = await fetchCSV(GID_CAT);
       const rows = parseCSV(csv);
+      // Remove acentos para comparação de nomes de colunas
+      const semAcento = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
       rows.forEach(r => {
-        const keys   = Object.keys(r);
-        const codKey = keys.find(k => /codbarras/i.test(k) || /cod.*(barras?|barra)/i.test(k) || /^gtin$|^ean$|^plu$/i.test(k) || /gtin|ean/i.test(k)) || keys[0];
-        const catKey = keys.find(k => /categ/i.test(k)) || keys[1];
-        const famKey = keys.find(k => /famil/i.test(k)) || keys[2];
-        const ean    = normalizarCodigoBarras(r[codKey]);
+        const keys  = Object.keys(r);
+        const nkeys = keys.map(semAcento);
+        const achar = (...pats) => {
+          for (const pat of pats) {
+            const i = nkeys.findIndex(nk => pat.test(nk));
+            if (i >= 0) return keys[i];
+          }
+          return null;
+        };
+
+        const codKey     = achar(/codbarras/, /cod.*(barras|barra)/, /^(gtin|ean|plu)$/, /gtin|ean/) || keys[0];
+        // Coluna combinada "FAMILIA/CATEGORIA" (ou "CATEGORIA/FAMILIA")
+        const famcatKey  = achar(/famil.*cat/, /cat.*famil/);
+
+        const ean = normalizarCodigoBarras(r[codKey]);
         if (!ean) return;
-        if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
-        if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
+
+        if (famcatKey) {
+          // Valor pode ser "FAMILIA/CATEGORIA" — divide na primeira barra
+          const val = (r[famcatKey] || '').trim();
+          const sep = val.indexOf('/');
+          const familia   = sep >= 0 ? val.slice(0, sep).trim()  : val;
+          const categoria = sep >= 0 ? val.slice(sep + 1).trim() : val;
+          if (familia)   familiaMap[ean] = familia;
+          if (categoria) catMap[ean]     = categoria;
+        } else {
+          // Colunas separadas para FAMILIA e CATEGORIA
+          const catKey = achar(/categ/);
+          const famKey = achar(/famil/);
+          if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
+          if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
+        }
       });
+      console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para`);
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
@@ -768,11 +795,10 @@ function parseBR(raw) {
 }
 
 function normalizarCodigoBarras(valor) {
-  return String(valor ?? '')
-    .trim()
-    .replace(/^["']|["']$/g, '')
-    .replace(/\.0$/, '')
-    .replace(/\D/g, '');
+  let s = String(valor ?? '').trim().replace(/^["']|["']$/g, '');
+  // scientific notation (e.g. "7.89E+12")
+  if (/^\d+\.?\d*[eE][+\-]?\d+$/.test(s)) s = String(Math.round(Number(s)));
+  return s.replace(/\.0+$/, '').replace(/\D/g, '');
 }
 
 function parseDataBR(raw) {
