@@ -761,7 +761,7 @@ function construirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const sA = document.getElementById('f-ano');
@@ -802,6 +802,8 @@ function filtrar(excl) {
   const familia = document.getElementById('f-familia').value;
 
   return rawData.filter(r => {
+    const lojaBase = col(r,'Loja','loja').trim();
+    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -836,10 +838,14 @@ function agruparPorLoja(data) {
   data.forEach(r => {
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     const key = loja.trim();
+
+    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
+    if (!deParaMap[key]) return;
+
+    const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[key]) {
-      map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
+      map[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     }
     map[key].qty += qty;
   });
@@ -1213,7 +1219,7 @@ function d2ConstruirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1251,6 +1257,8 @@ function d2Filtrar(excl) {
   const familia = document.getElementById('d2-familia').value;
 
   return rawData.filter(r => {
+    const lojaBase = col(r,'Loja','loja').trim();
+    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1565,7 +1573,7 @@ function d3ConstruirFiltros() {
   const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1601,6 +1609,8 @@ function d3Filtrar(excl) {
   const familia = document.getElementById('d3-familia').value;
 
   return rawData.filter(r => {
+    const lojaBase = col(r,'Loja','loja').trim();
+    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1641,7 +1651,11 @@ function d3Renderizar() {
     const l   = col(r,'Loja','loja'); if (!l) return;
     const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
     const key = l.trim();
-    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
+
+    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
+    if (!deParaMap[key]) return;
+
+    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     mapLoja[key].qty += est;
   });
 
@@ -1701,7 +1715,7 @@ function d3Renderizar() {
 
   const dadosChart = d3Filtrar('loja');
   const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
-  const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
+  const lojas = loja ? [loja].filter(l => deParaMap[l]) : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(l => l && deParaMap[l.trim()]))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
   if (dias.length === 0) {
@@ -1838,6 +1852,8 @@ function vFiltrar(excl) {
   const familia = document.getElementById('v-familia').value;
 
   return rawData.filter(r => {
+    const lojaBase = col(r,'Loja','loja').trim();
+    if (!lojaBase || !deParaMap[lojaBase]) return false;
     if (ano     && col(r,'Ano') !== ano) return false;
     if (mes     && col(r,'Mês','Mes') !== mes) return false;
     if (loja    && col(r,'Loja','loja') !== loja) return false;
@@ -1868,9 +1884,13 @@ function vAgruparPorLoja(data) {
   data.forEach(r => {
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     const key = loja.trim();
-    if (!map[key]) map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, val: 0 };
+
+    // Regra: só considerar filiais cadastradas na aba De-Para Lojas
+    if (!deParaMap[key]) return;
+
+    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
+    if (!map[key]) map[key] = { loja: key, nome: deParaMap[key], val: 0 };
     map[key].val += val;
   });
   return Object.values(map).sort((a,b) => b.val - a.val);
