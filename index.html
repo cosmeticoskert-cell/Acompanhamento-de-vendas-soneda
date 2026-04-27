@@ -1490,7 +1490,7 @@ function d2Renderizar() {
     const fds  = dia === 'Sáb' || dia === 'Dom';
     const ativoData = d2_active.dim === 'data' && d2_active.val === r.data ? ' row-active' : '';
     return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData('${r.data}')">
-      <td class="td-loja">${r.data}</td>
+      <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
