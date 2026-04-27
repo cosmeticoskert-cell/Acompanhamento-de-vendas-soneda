@@ -701,6 +701,21 @@ async function init() {
 
     rawData = todas.filter(r => /^\d{4}$/.test(col(r, 'Ano')));
 
+    if (rawData.length > 0) {
+      const s = rawData[0];
+      console.log('Diagnóstico Venda (R$):', {
+        'Venda (R$)':        s['Venda (R$)'],
+        'Venda Nf Valor':    s['Venda Nf Valor'],
+        'Venda Pdv Valor':   s['Venda Pdv Valor'],
+        'Venda (Qtd)':       s['Venda (Qtd)'],
+      });
+      // mostra primeiras linhas com venda não-zero
+      const comVenda = rawData.filter(r => parseFloat((r['Venda (R$)']||'').replace(/\./g,'').replace(',','.')) > 0);
+      console.log('Linhas com Venda (R$) > 0:', comVenda.length, '— amostra:', comVenda.slice(0,2).map(r=>r['Venda (R$)']));
+      const comNfValor = rawData.filter(r => parseFloat((r['Venda Nf Valor']||'').replace(/\./g,'').replace(',','.')) > 0);
+      console.log('Linhas com Venda Nf Valor > 0:', comNfValor.length, '— amostra:', comNfValor.slice(0,2).map(r=>r['Venda Nf Valor']));
+    }
+
     if (rawData.length === 0) {
       throw new Error(`Nenhuma linha válida encontrada. Colunas detectadas: ${Object.keys(todas[0]||{}).join(', ')}`);
     }
