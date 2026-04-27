@@ -99,6 +99,13 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .no-data { display: flex; align-items: center; justify-content: center; height: 180px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.8rem; }
   .err { color: #ff6b6b; }
+  .active-banner { display:flex; align-items:center; gap:12px; padding:10px 20px; background:var(--surface2); border:1px solid var(--accent); border-radius:8px; margin-bottom:16px; font-family:'DM Mono',monospace; font-size:0.75rem; color:var(--accent); letter-spacing:0.5px; }
+  .active-banner strong { color:var(--text); font-weight:600; }
+  .active-banner button { background:none; border:1px solid currentColor; color:inherit; padding:2px 10px; border-radius:20px; cursor:pointer; font-family:'DM Mono',monospace; font-size:0.7rem; transition:all .2s; margin-left:auto; }
+  .active-banner button:hover { background:var(--accent); color:var(--bg); }
+  tbody tr.clickable-row { cursor:pointer; }
+  tbody tr.clickable-row:hover { background:var(--surface2); }
+  tbody tr.row-active { background:rgba(200,241,53,0.07) !important; outline:1px solid var(--accent); outline-offset:-1px; }
 </style>
 </head>
 <body>
@@ -153,6 +160,7 @@
     </div>
     <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
   </div>
+  <div id="f-active-banner" class="active-banner" style="display:none"></div>
 
   <!-- KPIs -->
   <div class="kpi-row">
@@ -280,6 +288,7 @@
     </div>
     <button class="btn-clear" onclick="vLimparFiltros()">↺ Limpar</button>
   </div>
+  <div id="v-active-banner" class="active-banner" style="display:none"></div>
 
   <!-- KPIs -->
   <div class="kpi-row">
@@ -388,6 +397,7 @@
     </div>
     <button class="btn-clear" onclick="d2LimparFiltros()">↺ Limpar</button>
   </div>
+  <div id="d2-active-banner" class="active-banner" style="display:none"></div>
 
   <!-- KPIs -->
   <div class="kpi-row">
@@ -495,6 +505,7 @@
     </div>
     <button class="btn-clear" onclick="d3LimparFiltros()">↺ Limpar</button>
   </div>
+  <div id="d3-active-banner" class="active-banner" style="display:none"></div>
 
   <!-- KPIs -->
   <div class="kpi-row">
@@ -575,12 +586,38 @@ let vCat1Chart     = null;
 let cat2Chart      = null;
 let d3BarChart     = null;
 let d3LineChart    = null;
-let lojaFiltrada   = null;
-let vLojaFiltrada  = null;
+let f_active       = { dim: null, val: null };
+let v_active       = { dim: null, val: null };
+let d2_active      = { dim: null, val: null };
+let d3_active      = { dim: null, val: null };
 let t1Sort         = { col: 'qty', dir: 'desc' };
 let vt1Sort        = { col: 'val', dir: 'desc' };
 let t2Sort         = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
+
+// ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
+function setFilter(active, dim, val, renderFn) {
+  if (active.dim === dim && active.val === val) { active.dim = null; active.val = null; }
+  else { active.dim = dim; active.val = val; }
+  renderFn();
+}
+function fSetFilter(dim, val)  { setFilter(f_active,  dim, val, renderizar);  }
+function vSetFilter(dim, val)  { setFilter(v_active,  dim, val, vRenderizar); }
+function d2SetFilter(dim, val) { setFilter(d2_active, dim, val, d2Renderizar);}
+function d3SetFilter(dim, val) { setFilter(d3_active, dim, val, d3Renderizar);}
+
+function mostrarBanner(bannerId, active, labels, limparFn) {
+  const el = document.getElementById(bannerId);
+  if (!el) return;
+  if (!active.val) { el.style.display = 'none'; return; }
+  const label = labels[active.dim] || active.dim;
+  el.style.display = 'flex';
+  el.innerHTML = `▶ FILTRANDO POR ${label}: <strong>${active.val}</strong><button onclick="${limparFn}()">✕ limpar</button>`;
+}
+function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
+function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
+function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
+function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
 
@@ -751,10 +788,11 @@ function construirFiltros() {
 
 function limparFiltros() {
   ['f-ano','f-mes','f-di','f-df','f-loja','f-cat','f-familia'].forEach(id => document.getElementById(id).value = '');
+  f_active = { dim: null, val: null };
   renderizar();
 }
 
-function filtrar() {
+function filtrar(excl) {
   const ano     = document.getElementById('f-ano').value;
   const mes     = document.getElementById('f-mes').value;
   const di      = document.getElementById('f-di').value;
@@ -769,6 +807,11 @@ function filtrar() {
     if (loja    && col(r,'Loja','loja') !== loja) return false;
     if (cat     && getCat(r) !== cat) return false;
     if (familia && getFamilia(r) !== familia) return false;
+    if (f_active.val && f_active.dim !== excl) {
+      if (f_active.dim === 'loja'    && col(r,'Loja','loja') !== f_active.val) return false;
+      if (f_active.dim === 'cat'     && getCat(r) !== f_active.val) return false;
+      if (f_active.dim === 'familia' && getFamilia(r) !== f_active.val) return false;
+    }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -805,41 +848,25 @@ function agruparPorLoja(data) {
 
 // ── RENDER PRINCIPAL ──────────────────────────────────────────────────────────
 function renderizar() {
-  const dadosTodos = filtrar();
-  const byLojaAll  = agruparPorLoja(dadosTodos);
+  mostrarBanner('f-active-banner', f_active,
+    {loja:'FILIAL', cat:'CATEGORIA', familia:'FAMÍLIA'}, 'fLimparAtivo');
 
   const ano = document.getElementById('f-ano').value;
   const mes = document.getElementById('f-mes').value;
   document.getElementById('chart-sub').textContent =
     [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+  document.getElementById('loja-ativa').style.display = 'none';
 
-  const lojaAtivaEl = document.getElementById('loja-ativa');
-  if (lojaFiltrada) {
-    const info = byLojaAll.find(r => r.loja === lojaFiltrada);
-    lojaAtivaEl.style.display = 'flex';
-    lojaAtivaEl.innerHTML = `
-      <span style="color:var(--accent);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:.5px">
-        ▶ FILTRANDO: #${lojaFiltrada}${info ? ' · ' + info.nome : ''}
-      </span>
-      <button onclick="limparFiltroLoja()" style="background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:0.68rem;padding:2px 10px;border-radius:20px;margin-left:6px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕ limpar</button>`;
-  } else {
-    lojaAtivaEl.style.display = 'none';
-  }
+  // Cada gráfico recebe dados sem o próprio filtro ativo (para poder mostrar todos os itens com destaque)
+  // KPIs e tabelas recebem dados totalmente filtrados
+  const byLojaChart = agruparPorLoja(filtrar('loja'));
+  const byLojaFull  = agruparPorLoja(filtrar());
 
-  const byLojaFiltrada = lojaFiltrada
-    ? byLojaAll.filter(r => r.loja === lojaFiltrada)
-    : byLojaAll;
-
-  renderKPIs(byLojaFiltrada);
-  renderGrafico(byLojaAll);
-  renderTabela(byLojaFiltrada);
-  renderCat1(filtrar());
-  renderFam1(filtrar());
-}
-
-function limparFiltroLoja() {
-  lojaFiltrada = null;
-  renderizar();
+  renderKPIs(byLojaFull);
+  renderGrafico(byLojaChart);
+  renderTabela(byLojaFull);
+  renderCat1(filtrar('cat'));
+  renderFam1(filtrar('familia'));
 }
 
 function renderKPIs(byLoja) {
@@ -873,18 +900,14 @@ function renderGrafico(byLoja) {
   const values = byLoja.map(r => r.qty);
   const n      = byLoja.length;
 
+  const sel = f_active.dim === 'loja' ? f_active.val : null;
   const bgColors = byLoja.map((r, i) => {
-    if (lojaFiltrada) {
-      return r.loja === lojaFiltrada ? 'rgba(200,241,53,0.95)' : 'rgba(37,42,58,0.45)';
-    }
+    if (sel) return r.loja === sel ? 'rgba(200,241,53,0.95)' : 'rgba(37,42,58,0.45)';
     const t = n > 1 ? i/(n-1) : 0;
     return `rgba(${Math.round(200-t*80)},${Math.round(241-t*100)},${Math.round(53+t*100)},0.85)`;
   });
-
   const borderColors = byLoja.map((r, i) => {
-    if (lojaFiltrada) {
-      return r.loja === lojaFiltrada ? 'rgba(200,241,53,1)' : 'rgba(37,42,58,0.2)';
-    }
+    if (sel) return r.loja === sel ? 'rgba(200,241,53,1)' : 'rgba(37,42,58,0.2)';
     const t = n > 1 ? i/(n-1) : 0;
     return `rgba(${Math.round(200-t*80)},${Math.round(241-t*100)},${Math.round(53+t*100)},1)`;
   });
@@ -908,12 +931,7 @@ function renderGrafico(byLoja) {
       responsive: true,
       maintainAspectRatio: false,
       onClick: (evt, elements) => {
-        if (elements.length > 0) {
-          const idx  = elements[0].index;
-          const loja = byLoja[idx].loja;
-          lojaFiltrada = lojaFiltrada === loja ? null : loja;
-          renderizar();
-        }
+        if (elements.length > 0) fSetFilter('loja', byLoja[elements[0].index].loja);
       },
       interaction: { mode: 'index', intersect: false },
       plugins: {
@@ -934,8 +952,8 @@ function renderGrafico(byLoja) {
         x: {
           ticks: {
             color: ctx => {
-              if (!lojaFiltrada) return '#8891aa';
-              return byLoja[ctx.index]?.loja === lojaFiltrada ? '#c8f135' : '#3a4060';
+              if (!sel) return '#8891aa';
+              return byLoja[ctx.index]?.loja === sel ? '#c8f135' : '#3a4060';
             },
             font: { family: 'DM Mono', size: 9 },
             maxRotation: 45,
@@ -986,19 +1004,23 @@ function renderCat1(data) {
   }
   if (cat1Chart) cat1Chart.destroy();
 
+  const selCat = f_active.dim === 'cat' ? f_active.val : null;
   cat1Chart = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: byCat.map(r => r.cat),
       datasets: [{
         data: byCat.map(r => r.qty),
-        backgroundColor: byCat.map((_,i) => PALETTE[i % PALETTE.length] + 'cc'),
-        borderColor:     byCat.map((_,i) => PALETTE[i % PALETTE.length]),
+        backgroundColor: byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
+        borderColor:     byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) fSetFilter('cat', byCat[elements[0].index].cat);
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -1009,17 +1031,19 @@ function renderCat1(data) {
         }
       },
       scales: {
-        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        x: { ticks:{ color: ctx => selCat ? (byCat[ctx.index]?.cat===selCat ? '#c8f135':'#3a4060') : '#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
         y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
       }
     }
   });
+  canvas.style.cursor = 'pointer';
 
   const maxQ = byCat[0]?.qty || 1;
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    return `<tr>
+    const ativo = selCat === r.cat ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="fSetFilter('cat',this.dataset.v)" data-v="${r.cat.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.cat}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
@@ -1065,19 +1089,23 @@ function renderFam1(data) {
   }
   if (fam1Chart) fam1Chart.destroy();
 
+  const selFam = f_active.dim === 'familia' ? f_active.val : null;
   fam1Chart = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: byFam.map(r => r.fam),
       datasets: [{
         data: byFam.map(r => r.qty),
-        backgroundColor: byFam.map((_,i) => PALETTE[i % PALETTE.length] + 'cc'),
-        borderColor:     byFam.map((_,i) => PALETTE[i % PALETTE.length]),
+        backgroundColor: byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byFam.indexOf(r)%PALETTE.length]+'cc'),
+        borderColor:     byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byFam.indexOf(r)%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) fSetFilter('familia', byFam[elements[0].index].fam);
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -1088,17 +1116,19 @@ function renderFam1(data) {
         }
       },
       scales: {
-        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        x: { ticks:{ color: ctx => selFam ? (byFam[ctx.index]?.fam===selFam ? '#c8f135':'#3a4060') : '#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
         y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
       }
     }
   });
+  canvas.style.cursor = 'pointer';
 
   const maxQ = byFam[0]?.qty || 1;
   const linhas = byFam.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    return `<tr>
+    const ativo = selFam === r.fam ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="fSetFilter('familia',this.dataset.v)" data-v="${r.fam.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.fam}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
@@ -1145,10 +1175,12 @@ function renderTabela(byLoja) {
     return `<th${cls} onclick="t1OrdenarPor('${key}')">${label}</th>`;
   };
 
+  const sel1 = f_active.dim === 'loja' ? f_active.val : null;
   const linhas = sorted.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    return `<tr>
+    const ativo = sel1 === r.loja ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="fSetFilter('loja','${r.loja}')">
       <td class="td-loja">#${r.loja}</td>
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1205,10 +1237,11 @@ function d2ConstruirFiltros() {
 
 function d2LimparFiltros() {
   ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat','d2-familia'].forEach(id => document.getElementById(id).value = '');
+  d2_active = { dim: null, val: null };
   d2Renderizar();
 }
 
-function d2Filtrar() {
+function d2Filtrar(excl) {
   const ano     = document.getElementById('d2-ano').value;
   const mes     = document.getElementById('d2-mes').value;
   const di      = document.getElementById('d2-di').value;
@@ -1223,6 +1256,9 @@ function d2Filtrar() {
     if (loja    && col(r,'Loja','loja') !== loja) return false;
     if (cat     && getCat(r) !== cat) return false;
     if (familia && getFamilia(r) !== familia) return false;
+    if (d2_active.val && d2_active.dim !== excl) {
+      if (d2_active.dim === 'cat' && getCat(r) !== d2_active.val) return false;
+    }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1275,6 +1311,7 @@ function d2DiaSemana(iso) {
 }
 
 function d2Renderizar() {
+  mostrarBanner('d2-active-banner', d2_active, {cat:'CATEGORIA'}, 'd2LimparAtivo');
   const dados  = d2Filtrar();
   const porDia = d2AgruparPorDia(dados);
 
@@ -1413,7 +1450,7 @@ function d2Renderizar() {
     <tbody>${linhas2}${totalLinha2}</tbody>
   </table>`;
 
-  renderCat2(dados);
+  renderCat2(d2Filtrar('cat'));
 }
 
 function renderCat2(data) {
@@ -1455,6 +1492,7 @@ function renderCat2(data) {
   }
   if (cat2Chart) cat2Chart.destroy();
 
+  const d2SelC = d2_active.dim === 'cat' ? d2_active.val : null;
   cat2Chart = new Chart(canvas2, {
     type: 'line',
     data: {
@@ -1462,17 +1500,23 @@ function renderCat2(data) {
       datasets: cats.map((c, i) => ({
         label: c,
         data: dias.map(d => mapCatDia[c]?.[d] || 0),
-        borderColor: PALETTE[i % PALETTE.length],
-        backgroundColor: PALETTE[i % PALETTE.length] + '22',
-        borderWidth: 2, pointRadius: dias.length <= 60 ? 2 : 0,
-        pointHoverRadius: 4, tension: 0.3, fill: false,
+        borderColor:     d2SelC ? (c===d2SelC ? PALETTE[i%PALETTE.length] : 'rgba(90,96,128,0.25)') : PALETTE[i%PALETTE.length],
+        backgroundColor: d2SelC ? (c===d2SelC ? PALETTE[i%PALETTE.length]+'22' : 'transparent') : PALETTE[i%PALETTE.length]+'22',
+        borderWidth: d2SelC ? (c===d2SelC ? 2.5 : 1) : 2,
+        pointRadius: dias.length <= 60 ? 2 : 0, pointHoverRadius: 4, tension: 0.3, fill: false,
       }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode:'index', intersect:false },
+      onClick: (evt, elements) => {
+        if (elements.length > 0) d2SetFilter('cat', cats[elements[0].datasetIndex]);
+      },
       plugins: {
-        legend: { labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 } },
+        legend: {
+          labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 },
+          onClick: (e, item) => d2SetFilter('cat', item.text),
+        },
         tooltip: {
           backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
           titleColor:'#c8f135', bodyColor:'#e8ecf5',
@@ -1485,6 +1529,7 @@ function renderCat2(data) {
       }
     }
   });
+  canvas2.style.cursor = 'pointer';
 
   const totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.qty-a.qty);
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
@@ -1492,7 +1537,8 @@ function renderCat2(data) {
   const linhas = totCat.map(r => {
     const pct  = totalGeral > 0 ? ((r.qty/totalGeral)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    return `<tr>
+    const ativo = d2SelC === r.cat ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="d2SetFilter('cat',this.dataset.v)" data-v="${r.cat.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.cat}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
@@ -1541,10 +1587,11 @@ function d3ConstruirFiltros() {
 
 function d3LimparFiltros() {
   ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'].forEach(id => document.getElementById(id).value = '');
+  d3_active = { dim: null, val: null };
   d3Renderizar();
 }
 
-function d3Filtrar() {
+function d3Filtrar(excl) {
   const ano     = document.getElementById('d3-ano').value;
   const mes     = document.getElementById('d3-mes').value;
   const di      = document.getElementById('d3-di').value;
@@ -1559,6 +1606,9 @@ function d3Filtrar() {
     if (loja    && col(r,'Loja','loja') !== loja) return false;
     if (cat     && getCat(r) !== cat) return false;
     if (familia && getFamilia(r) !== familia) return false;
+    if (d3_active.val && d3_active.dim !== excl) {
+      if (d3_active.dim === 'loja' && col(r,'Loja','loja') !== d3_active.val) return false;
+    }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1576,6 +1626,7 @@ function d3Filtrar() {
 }
 
 function d3Renderizar() {
+  mostrarBanner('d3-active-banner', d3_active, {loja:'FILIAL'}, 'd3LimparAtivo');
   const dados = d3Filtrar();
   const ano   = document.getElementById('d3-ano').value;
   const mes   = document.getElementById('d3-mes').value;
@@ -1616,19 +1667,23 @@ function d3Renderizar() {
     if (!c1) { c1 = document.createElement('canvas'); c1.id = 'd3-bar-canvas'; document.getElementById('d3-chart-wrap').appendChild(c1); }
     if (d3BarChart) d3BarChart.destroy();
     const n = byLoja.length;
+    const d3Sel = d3_active.dim === 'loja' ? d3_active.val : null;
     d3BarChart = new Chart(c1, {
       type: 'bar',
       data: {
         labels: byLoja.map(r => r.nome),
         datasets: [{
           data: byLoja.map(r => r.qty),
-          backgroundColor: byLoja.map((_,i) => { const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},0.85)`; }),
-          borderColor:     byLoja.map((_,i) => { const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},1)`; }),
+          backgroundColor: byLoja.map((r,i) => { if(d3Sel) return r.loja===d3Sel?'rgba(79,255,176,0.95)':'rgba(37,42,58,0.45)'; const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},0.85)`; }),
+          borderColor:     byLoja.map((r,i) => { if(d3Sel) return r.loja===d3Sel?'rgba(79,255,176,1)':'rgba(37,42,58,0.2)'; const t=n>1?i/(n-1):0; return `rgba(${Math.round(79+t*121)},${Math.round(255-t*145)},${Math.round(176-t*123)},1)`; }),
           borderWidth: 1.5, borderRadius: 6,
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: (evt, elements) => {
+          if (elements.length > 0) d3SetFilter('loja', byLoja[elements[0].index].loja);
+        },
         plugins: {
           legend: { display: false },
           tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
@@ -1636,15 +1691,17 @@ function d3Renderizar() {
           }
         },
         scales: {
-          x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:false }, grid:{color:'#1c2030'} },
+          x: { ticks:{ color: ctx => d3Sel?(byLoja[ctx.index]?.loja===d3Sel?'#4fffb0':'#3a4060'):'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:false }, grid:{color:'#1c2030'} },
           y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
         }
       }
     });
+    c1.style.cursor = 'pointer';
   }
 
-  const dias = [...new Set(dados.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
-  const lojas = loja ? [loja] : [...new Set(dados.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
+  const dadosChart = d3Filtrar('loja');
+  const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
+  const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
   if (dias.length === 0) {
@@ -1652,7 +1709,7 @@ function d3Renderizar() {
   } else {
     if(lineState) lineState.style.display = 'none';
     const mapLD = {};
-    dados.forEach(r => {
+    dadosChart.forEach(r => {
       const l   = col(r,'Loja','loja'); if (!l || !lojas.includes(l)) return;
       const dt  = d2ParseData(col(r,'Data','data')); if (!dt) return;
       const dk  = dt.toISOString().split('T')[0];
@@ -1665,6 +1722,7 @@ function d3Renderizar() {
     if (!c2) { c2 = document.createElement('canvas'); c2.id = 'd3-line-canvas'; document.getElementById('d3-line-wrap').appendChild(c2); }
     if (d3LineChart) d3LineChart.destroy();
 
+    const d3SelL = d3_active.dim === 'loja' ? d3_active.val : null;
     d3LineChart = new Chart(c2, {
       type: 'line',
       data: {
@@ -1672,17 +1730,24 @@ function d3Renderizar() {
         datasets: lojas.map((l,i) => ({
           label: deParaMap[l] || `Filial ${l}`,
           data: dias.map(d => mapLD[l]?.[d] ?? null),
-          borderColor: PALETTE[i % PALETTE.length],
-          backgroundColor: PALETTE[i % PALETTE.length] + '22',
-          borderWidth: 2, pointRadius: dias.length <= 60 ? 2 : 0,
+          borderColor:     d3SelL ? (l===d3SelL ? PALETTE[i%PALETTE.length] : 'rgba(90,96,128,0.25)') : PALETTE[i%PALETTE.length],
+          backgroundColor: d3SelL ? (l===d3SelL ? PALETTE[i%PALETTE.length]+'22' : 'transparent') : PALETTE[i%PALETTE.length]+'22',
+          borderWidth: d3SelL ? (l===d3SelL ? 2.5 : 1) : 2,
+          pointRadius: dias.length <= 60 ? 2 : 0,
           pointHoverRadius: 4, tension: 0.3, fill: false, spanGaps: true,
         }))
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode:'index', intersect:false },
+        onClick: (evt, elements) => {
+          if (elements.length > 0) d3SetFilter('loja', lojas[elements[0].datasetIndex]);
+        },
         plugins: {
-          legend: { labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 } },
+          legend: {
+            labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 },
+            onClick: (e, item) => d3SetFilter('loja', lojas[item.datasetIndex]),
+          },
           tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:12}, padding:12 }
         },
         scales: {
@@ -1691,6 +1756,7 @@ function d3Renderizar() {
         }
       }
     });
+    c2.style.cursor = 'pointer';
   }
 
   const maxQ = byLoja[0]?.qty || 1;
@@ -1707,9 +1773,11 @@ function d3Renderizar() {
     if (va>vb) return t3Sort.dir==='asc'?1:-1;
     return 0;
   });
+  const d3SelTab = d3_active.dim === 'loja' ? d3_active.val : null;
   const linhas3 = sorted3.map(r => {
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    return `<tr>
+    const ativo = d3SelTab === r.loja ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="d3SetFilter('loja','${r.loja}')">
       <td class="td-loja">#${r.loja}</td>
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1756,11 +1824,11 @@ function vConstruirFiltros() {
 
 function vLimparFiltros() {
   ['v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia'].forEach(id => document.getElementById(id).value = '');
-  vLojaFiltrada = null;
+  v_active = { dim: null, val: null };
   vRenderizar();
 }
 
-function vFiltrar() {
+function vFiltrar(excl) {
   const ano     = document.getElementById('v-ano').value;
   const mes     = document.getElementById('v-mes').value;
   const di      = document.getElementById('v-di').value;
@@ -1775,6 +1843,10 @@ function vFiltrar() {
     if (loja    && col(r,'Loja','loja') !== loja) return false;
     if (cat     && getCat(r) !== cat) return false;
     if (familia && getFamilia(r) !== familia) return false;
+    if (v_active.val && v_active.dim !== excl) {
+      if (v_active.dim === 'loja' && col(r,'Loja','loja') !== v_active.val) return false;
+      if (v_active.dim === 'cat'  && getCat(r) !== v_active.val) return false;
+    }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1837,13 +1909,14 @@ function vRenderGrafico(byLoja) {
   }
 
   const n = byLoja.length;
+  const vSel = v_active.dim === 'loja' ? v_active.val : null;
   const bgColors = byLoja.map((r, i) => {
-    if (vLojaFiltrada) return r.loja === vLojaFiltrada ? 'rgba(79,255,176,0.95)' : 'rgba(37,42,58,0.45)';
+    if (vSel) return r.loja === vSel ? 'rgba(79,255,176,0.95)' : 'rgba(37,42,58,0.45)';
     const t = n > 1 ? i/(n-1) : 0;
     return `rgba(${Math.round(79+t*121)},${Math.round(255-t*100)},${Math.round(176-t*50)},0.85)`;
   });
   const borderColors = byLoja.map((r, i) => {
-    if (vLojaFiltrada) return r.loja === vLojaFiltrada ? 'rgba(79,255,176,1)' : 'rgba(37,42,58,0.2)';
+    if (vSel) return r.loja === vSel ? 'rgba(79,255,176,1)' : 'rgba(37,42,58,0.2)';
     const t = n > 1 ? i/(n-1) : 0;
     return `rgba(${Math.round(79+t*121)},${Math.round(255-t*100)},${Math.round(176-t*50)},1)`;
   });
@@ -1858,11 +1931,7 @@ function vRenderGrafico(byLoja) {
     options: {
       responsive: true, maintainAspectRatio: false,
       onClick: (evt, elements) => {
-        if (elements.length > 0) {
-          const loja = byLoja[elements[0].index].loja;
-          vLojaFiltrada = vLojaFiltrada === loja ? null : loja;
-          vRenderizar();
-        }
+        if (elements.length > 0) vSetFilter('loja', byLoja[elements[0].index].loja);
       },
       interaction: { mode: 'index', intersect: false },
       plugins: {
@@ -1877,7 +1946,7 @@ function vRenderGrafico(byLoja) {
       scales: {
         x: {
           ticks: {
-            color: ctx => { if (!vLojaFiltrada) return '#8891aa'; return byLoja[ctx.index]?.loja === vLojaFiltrada ? '#4fffb0' : '#3a4060'; },
+            color: ctx => { if (!vSel) return '#8891aa'; return byLoja[ctx.index]?.loja === vSel ? '#4fffb0' : '#3a4060'; },
             font: { family: 'DM Mono', size: 9 }, maxRotation: 45, minRotation: 45, autoSkip: false
           },
           grid: { color: '#1c2030' }
@@ -1912,10 +1981,12 @@ function vRenderTabela(byLoja) {
     const cls = vt1Sort.col === key ? ` class="sort-${vt1Sort.dir}"` : '';
     return `<th${cls} onclick="vt1OrdenarPor('${key}')">${label}</th>`;
   };
+  const vSelT = v_active.dim === 'loja' ? v_active.val : null;
   const linhas = sorted.map(r => {
     const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
     const barW = ((r.val/maxV)*100).toFixed(1);
-    return `<tr>
+    const ativo = vSelT === r.loja ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="vSetFilter('loja','${r.loja}')">
       <td class="td-loja">#${r.loja}</td>
       <td class="td-nome">${r.nome}</td>
       <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
@@ -1963,14 +2034,21 @@ function vRenderCat1(data) {
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'v-cat1-canvas'; document.getElementById('v-cat1-wrap').appendChild(canvas); }
   if (vCat1Chart) vCat1Chart.destroy();
 
+  const vSelC = v_active.dim === 'cat' ? v_active.val : null;
   vCat1Chart = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: byCat.map(r => r.cat),
-      datasets: [{ data: byCat.map(r => r.val), backgroundColor: byCat.map((_,i) => PALETTE[i%PALETTE.length]+'cc'), borderColor: byCat.map((_,i) => PALETTE[i%PALETTE.length]), borderWidth:1.5, borderRadius:6 }]
+      datasets: [{ data: byCat.map(r => r.val),
+        backgroundColor: byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee':'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
+        borderColor:     byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]:'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
+        borderWidth:1.5, borderRadius:6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) vSetFilter('cat', byCat[elements[0].index].cat);
+      },
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:13}, padding:14,
@@ -1978,17 +2056,19 @@ function vRenderCat1(data) {
         }
       },
       scales: {
-        x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
+        x: { ticks:{ color: ctx => vSelC?(byCat[ctx.index]?.cat===vSelC?'#4fffb0':'#3a4060'):'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:35, autoSkip:false }, grid:{color:'#1c2030'} },
         y: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback: v => 'R$ '+v.toLocaleString('pt-BR') }, grid:{color:'#252a3a'} }
       }
     }
   });
+  canvas.style.cursor = 'pointer';
 
   const maxV = byCat[0]?.val || 1;
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
     const barW = ((r.val/maxV)*100).toFixed(1);
-    return `<tr>
+    const ativo = vSelC === r.cat ? ' row-active' : '';
+    return `<tr class="clickable-row${ativo}" onclick="vSetFilter('cat',this.dataset.v)" data-v="${r.cat.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.cat}</td>
       <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
       <td><div class="td-bar-wrap">
@@ -2004,36 +2084,19 @@ function vRenderCat1(data) {
 }
 
 function vRenderizar() {
-  const dadosTodos = vFiltrar();
-  const byLojaAll  = vAgruparPorLoja(dadosTodos);
+  mostrarBanner('v-active-banner', v_active, {loja:'FILIAL', cat:'CATEGORIA'}, 'vLimparAtivo');
 
   const ano = document.getElementById('v-ano').value;
   const mes = document.getElementById('v-mes').value;
   document.getElementById('v-chart-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+  document.getElementById('v-loja-ativa').style.display = 'none';
 
-  const lojaAtivaEl = document.getElementById('v-loja-ativa');
-  if (vLojaFiltrada) {
-    const info = byLojaAll.find(r => r.loja === vLojaFiltrada);
-    lojaAtivaEl.style.display = 'flex';
-    lojaAtivaEl.innerHTML = `
-      <span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:0.72rem;letter-spacing:.5px">
-        ▶ FILTRANDO: #${vLojaFiltrada}${info ? ' · ' + info.nome : ''}
-      </span>
-      <button onclick="vLimparFiltroLoja()" style="background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:0.68rem;padding:2px 10px;border-radius:20px;margin-left:6px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕ limpar</button>`;
-  } else {
-    lojaAtivaEl.style.display = 'none';
-  }
-
-  const byLojaFiltrada = vLojaFiltrada ? byLojaAll.filter(r => r.loja === vLojaFiltrada) : byLojaAll;
-  vRenderKPIs(byLojaFiltrada);
-  vRenderGrafico(byLojaAll);
-  vRenderTabela(byLojaFiltrada);
-  vRenderCat1(vFiltrar());
-}
-
-function vLimparFiltroLoja() {
-  vLojaFiltrada = null;
-  vRenderizar();
+  const byLojaChart = vAgruparPorLoja(vFiltrar('loja'));
+  const byLojaFull  = vAgruparPorLoja(vFiltrar());
+  vRenderKPIs(byLojaFull);
+  vRenderGrafico(byLojaChart);
+  vRenderTabela(byLojaFull);
+  vRenderCat1(vFiltrar('cat'));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
