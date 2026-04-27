@@ -731,6 +731,9 @@ async function init() {
         const famcatKey  = achar(/famil.*cat/, /cat.*famil/);
 
         const ean = normalizarCodigoBarras(r[codKey]);
+        // DEBUG: log primeiros 15 valores brutos de CODBARRAS
+        if (!window._dbgCod) window._dbgCod = 0;
+        if (window._dbgCod < 15) { console.log(`[DBG-CODBARRAS] raw="${r[codKey]}" key="${codKey}" → ean="${ean}"`); window._dbgCod++; }
         if (!ean) return;
 
         const valido = v => v && v !== '-' && v !== '–' && v !== '—';
@@ -753,6 +756,8 @@ async function init() {
         }
       });
       console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para`);
+      console.log('[DBG-catMap primeiras chaves]', Object.keys(catMap).slice(0, 10));
+      console.log('[DBG-familiaMap primeiras chaves]', Object.keys(familiaMap).slice(0, 10));
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
@@ -840,7 +845,11 @@ function dataParaISO(dt) {
 
 
 function getCat(r) {
-  const ean = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
+  const rawGtin = col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
+  const ean = normalizarCodigoBarras(rawGtin);
+  // DEBUG: log primeiros 10 valores brutos de GTIN
+  if (!window._dbgGtin) window._dbgGtin = 0;
+  if (window._dbgGtin < 10) { console.log(`[DBG-GTIN] raw="${rawGtin}" → ean="${ean}" → match=${!!catMap[ean]}`); window._dbgGtin++; }
   return (ean && catMap[ean]) ? catMap[ean] : '';
 }
 
