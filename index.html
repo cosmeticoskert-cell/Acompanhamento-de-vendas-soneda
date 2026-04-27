@@ -2703,32 +2703,24 @@ async function atualizarStatusAtualizacao() {
   const sheetData = agora.toLocaleDateString('pt-BR');
   const sheetHora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  /*
-    STATUS DO GIT
-    O erro 404 acontece quando o endereço usado na API não bate exatamente com o OWNER/REPO do GitHub.
-    Assim que você me mandar a URL completa do repositório, eu deixo fixo aqui.
-  */
-  const owner = "cosmeticoskert-cell";
-  const repo  = "Acompanhamento-de-vendas-soneda";
+  const gitRawUrl = "https://raw.githubusercontent.com/cosmeticoskert-cell/Acompanhamento-de-vendas-soneda/main/index.html";
 
   let gitTexto = "indisponível";
 
   try {
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`;
-    const res = await fetch(apiUrl);
+    const res = await fetch(`${gitRawUrl}?t=${Date.now()}`, {
+      method: 'HEAD',
+      cache: 'no-store'
+    });
 
     if (res.ok) {
-      const data = await res.json();
-
-      if (Array.isArray(data) && data.length > 0 && data[0]?.commit?.author?.date) {
-        const dt = new Date(data[0].commit.author.date);
+      const lastModified = res.headers.get('last-modified');
+      if (lastModified) {
+        const dt = new Date(lastModified);
         const gitData = dt.toLocaleDateString('pt-BR');
         const gitHora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         gitTexto = `${gitData} ${gitHora}`;
       }
-    } else {
-      console.warn("GitHub API não encontrou o repositório:", apiUrl, res.status);
-      gitTexto = "verificar URL";
     }
 
     el.innerHTML = `
@@ -2744,7 +2736,6 @@ async function atualizarStatusAtualizacao() {
       &nbsp;|&nbsp;
       Git: indisponível
     `;
-    console.warn("Status Git não carregado:", err);
   }
 }
 
