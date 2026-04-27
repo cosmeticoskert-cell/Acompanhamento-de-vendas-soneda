@@ -878,8 +878,8 @@ function renderizar() {
     [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
   document.getElementById('loja-ativa').style.display = 'none';
 
-  // Cada gráfico recebe dados sem o próprio filtro ativo (para poder mostrar todos os itens com destaque)
-  // KPIs e tabelas recebem dados totalmente filtrados
+  // Gráficos/tabelas da dimensão selecionada mantêm todas as linhas visíveis e destacam a linha ativa.
+  // KPIs e demais visuais recebem o filtro ativo normalmente.
   const byLojaChart = agruparPorLoja(filtrar('loja'));
   const byLojaFull  = agruparPorLoja(filtrar());
 
@@ -1930,6 +1930,7 @@ function seConstruirFiltros() {
 
 function seLimparFiltros() {
   ['se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'].forEach(id => document.getElementById(id).value = '');
+  se_active = { dim: null, val: null };
   seRenderizar();
 }
 
