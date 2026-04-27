@@ -668,9 +668,14 @@ async function init() {
       const csv  = await fetchCSV(GID_DEPARA);
       const rows = parseCSV(csv);
       rows.forEach(r => {
-        const vals = Object.values(r).filter(v => v !== '');
-        if (vals.length >= 2) deParaMap[String(vals[0]).trim()] = String(vals[1]).trim();
+        const keys    = Object.keys(r);
+        const codKey  = keys.find(k => /cod.?loja|cod_loja/i.test(k))    || keys[0];
+        const nomeKey = keys.find(k => /nome.?fantasia|nome_fantasia/i.test(k)) || keys[1];
+        const cod  = (r[codKey]  || '').trim();
+        const nome = (r[nomeKey] || '').trim();
+        if (cod && nome) deParaMap[cod] = nome;
       });
+      console.log('De-Para lojas carregado:', Object.keys(deParaMap).length, 'entradas', deParaMap);
     } catch(e) { console.warn('De-Para não carregado:', e.message); }
 
     try {
@@ -678,7 +683,7 @@ async function init() {
       const rows = parseCSV(csv);
       rows.forEach(r => {
         const keys   = Object.keys(r);
-        const codKey = keys.find(k => /cod.*(barras?|barra)/i.test(k) || /gtin|plu|ean/i.test(k)) || keys[0];
+        const codKey = keys.find(k => /codbarras/i.test(k) || /cod.*(barras?|barra)/i.test(k) || /^gtin$|^ean$|^plu$/i.test(k) || /gtin|ean/i.test(k)) || keys[0];
         const catKey = keys.find(k => /categ/i.test(k)) || keys[1];
         const famKey = keys.find(k => /famil/i.test(k)) || keys[2];
         const ean    = (r[codKey] || '').trim();
@@ -686,12 +691,13 @@ async function init() {
         if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
         if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
       });
+      console.log('Categorias carregadas:', Object.keys(catMap).length, 'entradas');
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
     const todas = parseCSV(csv);
-    console.log('Colunas encontradas:', Object.keys(todas[0] || {}));
-    console.log('Primeiras linhas:', todas.slice(0,3));
+    console.log('Colunas dados brutos:', Object.keys(todas[0] || {}));
+    console.log('Amostra dados brutos (3 linhas):', todas.slice(0,3));
 
     rawData = todas.filter(r => /^\d{4}$/.test(col(r, 'Ano')));
 
@@ -731,15 +737,13 @@ function parseBR(raw) {
 }
 
 function getCat(r) {
-  // Usa o GTIN/PLU do dado bruto para fazer de-para na aba de categorias
-  const ean = col(r, 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'GTIN', 'PLU', 'Ean', 'EAN');
+  const ean = col(r, 'gtin', 'Gtin', 'GTIN', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
   if (ean && catMap[ean]) return catMap[ean];
-  // Fallback: lê a coluna de categoria diretamente (se existir)
-  return col(r, 'Categoria', 'categoria', 'Kert', 'kert');
+  return col(r, 'Categoria', 'categoria', 'Categoria Kert', 'categoria kert', 'Kert', 'kert');
 }
 
 function getFamilia(r) {
-  const ean = col(r, 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'GTIN', 'PLU', 'Ean', 'EAN');
+  const ean = col(r, 'gtin', 'Gtin', 'GTIN', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
   if (ean && familiaMap[ean]) return familiaMap[ean];
   return col(r, 'Familia', 'Família', 'familia', 'família', 'FAMILIA', 'FAMÍLIA');
 }
@@ -1868,7 +1872,7 @@ function vAgruparPorLoja(data) {
   data.forEach(r => {
     const loja = col(r,'Loja','loja');
     if (!loja) return;
-    const val = parseBR(col(r,'Venda (R$)','Venda R$','Venda Valor','venda_valor'));
+    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     const key = loja.trim();
     if (!map[key]) map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, val: 0 };
     map[key].val += val;
@@ -2015,7 +2019,7 @@ function vRenderCat1(data) {
   const map = {};
   data.forEach(r => {
     const cat = getCat(r) || 'Sem categoria';
-    const val = parseBR(col(r,'Venda (R$)','Venda R$','Venda Valor','venda_valor'));
+    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     if (!map[cat]) map[cat] = { cat, val: 0 };
     map[cat].val += val;
   });
