@@ -13,7 +13,7 @@
     --surface:  #141720;
     --surface2: #1c2030;
     --border:   #252a3a;
-    --accent:   #c8f135; 
+    --accent:   #c8f135;
     --accent2:  #4fffb0;
     --muted:    #5a6080;
     --text:     #e8ecf5;
@@ -111,7 +111,7 @@
   .update-notice {
     position: fixed;
     right: 24px;
-    bottom: 24px;
+    top: 88px;
     z-index: 9999;
     display: none;
     align-items: center;
@@ -715,8 +715,8 @@ function parseCSV(text) {
 
 // ── FETCH CSV ─────────────────────────────────────────────────────────────────
 async function fetchCSV(gid) {
-  const url = `https://docs.google.com/spreadsheets/d/e/${PUBLISHED_ID}/pub?gid=${gid}&single=true&output=csv`;
-  const res = await fetch(url);
+  const url = `https://docs.google.com/spreadsheets/d/e/${PUBLISHED_ID}/pub?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status} — verifique se a planilha está publicada na web (Arquivo → Publicar na web).`);
   return res.text();
 }
@@ -2328,12 +2328,21 @@ async function atualizarStatusAtualizacao() {
 let lastGitUpdate = null;
 let lastSheetsSignature = null;
 let updateNoticeVisible = false;
+let monitorInicializado = false;
+
+function gerarHashTexto(txt) {
+  // Hash leve para detectar alteração real em qualquer ponto do CSV.
+  txt = String(txt || '');
+  let h = 0;
+  for (let i = 0; i < txt.length; i++) {
+    h = ((h << 5) - h) + txt.charCodeAt(i);
+    h |= 0;
+  }
+  return `${txt.length}|${h}`;
+}
 
 function getSheetsSignature(csvText) {
-  // Assinatura simples e eficiente: tamanho + início + final do CSV.
-  // Assim detecta alteração real no conteúdo, não apenas mudança na quantidade de linhas.
-  const txt = String(csvText || '');
-  return `${txt.length}|${txt.slice(0, 300)}|${txt.slice(-300)}`;
+  return gerarHashTexto(csvText);
 }
 
 function filtrosEmUso() {
@@ -2356,23 +2365,21 @@ function filtrosEmUso() {
 }
 
 function mostrarAvisoAtualizacao(origem) {
-  if (updateNoticeVisible) return;
-
-  updateNoticeVisible = true;
-
   const box = document.getElementById('update-notice');
   const txt = document.getElementById('update-notice-text');
   if (!box || !txt) return;
 
+  updateNoticeVisible = true;
+
   const complemento = filtrosEmUso()
-    ? 'Você está usando filtros. A página não será recarregada automaticamente para não interromper sua análise.'
-    : 'Clique em recarregar para atualizar a página.';
+    ? 'Você está usando filtros. Para não interromper sua análise, a página não será recarregada automaticamente.'
+    : 'Clique em recarregar para atualizar o painel.';
 
   txt.textContent = `${origem} foi atualizado. ${complemento}`;
   box.style.display = 'flex';
 }
 
-async function verificarAtualizacao() {
+async function verificarAtualizacao(forcarAviso = false) {
   try {
     let houveAtualizacaoGit = false;
     let houveAtualizacaoSheets = false;
@@ -2381,7 +2388,7 @@ async function verificarAtualizacao() {
     const owner = "cosmeticoskert-cell";
     const repo  = "Acompanhamento-de-vendas-soneda";
 
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { cache: 'no-store' });
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&t=${Date.now()}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       const commitDate = data[0]?.commit?.author?.date;
@@ -2409,12 +2416,16 @@ async function verificarAtualizacao() {
       }
     }
 
-    if (houveAtualizacaoGit || houveAtualizacaoSheets) {
-      const origem = houveAtualizacaoGit && houveAtualizacaoSheets
-        ? 'Git e Google Sheets'
-        : houveAtualizacaoGit
-          ? 'Git'
-          : 'Google Sheets';
+    monitorInicializado = true;
+
+    if (forcarAviso || houveAtualizacaoGit || houveAtualizacaoSheets) {
+      const origem = forcarAviso
+        ? 'Monitor de atualização'
+        : houveAtualizacaoGit && houveAtualizacaoSheets
+          ? 'Git e Google Sheets'
+          : houveAtualizacaoGit
+            ? 'Git'
+            : 'Google Sheets';
 
       mostrarAvisoAtualizacao(origem);
     }
@@ -2424,10 +2435,10 @@ async function verificarAtualizacao() {
   }
 }
 
-// roda a cada 60 segundos, mas NÃO recarrega sozinho.
-// Apenas mostra aviso quando identificar mudança real.
-setInterval(verificarAtualizacao, 60000);
-setTimeout(verificarAtualizacao, 3000);
+// Primeira execução apenas cria a base de comparação.
+// Depois disso, o aviso só aparece quando Git ou Sheets mudarem de verdade.
+setTimeout(() => verificarAtualizacao(false), 3000);
+setInterval(() => verificarAtualizacao(false), 60000);
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
