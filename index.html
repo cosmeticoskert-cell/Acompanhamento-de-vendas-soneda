@@ -578,9 +578,18 @@ let seSort         = { col: 'sellout', dir: 'desc' };
 let seRiskSort     = { col: 'sellout', dir: 'desc' };
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
+function toggleActiveFilter(active, dim, val) {
+  const normVal = String(val ?? '').trim();
+  if (active.dim === dim && String(active.val ?? '').trim() === normVal) {
+    return { dim: null, val: null };
+  }
+  return { dim, val: normVal };
+}
+
 function setFilter(active, dim, val, renderFn) {
-  if (active.dim === dim && active.val === val) { active.dim = null; active.val = null; }
-  else { active.dim = dim; active.val = val; }
+  const next = toggleActiveFilter(active, dim, val);
+  active.dim = next.dim;
+  active.val = next.val;
   renderFn();
 }
 function fSetFilter(dim, val)  { setFilter(f_active,  dim, val, renderizar);  }
@@ -599,10 +608,8 @@ function mostrarBanner(bannerId, active, labels, limparFn) {
 function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
-function d2FiltrarPorData(iso) {
-  d2_active = (d2_active.dim === 'data' && d2_active.val === iso)
-    ? { dim: null, val: null }
-    : { dim: 'data', val: iso };
+function d2FiltrarPorData(dataOriginal) {
+  d2_active = toggleActiveFilter(d2_active, 'data', dataOriginal);
   d2Renderizar();
 }
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
@@ -1496,7 +1503,7 @@ function d2Renderizar() {
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
     const ativoData = d2_active.dim === 'data' && d2_active.val === r.data ? ' row-active' : '';
-    return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData('${r.data}')">
+    return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData(this.dataset.v)" data-v="${String(r.data).replace(/"/g,'&quot;')}">
       <td class="td-loja">${r.data}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1942,9 +1949,7 @@ function seLimparFiltros() {
 }
 
 function seFiltrarPorLoja(loja) {
-  se_active = (se_active.dim === 'loja' && se_active.val === loja)
-    ? { dim: null, val: null }
-    : { dim: 'loja', val: loja };
+  se_active = toggleActiveFilter(se_active, 'loja', loja);
   seRenderizar();
 }
 
@@ -2567,3 +2572,4 @@ atualizarStatusAtualizacao();
 
 </body>
 </html>
+
