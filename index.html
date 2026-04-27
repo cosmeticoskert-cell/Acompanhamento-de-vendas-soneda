@@ -546,6 +546,7 @@ const GID_CAT      = '1807120713';
 let rawData      = [];
 let deParaMap    = {};
 let catMap       = {};
+let familiaMap   = {};
 let chartInst    = null;
 let d2Chart      = null;
 let cat1Chart    = null;
@@ -615,9 +616,14 @@ async function init() {
       const csv  = await fetchCSV(GID_CAT);
       const rows = parseCSV(csv);
       rows.forEach(r => {
-        const vals = Object.values(r).filter(v => v !== '');
-        if (vals.length >= 2) catMap[String(vals[0]).trim()] = String(vals[1]).trim();
-        else if (vals.length === 1) catMap[String(vals[0]).trim()] = String(vals[0]).trim();
+        const keys   = Object.keys(r);
+        const codKey = keys.find(k => /cod.*(barras?|barra)/i.test(k) || /gtin|plu|ean/i.test(k)) || keys[0];
+        const catKey = keys.find(k => /categ/i.test(k)) || keys[1];
+        const famKey = keys.find(k => /famil/i.test(k)) || keys[2];
+        const ean    = (r[codKey] || '').trim();
+        if (!ean) return;
+        if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
+        if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
       });
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
@@ -637,6 +643,7 @@ async function init() {
 
     construirFiltros();
     renderizar();
+    vConstruirFiltros();
     d2ConstruirFiltros();
     d2Renderizar();
     d3ConstruirFiltros();
@@ -670,6 +677,8 @@ function getCat(r) {
 }
 
 function getFamilia(r) {
+  const ean = col(r, 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'GTIN', 'PLU', 'Ean', 'EAN');
+  if (ean && familiaMap[ean]) return familiaMap[ean];
   return col(r, 'Familia', 'Família', 'familia', 'família', 'FAMILIA', 'FAMÍLIA');
 }
 
@@ -697,6 +706,10 @@ function construirFiltros() {
   const sM = document.getElementById('f-mes');
   const sL = document.getElementById('f-loja');
   const sC = document.getElementById('f-cat');
+  const sF = document.getElementById('f-familia');
+
+  const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
+
   sA.innerHTML = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
   sM.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
   sL.innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
@@ -704,30 +717,33 @@ function construirFiltros() {
     return `<option value="${l}">#${l} · ${nome}</option>`;
   }).join('');
   sC.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  sF.innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
 
-  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat'].forEach(id =>
+  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat','f-familia'].forEach(id =>
     document.getElementById(id).addEventListener('change', renderizar)
   );
 }
 
 function limparFiltros() {
-  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat'].forEach(id => document.getElementById(id).value = '');
+  ['f-ano','f-mes','f-di','f-df','f-loja','f-cat','f-familia'].forEach(id => document.getElementById(id).value = '');
   renderizar();
 }
 
 function filtrar() {
-  const ano  = document.getElementById('f-ano').value;
-  const mes  = document.getElementById('f-mes').value;
-  const di   = document.getElementById('f-di').value;
-  const df   = document.getElementById('f-df').value;
-  const loja = document.getElementById('f-loja').value;
-  const cat  = document.getElementById('f-cat').value;
+  const ano     = document.getElementById('f-ano').value;
+  const mes     = document.getElementById('f-mes').value;
+  const di      = document.getElementById('f-di').value;
+  const df      = document.getElementById('f-df').value;
+  const loja    = document.getElementById('f-loja').value;
+  const cat     = document.getElementById('f-cat').value;
+  const familia = document.getElementById('f-familia').value;
 
   return rawData.filter(r => {
-    if (ano  && col(r,'Ano') !== ano) return false;
-    if (mes  && col(r,'Mês','Mes') !== mes) return false;
-    if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && getCat(r) !== cat) return false;
+    if (ano     && col(r,'Ano') !== ano) return false;
+    if (mes     && col(r,'Mês','Mes') !== mes) return false;
+    if (loja    && col(r,'Loja','loja') !== loja) return false;
+    if (cat     && getCat(r) !== cat) return false;
+    if (familia && getFamilia(r) !== familia) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1063,15 +1079,18 @@ function d2ConstruirFiltros() {
   const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
-  document.getElementById('d2-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
-  document.getElementById('d2-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
-  document.getElementById('d2-loja').innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
+  const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
+
+  document.getElementById('d2-ano').innerHTML     = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('d2-mes').innerHTML     = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('d2-loja').innerHTML    = '<option value="">Todas</option>' + lojas.map(l => {
     const nome = deParaMap[l] || `Filial ${l}`;
     return `<option value="${l}">#${l} · ${nome}</option>`;
   }).join('');
-  document.getElementById('d2-cat').innerHTML  = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('d2-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('d2-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
 
-  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat'].forEach(id =>
+  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat','d2-familia'].forEach(id =>
     document.getElementById(id).addEventListener('change', d2Renderizar)
   );
 
@@ -1080,23 +1099,25 @@ function d2ConstruirFiltros() {
 }
 
 function d2LimparFiltros() {
-  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat'].forEach(id => document.getElementById(id).value = '');
+  ['d2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat','d2-familia'].forEach(id => document.getElementById(id).value = '');
   d2Renderizar();
 }
 
 function d2Filtrar() {
-  const ano  = document.getElementById('d2-ano').value;
-  const mes  = document.getElementById('d2-mes').value;
-  const di   = document.getElementById('d2-di').value;
-  const df   = document.getElementById('d2-df').value;
-  const loja = document.getElementById('d2-loja').value;
-  const cat  = document.getElementById('d2-cat').value;
+  const ano     = document.getElementById('d2-ano').value;
+  const mes     = document.getElementById('d2-mes').value;
+  const di      = document.getElementById('d2-di').value;
+  const df      = document.getElementById('d2-df').value;
+  const loja    = document.getElementById('d2-loja').value;
+  const cat     = document.getElementById('d2-cat').value;
+  const familia = document.getElementById('d2-familia').value;
 
   return rawData.filter(r => {
-    if (ano  && col(r,'Ano') !== ano) return false;
-    if (mes  && col(r,'Mês','Mes') !== mes) return false;
-    if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && getCat(r) !== cat) return false;
+    if (ano     && col(r,'Ano') !== ano) return false;
+    if (mes     && col(r,'Mês','Mes') !== mes) return false;
+    if (loja    && col(r,'Loja','loja') !== loja) return false;
+    if (cat     && getCat(r) !== cat) return false;
+    if (familia && getFamilia(r) !== familia) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1396,38 +1417,43 @@ function d3ConstruirFiltros() {
   const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
-  document.getElementById('d3-ano').innerHTML  = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
-  document.getElementById('d3-mes').innerHTML  = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
-  document.getElementById('d3-loja').innerHTML = '<option value="">Todas</option>' + lojas.map(l => {
+  const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
+
+  document.getElementById('d3-ano').innerHTML     = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('d3-mes').innerHTML     = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('d3-loja').innerHTML    = '<option value="">Todas</option>' + lojas.map(l => {
     const nome = deParaMap[l] || `Filial ${l}`;
     return `<option value="${l}">#${l} · ${nome}</option>`;
   }).join('');
-  document.getElementById('d3-cat').innerHTML  = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('d3-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('d3-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
 
-  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat'].forEach(id =>
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'].forEach(id =>
     document.getElementById(id).addEventListener('change', d3Renderizar)
   );
   document.getElementById('d3-status-msg').textContent = document.getElementById('status-msg').textContent;
 }
 
 function d3LimparFiltros() {
-  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat'].forEach(id => document.getElementById(id).value = '');
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'].forEach(id => document.getElementById(id).value = '');
   d3Renderizar();
 }
 
 function d3Filtrar() {
-  const ano  = document.getElementById('d3-ano').value;
-  const mes  = document.getElementById('d3-mes').value;
-  const di   = document.getElementById('d3-di').value;
-  const df   = document.getElementById('d3-df').value;
-  const loja = document.getElementById('d3-loja').value;
-  const cat  = document.getElementById('d3-cat').value;
+  const ano     = document.getElementById('d3-ano').value;
+  const mes     = document.getElementById('d3-mes').value;
+  const di      = document.getElementById('d3-di').value;
+  const df      = document.getElementById('d3-df').value;
+  const loja    = document.getElementById('d3-loja').value;
+  const cat     = document.getElementById('d3-cat').value;
+  const familia = document.getElementById('d3-familia').value;
 
   return rawData.filter(r => {
-    if (ano  && col(r,'Ano') !== ano) return false;
-    if (mes  && col(r,'Mês','Mes') !== mes) return false;
-    if (loja && col(r,'Loja','loja') !== loja) return false;
-    if (cat  && getCat(r) !== cat) return false;
+    if (ano     && col(r,'Ano') !== ano) return false;
+    if (mes     && col(r,'Mês','Mes') !== mes) return false;
+    if (loja    && col(r,'Loja','loja') !== loja) return false;
+    if (cat     && getCat(r) !== cat) return false;
+    if (familia && getFamilia(r) !== familia) return false;
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
@@ -1596,6 +1622,32 @@ function t3OrdenarPor(coluna) {
   t3Sort.dir = t3Sort.col === coluna && t3Sort.dir === 'desc' ? 'asc' : 'desc';
   t3Sort.col = coluna;
   d3Renderizar();
+}
+
+// ── ABA VALOR: VENDA VALOR (stubs — selects + limpar) ────────────────────────
+function vConstruirFiltros() {
+  const anos     = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
+  const meses    = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
+  const ORD      = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
+  const lojas    = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const cats     = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
+  const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
+
+  document.getElementById('v-ano').innerHTML     = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('v-mes').innerHTML     = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('v-loja').innerHTML    = '<option value="">Todas</option>' + lojas.map(l => {
+    const nome = deParaMap[l] || `Filial ${l}`;
+    return `<option value="${l}">#${l} · ${nome}</option>`;
+  }).join('');
+  document.getElementById('v-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('v-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
+
+  document.getElementById('v-status-msg').textContent = document.getElementById('status-msg').textContent;
+}
+
+function vLimparFiltros() {
+  ['v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia'].forEach(id => document.getElementById(id).value = '');
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
