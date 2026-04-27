@@ -600,7 +600,7 @@ function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
 function d2FiltrarPorData(iso) {
-  d2_table_active = (d2_table_active.dim === 'data' && d2_table_active.val === iso)
+  d2_active = (d2_active.dim === 'data' && d2_active.val === iso)
     ? { dim: null, val: null }
     : { dim: 'data', val: iso };
   d2Renderizar();
@@ -885,7 +885,7 @@ function renderizar() {
 
   renderKPIs(byLojaFull);
   renderGrafico(byLojaChart);
-  renderTabela(byLojaFull);
+  renderTabela(byLojaChart);
   renderCat1(filtrar('cat'));
   renderFam1(filtrar('familia'));
 }
@@ -1320,6 +1320,11 @@ function d2Filtrar(excl) {
     if (familia && getFamilia(r) !== familia) return false;
     if (d2_active.val && d2_active.dim !== excl) {
       if (d2_active.dim === 'cat' && getCat(r) !== d2_active.val) return false;
+      if (d2_active.dim === 'data') {
+        const dtAtiva = d2ParseData(col(r,'Data','data'));
+        const isoAtiva = dtAtiva ? dataParaISO(dtAtiva) : '';
+        if (isoAtiva !== d2_active.val) return false;
+      }
     }
     if (di || df) {
       const raw = col(r,'Data','data');
@@ -1365,9 +1370,10 @@ function d2DiaSemana(iso) {
 }
 
 function d2Renderizar() {
-  mostrarBanner('d2-active-banner', d2_active, {cat:'CATEGORIA'}, 'd2LimparAtivo');
+  mostrarBanner('d2-active-banner', d2_active, {cat:'CATEGORIA', data:'DATA'}, 'd2LimparAtivo');
   const dados  = d2Filtrar();
   const porDia = d2AgruparPorDia(dados);
+  const porDiaTabela = d2AgruparPorDia(d2Filtrar('data'));
 
   const ano  = document.getElementById('d2-ano').value;
   const mes  = document.getElementById('d2-mes').value;
@@ -1458,7 +1464,7 @@ function d2Renderizar() {
     }
   });
 
-  const sorted2 = [...porDia].sort((a,b) => {
+  const sorted2 = [...porDiaTabela].sort((a,b) => {
     let va, vb;
     const ORD_DIA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     if (t2Sort.col === 'data') { va = a.data; vb = b.data; }
@@ -1470,7 +1476,7 @@ function d2Renderizar() {
     return 0;
   });
 
-  const maxQ2 = Math.max(...porDia.map(r => r.qty), 1);
+  const maxQ2 = Math.max(...porDiaTabela.map(r => r.qty), 1);
 
   const th2 = (label, key) => {
     const cls = t2Sort.col === key ? ` class="sort-${t2Sort.dir}"` : '';
@@ -1482,7 +1488,7 @@ function d2Renderizar() {
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
-    const ativoData = d2_table_active.dim === 'data' && d2_table_active.val === r.data ? ' row-active' : '';
+    const ativoData = d2_active.dim === 'data' && d2_active.val === r.data ? ' row-active' : '';
     return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData('${r.data}')">
       <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
@@ -1706,6 +1712,7 @@ function d3Filtrar(excl) {
 function d3Renderizar() {
   mostrarBanner('d3-active-banner', d3_active, {loja:'FILIAL'}, 'd3LimparAtivo');
   const dados = d3Filtrar();
+  const dadosTabela = d3Filtrar('loja');
   const ano   = document.getElementById('d3-ano').value;
   const mes   = document.getElementById('d3-mes').value;
   const loja  = document.getElementById('d3-loja').value;
@@ -1725,6 +1732,17 @@ function d3Renderizar() {
   });
 
   const byLoja = Object.values(mapLoja).sort((a,b) => b.qty - a.qty);
+
+  const mapLojaTabela = {};
+  dadosTabela.forEach(r => {
+    const l   = col(r,'Loja','loja'); if (!l) return;
+    const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
+    const key = l.trim();
+    if (!deParaMap[key]) return;
+    if (!mapLojaTabela[key]) mapLojaTabela[key] = { loja: key, nome: deParaMap[key], qty: 0 };
+    mapLojaTabela[key].qty += est;
+  });
+  const byLojaTabela = Object.values(mapLojaTabela).sort((a,b) => b.qty - a.qty);
   const total  = byLoja.reduce((s,r) => s + r.qty, 0);
   const ativas = byLoja.filter(r => r.qty > 0).length;
   const top    = byLoja[0];
@@ -1844,12 +1862,12 @@ function d3Renderizar() {
     c2.style.cursor = 'pointer';
   }
 
-  const maxQ = byLoja[0]?.qty || 1;
+  const maxQ = byLojaTabela[0]?.qty || 1;
   const th3 = (label, key) => {
     const cls = t3Sort.col === key ? ` class="sort-${t3Sort.dir}"` : '';
     return `<th${cls} onclick="t3OrdenarPor('${key}')">${label}</th>`;
   };
-  const sorted3 = [...byLoja].sort((a,b) => {
+  const sorted3 = [...byLojaTabela].sort((a,b) => {
     let va, vb;
     if (t3Sort.col === 'loja') { va=+a.loja; vb=+b.loja; }
     else if (t3Sort.col === 'nome') { va=a.nome.toLowerCase(); vb=b.nome.toLowerCase(); }
@@ -1872,7 +1890,7 @@ function d3Renderizar() {
       </div></td>
     </tr>`;
   }).join('');
-  document.getElementById('d3-table-body').innerHTML = byLoja.length === 0
+  document.getElementById('d3-table-body').innerHTML = byLojaTabela.length === 0
     ? '<div class="no-data">Nenhum dado para os filtros selecionados</div>'
     : `<table><thead><tr>${th3('Filial','loja')}${th3('Nome Fantasia','nome')}${th3('Estoque Atual','qty')}${th3('Volume','volume')}</tr></thead><tbody>${linhas3}</tbody></table>`;
 }
@@ -1922,7 +1940,7 @@ function seFiltrarPorLoja(loja) {
   seRenderizar();
 }
 
-function seFiltrar() {
+function seFiltrar(excl) {
   const ano     = document.getElementById('se-ano').value;
   const mes     = document.getElementById('se-mes').value;
   const di      = document.getElementById('se-di').value;
@@ -1943,6 +1961,10 @@ function seFiltrar() {
     if (loja    && lojaKey !== loja) return false;
     if (cat     && getCat(r) !== cat) return false;
     if (familia && getFamilia(r) !== familia) return false;
+
+    if (se_active.val && se_active.dim !== excl) {
+      if (se_active.dim === 'loja' && lojaKey !== se_active.val) return false;
+    }
 
     if (di || df) {
       const raw = col(r,'Data','data');
@@ -2027,7 +2049,9 @@ function seAplicarSort(data, sortState) {
 
 function seRenderizar() {
   const dados = seFiltrar();
+  const dadosTabela = seFiltrar('loja');
   const byLoja = seAgruparPorLoja(dados);
+  const byLojaTabela = seAgruparPorLoja(dadosTabela);
 
   const ano = document.getElementById('se-ano').value;
   const mes = document.getElementById('se-mes').value;
@@ -2042,7 +2066,7 @@ function seRenderizar() {
   
 
   seRenderGrafico(byLoja);
-  seRenderTabela(byLoja);
+  seRenderTabela(byLojaTabela);
   seRenderRiskTabela(byLoja);
 }
 
@@ -2495,7 +2519,7 @@ function vRenderizar() {
   const byLojaFull  = vAgruparPorLoja(vFiltrar());
   vRenderKPIs(byLojaFull);
   vRenderGrafico(byLojaChart);
-  vRenderTabela(byLojaFull);
+  vRenderTabela(byLojaChart);
   vRenderCat1(vFiltrar('cat'));
 }
 
