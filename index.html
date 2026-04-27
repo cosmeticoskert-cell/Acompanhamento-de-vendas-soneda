@@ -128,95 +128,37 @@
 </div>
 </header>
 
-<nav class="tabs-nav">
-  <button class="tab-btn active" onclick="trocarAba('vendas', event)">Vendas Sell Out</button>
-  <button class="tab-btn" onclick="trocarAba('valor', event)">Venda Valor</button>
-  <button class="tab-btn" onclick="trocarAba('dia', event)">Venda por Dia</button>
-  <button class="tab-btn" onclick="trocarAba('estoque', event)">Estoque</button>
-  <button class="tab-btn" onclick="trocarAba('se', event)">Sell Out x Estoque</button>
-</nav>
-
-<!-- ABA 1: VENDAS SELL OUT -->
-<div id="tab-vendas" class="tab-panel active">
-<main>
-  <h1 class="section-title">Vendas Sell Out</h1>
-  <p class="section-sub" id="status-msg">Carregando dados da planilha...</p>
-
-  <div class="filters-row">
-    <div class="filter-group"><label>Ano</label><select id="f-ano"><option value="">Todos</option></select></div>
-    <div class="filter-group"><label>Mês</label><select id="f-mes"><option value="">Todos</option></select></div>
-    <div class="filter-group"><label>Data início</label><input type="date" id="f-di"></div>
-    <div class="filter-group"><label>Data fim</label><input type="date" id="f-df"></div>
-    <div class="filter-group"><label>Loja</label><select id="f-loja"><option value="">Todas</option></select></div>
-    <div class="filter-group"><label>Categoria</label><select id="f-cat"><option value="">Todas</option></select></div>
-    <div class="filter-group"><label>Família</label><select id="f-familia"><option value="">Todas</option></select></div>
-    <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
-  </div>
-  <div id="f-active-banner" class="active-banner" style="display:none"></div>
-
-  <div class="kpi-row">
-    <div class="kpi-card"><div class="kpi-label">Total Vendido</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub">unidades vendidas</div></div>
-    <div class="kpi-card"><div class="kpi-label">Lojas com Venda</div><div class="kpi-value" id="kpi-lojas">—</div><div class="kpi-sub">filiais ativas no período</div></div>
-    <div class="kpi-card"><div class="kpi-label">Maior Filial</div><div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">—</div><div class="kpi-sub" id="kpi-top-sub">—</div></div>
+    
+      <div class="kpi-value" id="se-kpi-cobertura">—</div>
+      <div class="kpi-sub">estoque ÷ sell out</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Maior Risco</div>
+      <div class="kpi-value" id="se-kpi-risco" style="font-size:1.1rem;padding-top:6px">—</div>
+      <div class="kpi-sub" id="se-kpi-risco-sub">—</div>
+    </div>
   </div>
 
   <div class="chart-card">
     <div class="chart-header">
       <div>
-        <div class="chart-title">Quantidade Vendida por Filial</div>
-        <div class="chart-subtitle" id="chart-sub">Todos os períodos</div>
-        <div id="loja-ativa" style="display:none;align-items:center;margin-top:10px;gap:6px"></div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div class="kpi-label">Total do período</div>
-        <div class="kpi-value" id="chart-total-val" style="font-size:2.2rem">—</div>
-        <div class="kpi-sub">unidades vendidas</div>
+        <div class="chart-title">Sell Out x Estoque por Filial</div>
+        <div class="chart-subtitle" id="se-chart-sub">Todos os períodos</div>
       </div>
     </div>
-    <div class="chart-wrap" id="chart-wrap"><div class="state-msg" id="chart-state"><div class="spinner"></div>Carregando dados...</div></div>
-  </div>
-
-  <div class="table-card"><div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div><div id="table-body"><div class="no-data">Carregando...</div></div></div>
-
-  <div class="chart-card" style="margin-top:20px"><div class="chart-header"><div><div class="chart-title">Categorias com Maior Venda</div><div class="chart-subtitle" id="cat1-sub">Todos os períodos</div></div></div><div class="chart-wrap" id="cat1-wrap" style="height:360px"><div class="state-msg" id="cat1-state"><div class="spinner"></div>Carregando...</div></div></div>
-  <div class="table-card" style="margin-top:20px"><div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div><div id="cat1-table-body"><div class="no-data">Carregando...</div></div></div>
-
-  <div class="chart-card" style="margin-top:20px"><div class="chart-header"><div><div class="chart-title">Famílias com Maior Venda</div><div class="chart-subtitle" id="fam1-sub">Todos os períodos</div></div></div><div class="chart-wrap" id="fam1-wrap" style="height:360px"><div class="state-msg" id="fam1-state"><div class="spinner"></div>Carregando...</div></div></div>
-  <div class="table-card" style="margin-top:20px"><div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div><div id="fam1-table-body"><div class="no-data">Carregando...</div></div></div>
-</main>
-</div>
-<!-- /ABA 1 -->
-
-<!-- ABA SELL OUT X ESTOQUE -->
-<div id="tab-se" class="tab-panel">
-<main>
-  <h1 class="section-title">Sell Out x Estoque</h1>
-  <p class="section-sub" id="se-status-msg">Carregando dados...</p>
-
-  <div class="filters-row">
-    <div class="filter-group"><label>Ano</label><select id="se-ano"><option value="">Todos</option></select></div>
-    <div class="filter-group"><label>Mês</label><select id="se-mes"><option value="">Todos</option></select></div>
-    <div class="filter-group"><label>Data início</label><input type="date" id="se-di"></div>
-    <div class="filter-group"><label>Data fim</label><input type="date" id="se-df"></div>
-    <div class="filter-group"><label>Loja</label><select id="se-loja"><option value="">Todas</option></select></div>
-    <div class="filter-group"><label>Categoria</label><select id="se-cat"><option value="">Todas</option></select></div>
-    <div class="filter-group"><label>Família</label><select id="se-familia"><option value="">Todas</option></select></div>
-    <button class="btn-clear" onclick="seLimparFiltros()">↺ Limpar</button>
-  </div>
-
-  <div class="kpi-row">
-    <div class="kpi-card"><div class="kpi-label">Sell Out Total</div><div class="kpi-value" id="se-kpi-sellout">—</div><div class="kpi-sub">unidades vendidas</div></div>
-    <div class="kpi-card"><div class="kpi-label">Estoque Total</div><div class="kpi-value" id="se-kpi-estoque">—</div><div class="kpi-sub">unidades em estoque</div></div>
-  </div>
-
-  <div class="chart-card">
-    <div class="chart-header"><div><div class="chart-title">Sell Out x Estoque por Filial</div><div class="chart-subtitle" id="se-chart-sub">Todos os períodos</div></div></div>
-    <div class="chart-wrap" id="se-chart-wrap" style="height:420px"><div class="state-msg" id="se-chart-state"><div class="spinner"></div>Carregando dados...</div></div>
+    <div class="chart-wrap" id="se-chart-wrap" style="height:420px">
+      <div class="state-msg" id="se-chart-state"><div class="spinner"></div>Carregando dados...</div>
+    </div>
   </div>
 
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento Sell Out x Estoque por Filial</div></div>
     <div id="se-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
+
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Ranking de Risco de Ruptura</div></div>
+    <div id="se-risk-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
 </div>
@@ -573,7 +515,7 @@ let t2Sort         = { col: 'qty', dir: 'desc' };
 let cat2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
 let seSort         = { col: 'sellout', dir: 'desc' };
-let seRiskSort     = { col: 'sellout', dir: 'desc' };
+let seRiskSort     = { col: 'cobertura', dir: 'asc' };
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
 function setFilter(active, dim, val, renderFn) {
@@ -1951,6 +1893,8 @@ function seAgruparPorLoja(data) {
         nome: deParaMap[loja],
         sellout: 0,
         estoque: 0,
+        cobertura: 0,
+        giro: 0,
         risco: ''
       };
     }
@@ -1960,9 +1904,13 @@ function seAgruparPorLoja(data) {
   });
 
   return Object.values(map).map(r => {
-    if (r.sellout > 0 && r.estoque <= 0) r.risco = 'Sem estoque';
-    else if (r.sellout > r.estoque) r.risco = 'Estoque menor que venda';
-    else if (r.sellout > 0) r.risco = 'OK';
+    
+    
+
+    if (r.sellout > 0 && r.estoque <= 0) r.risco = 'Ruptura';
+    else if (r.sellout > 0 && r.cobertura < 1) r.risco = 'Alto';
+    else if (r.sellout > 0 && r.cobertura < 2) r.risco = 'Médio';
+    else if (r.sellout > 0) r.risco = 'Baixo';
     else r.risco = 'Sem venda';
 
     return r;
@@ -2011,10 +1959,16 @@ function seRenderizar() {
 
   const totalSellout = byLoja.reduce((s,r) => s + r.sellout, 0);
   const totalEstoque = byLoja.reduce((s,r) => s + r.estoque, 0);
+  const cobertura = totalSellout > 0 ? totalEstoque / totalSellout : 0;
+  const risco = byLoja
+    .filter(r => r.sellout > 0)
+    .sort((a,b) => a.cobertura - b.cobertura)[0];
 
   document.getElementById('se-kpi-sellout').textContent = totalSellout.toLocaleString('pt-BR');
   document.getElementById('se-kpi-estoque').textContent = totalEstoque.toLocaleString('pt-BR');
   
+  document.getElementById('se-kpi-risco').textContent = risco ? risco.nome : '—';
+  document.getElementById('se-kpi-risco-sub').textContent = risco ? `${risco.cobertura.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}x cobertura` : '—';
 
   seRenderGrafico(byLoja);
   seRenderTabela(byLoja);
@@ -2127,6 +2081,7 @@ function seRenderTabela(byLoja) {
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
       
+      <td class="td-loja">${r.risco}</td>
     </tr>
   `).join('');
 
@@ -2136,13 +2091,50 @@ function seRenderTabela(byLoja) {
       ${th('Nome Fantasia','nome')}
       ${th('Sell Out','sellout')}
       ${th('Estoque','estoque')}
+      ${}
+      ${th('Risco','risco')}
     </tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
 }
 
 function seRenderRiskTabela(byLoja) {
-  // Ranking separado removido: a aba agora mostra apenas Sell Out, Estoque e Status.
+  const container = document.getElementById('se-risk-table-body');
+  const base = byLoja.filter(r => r.sellout > 0);
+
+  if (base.length === 0) {
+    container.innerHTML = '<div class="no-data">Nenhuma filial com venda no período selecionado</div>';
+    return;
+  }
+
+  const sorted = seAplicarSort(base, seRiskSort);
+  const th = (label, key) => {
+    const cls = seRiskSort.col === key ? ` class="sort-${seRiskSort.dir}"` : '';
+    return `<th${cls} onclick="seRiskOrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = sorted.map(r => `
+    <tr>
+      <td class="td-loja">#${r.loja}</td>
+      <td class="td-nome">${r.nome}</td>
+      <td class="td-loja">${r.risco}</td>
+      <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
+      <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
+      
+    </tr>
+  `).join('');
+
+  container.innerHTML = `<table>
+    <thead><tr>
+      ${th('Filial','loja')}
+      ${th('Nome Fantasia','nome')}
+      ${th('Risco','risco')}
+      ${th('Sell Out','sellout')}
+      ${th('Estoque','estoque')}
+      ${}
+    </tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
 }
 
 // ── ABA VALOR: VENDA VALOR (R$) ───────────────────────────────────────────────
@@ -2466,12 +2458,11 @@ function vRenderizar() {
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
-function trocarAba(aba, evt) {
+function trocarAba(aba) {
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + aba).classList.add('active');
-  const btn = evt?.currentTarget || window.event?.currentTarget;
-  if (btn) btn.classList.add('active');
+  event.currentTarget.classList.add('active');
 }
 
 
