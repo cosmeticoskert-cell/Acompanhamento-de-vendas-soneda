@@ -748,6 +748,39 @@ function parseBR(raw) {
   return parseFloat((raw || '').replace(/R\$\s*/i, '').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
+function parseDataBR(raw) {
+  if (!raw) return null;
+
+  const txt = String(raw).trim();
+  if (!txt) return null;
+
+  // Formato brasileiro: DD/MM/AAAA
+  const p = txt.split('/');
+  if (p.length === 3) {
+    const d = Number(p[0]);
+    const m = Number(p[1]);
+    const y = Number(p[2]);
+
+    if (!Number.isNaN(d) && !Number.isNaN(m) && !Number.isNaN(y)) {
+      const dt = new Date(y, m - 1, d);
+      return isNaN(dt) ? null : dt;
+    }
+  }
+
+  // Fallback para datas ISO ou formatos reconhecidos pelo navegador
+  const dt = new Date(txt);
+  return isNaN(dt) ? null : dt;
+}
+
+function dataParaISO(dt) {
+  if (!dt || isNaN(dt)) return '';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const d = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+
 function getCat(r) {
   const ean = col(r, 'gtin', 'Gtin', 'GTIN', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
   if (ean && catMap[ean]) return catMap[ean];
@@ -831,12 +864,9 @@ function filtrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p = raw.split('/');
-        const dt = p.length === 3
-          ? new Date(+p[2], +p[0]-1, +p[1])
-          : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1315,10 +1345,9 @@ function d2Filtrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1329,14 +1358,7 @@ function d2Filtrar(excl) {
 }
 
 function d2ParseData(raw) {
-  if (!raw) return null;
-  const p = raw.split('/');
-  if (p.length === 3) {
-    const d = new Date(+p[2], +p[0]-1, +p[1]);
-    return isNaN(d) ? null : d;
-  }
-  const d = new Date(raw);
-  return isNaN(d) ? null : d;
+  return parseDataBR(raw);
 }
 
 function d2AgruparPorDia(data) {
@@ -1344,7 +1366,7 @@ function d2AgruparPorDia(data) {
   data.forEach(r => {
     const dt = d2ParseData(col(r,'Data','data'));
     if (!dt) return;
-    const key = dt.toISOString().split('T')[0];
+    const key = dataParaISO(dt);
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[key]) map[key] = { data: key, qty: 0 };
     map[key].qty += qty;
@@ -1516,7 +1538,7 @@ function renderCat2(data) {
   const cats = [...new Set(data.map(r => getCat(r)).filter(Boolean))].sort();
   const dias  = [...new Set(data.map(r => {
     const dt = d2ParseData(col(r,'Data','data'));
-    return dt ? dt.toISOString().split('T')[0] : null;
+    return dt ? dataParaISO(dt) : null;
   }).filter(Boolean))].sort();
 
   const state2 = document.getElementById('cat2-state');
@@ -1531,7 +1553,7 @@ function renderCat2(data) {
   data.forEach(r => {
     const c  = getCat(r); if (!c) return;
     const dt = d2ParseData(col(r,'Data','data')); if (!dt) return;
-    const dk = dt.toISOString().split('T')[0];
+    const dk = dataParaISO(dt);
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!mapCatDia[c]) mapCatDia[c] = {};
     mapCatDia[c][dk] = (mapCatDia[c][dk] || 0) + qty;
@@ -1684,10 +1706,9 @@ function d3Filtrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1734,6 +1755,9 @@ function d3Renderizar() {
   const barState = document.getElementById('d3-chart-state');
   if (byLoja.length === 0) {
     if(barState) { barState.style.display='flex'; barState.innerHTML='Nenhum dado.'; }
+    if (d3BarChart) { d3BarChart.destroy(); d3BarChart = null; }
+    const oldBarCanvas = document.getElementById('d3-bar-canvas');
+    if (oldBarCanvas) oldBarCanvas.remove();
   } else {
     if(barState) barState.style.display = 'none';
     let c1 = document.getElementById('d3-bar-canvas');
@@ -1773,19 +1797,22 @@ function d3Renderizar() {
   }
 
   const dadosChart = d3Filtrar('loja');
-  const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
+  const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dataParaISO(dt):null; }).filter(Boolean))].sort();
   const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
   if (dias.length === 0) {
     if(lineState) { lineState.style.display='flex'; lineState.innerHTML='Nenhum dado.'; }
+    if (d3LineChart) { d3LineChart.destroy(); d3LineChart = null; }
+    const oldLineCanvas = document.getElementById('d3-line-canvas');
+    if (oldLineCanvas) oldLineCanvas.remove();
   } else {
     if(lineState) lineState.style.display = 'none';
     const mapLD = {};
     dadosChart.forEach(r => {
       const l   = col(r,'Loja','loja'); if (!l || !lojas.includes(l)) return;
       const dt  = d2ParseData(col(r,'Data','data')); if (!dt) return;
-      const dk  = dt.toISOString().split('T')[0];
+      const dk  = dataParaISO(dt);
       const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
       if (!mapLD[l]) mapLD[l] = {};
       mapLD[l][dk] = (mapLD[l][dk] || 0) + est;
@@ -1923,10 +1950,9 @@ function vFiltrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
