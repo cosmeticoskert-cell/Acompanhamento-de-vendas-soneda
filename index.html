@@ -106,6 +106,41 @@
   tbody tr.clickable-row { cursor:pointer; }
   tbody tr.clickable-row:hover { background:var(--surface2); }
   tbody tr.row-active { background:rgba(200,241,53,0.07) !important; outline:1px solid var(--accent); outline-offset:-1px; }
+
+  /* UPDATE NOTICE */
+  .update-notice {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    font-family: 'DM Mono', monospace;
+    font-size: .74rem;
+    max-width: 430px;
+  }
+  .update-notice strong { color: var(--accent); font-weight: 600; }
+  .update-notice span { color: var(--text-dim); line-height: 1.5; }
+  .update-notice button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    white-space: nowrap;
+  }
+  .update-notice button:hover { filter: brightness(1.08); }
+
 </style>
 </head>
 <body>
@@ -126,6 +161,15 @@
   </div>
 </div>
 </header>
+
+<div id="update-notice" class="update-notice">
+  <div>
+    <strong>Dados atualizados</strong><br>
+    <span id="update-notice-text">Existe uma nova atualização disponível.</span>
+  </div>
+  <button onclick="location.reload()">Recarregar</button>
+</div>
+
 
 <nav class="tabs-nav">
   <button class="tab-btn active" onclick="trocarAba('loja')">Vendas Sell Out</button>
@@ -2278,6 +2322,112 @@ async function atualizarStatusAtualizacao() {
     console.warn("Status Git não carregado:", err);
   }
 }
+
+
+// ── AUTO UPDATE CONTROLADO (SHEETS + GIT) ─────────────────────────────────
+let lastGitUpdate = null;
+let lastSheetsSignature = null;
+let updateNoticeVisible = false;
+
+function getSheetsSignature(csvText) {
+  // Assinatura simples e eficiente: tamanho + início + final do CSV.
+  // Assim detecta alteração real no conteúdo, não apenas mudança na quantidade de linhas.
+  const txt = String(csvText || '');
+  return `${txt.length}|${txt.slice(0, 300)}|${txt.slice(-300)}`;
+}
+
+function filtrosEmUso() {
+  const ids = [
+    'f-ano','f-mes','f-di','f-df','f-loja','f-cat','f-familia',
+    'v-ano','v-mes','v-di','v-df','v-loja','v-cat','v-familia',
+    'd2-ano','d2-mes','d2-di','d2-df','d2-loja','d2-cat','d2-familia',
+    'd3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'
+  ];
+
+  const temFiltroCampo = ids.some(id => {
+    const el = document.getElementById(id);
+    return el && el.value;
+  });
+
+  const temFiltroInterativo =
+    (f_active?.val) || (v_active?.val) || (d2_active?.val) || (d3_active?.val);
+
+  return Boolean(temFiltroCampo || temFiltroInterativo);
+}
+
+function mostrarAvisoAtualizacao(origem) {
+  if (updateNoticeVisible) return;
+
+  updateNoticeVisible = true;
+
+  const box = document.getElementById('update-notice');
+  const txt = document.getElementById('update-notice-text');
+  if (!box || !txt) return;
+
+  const complemento = filtrosEmUso()
+    ? 'Você está usando filtros. A página não será recarregada automaticamente para não interromper sua análise.'
+    : 'Clique em recarregar para atualizar a página.';
+
+  txt.textContent = `${origem} foi atualizado. ${complemento}`;
+  box.style.display = 'flex';
+}
+
+async function verificarAtualizacao() {
+  try {
+    let houveAtualizacaoGit = false;
+    let houveAtualizacaoSheets = false;
+
+    // 🔹 VERIFICA GIT
+    const owner = "cosmeticoskert-cell";
+    const repo  = "Acompanhamento-de-vendas-soneda";
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      const commitDate = data[0]?.commit?.author?.date;
+
+      if (commitDate) {
+        if (lastGitUpdate === null) {
+          lastGitUpdate = commitDate;
+        } else if (commitDate !== lastGitUpdate) {
+          houveAtualizacaoGit = true;
+          lastGitUpdate = commitDate;
+        }
+      }
+    }
+
+    // 🔹 VERIFICA SHEETS
+    const csv = await fetchCSV(GID_BRUTOS);
+    const sheetsSignature = getSheetsSignature(csv);
+
+    if (sheetsSignature) {
+      if (lastSheetsSignature === null) {
+        lastSheetsSignature = sheetsSignature;
+      } else if (sheetsSignature !== lastSheetsSignature) {
+        houveAtualizacaoSheets = true;
+        lastSheetsSignature = sheetsSignature;
+      }
+    }
+
+    if (houveAtualizacaoGit || houveAtualizacaoSheets) {
+      const origem = houveAtualizacaoGit && houveAtualizacaoSheets
+        ? 'Git e Google Sheets'
+        : houveAtualizacaoGit
+          ? 'Git'
+          : 'Google Sheets';
+
+      mostrarAvisoAtualizacao(origem);
+    }
+
+  } catch (err) {
+    console.warn("Erro ao verificar atualização:", err);
+  }
+}
+
+// roda a cada 60 segundos, mas NÃO recarrega sozinho.
+// Apenas mostra aviso quando identificar mudança real.
+setInterval(verificarAtualizacao, 60000);
+setTimeout(verificarAtualizacao, 3000);
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
