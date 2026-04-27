@@ -106,82 +106,60 @@
   tbody tr.clickable-row { cursor:pointer; }
   tbody tr.clickable-row:hover { background:var(--surface2); }
   tbody tr.row-active { background:rgba(200,241,53,0.07) !important; outline:1px solid var(--accent); outline-offset:-1px; }
+
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Soneda<span>.</span></div>
-  <div class="badge">ACOMPANHAMENTO DE VENDAS E ESTOQUE</div>
+  <div style="display:flex; align-items:center; gap:16px">
+  <div id="status-update" style="
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--bg);
+  ">
+    Atualizando...
+  </div>
+</div>
 </header>
 
 <nav class="tabs-nav">
-  <button class="tab-btn active" onclick="trocarAba('loja')">Vendas Sell Out</button>
-  <button class="tab-btn" onclick="trocarAba('valor')">Venda Valor</button>
-  <button class="tab-btn" onclick="trocarAba('dia')">Venda por Dia</button>
-  <button class="tab-btn" onclick="trocarAba('estoque')">Estoque</button>
+  <button class="tab-btn active" onclick="trocarAba('vendas', event)">Vendas Sell Out</button>
+  <button class="tab-btn" onclick="trocarAba('valor', event)">Venda Valor</button>
+  <button class="tab-btn" onclick="trocarAba('dia', event)">Venda por Dia</button>
+  <button class="tab-btn" onclick="trocarAba('estoque', event)">Estoque</button>
+  <button class="tab-btn" onclick="trocarAba('se', event)">Sell Out x Estoque</button>
 </nav>
 
 <!-- ABA 1: VENDAS SELL OUT -->
-<div id="tab-loja" class="tab-panel active">
+<div id="tab-vendas" class="tab-panel active">
 <main>
   <h1 class="section-title">Vendas Sell Out</h1>
   <p class="section-sub" id="status-msg">Carregando dados da planilha...</p>
 
-  <!-- FILTROS -->
   <div class="filters-row">
-    <div class="filter-group">
-      <label>Ano</label>
-      <select id="f-ano"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Mês</label>
-      <select id="f-mes"><option value="">Todos</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Data início</label>
-      <input type="date" id="f-di">
-    </div>
-    <div class="filter-group">
-      <label>Data fim</label>
-      <input type="date" id="f-df">
-    </div>
-    <div class="filter-group">
-      <label>Loja</label>
-      <select id="f-loja"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Categoria</label>
-      <select id="f-cat"><option value="">Todas</option></select>
-    </div>
-    <div class="filter-group">
-      <label>Família</label>
-      <select id="f-familia"><option value="">Todas</option></select>
-    </div>
+    <div class="filter-group"><label>Ano</label><select id="f-ano"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>Mês</label><select id="f-mes"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>Data início</label><input type="date" id="f-di"></div>
+    <div class="filter-group"><label>Data fim</label><input type="date" id="f-df"></div>
+    <div class="filter-group"><label>Loja</label><select id="f-loja"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label>Categoria</label><select id="f-cat"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label>Família</label><select id="f-familia"><option value="">Todas</option></select></div>
     <button class="btn-clear" onclick="limparFiltros()">↺ Limpar</button>
   </div>
   <div id="f-active-banner" class="active-banner" style="display:none"></div>
 
-  <!-- KPIs -->
   <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">Total Geral (Qtd)</div>
-      <div class="kpi-value" id="kpi-total">—</div>
-      <div class="kpi-sub">unidades vendidas</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Lojas com Venda</div>
-      <div class="kpi-value" id="kpi-lojas">—</div>
-      <div class="kpi-sub">filiais ativas no período</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Maior Filial</div>
-      <div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">—</div>
-      <div class="kpi-sub" id="kpi-top-sub">—</div>
-    </div>
+    <div class="kpi-card"><div class="kpi-label">Total Vendido</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub">unidades vendidas</div></div>
+    <div class="kpi-card"><div class="kpi-label">Lojas com Venda</div><div class="kpi-value" id="kpi-lojas">—</div><div class="kpi-sub">filiais ativas no período</div></div>
+    <div class="kpi-card"><div class="kpi-label">Maior Filial</div><div class="kpi-value" id="kpi-top" style="font-size:1.1rem;padding-top:6px">—</div><div class="kpi-sub" id="kpi-top-sub">—</div></div>
   </div>
 
-  <!-- GRÁFICO -->
   <div class="chart-card">
     <div class="chart-header">
       <div>
@@ -195,60 +173,55 @@
         <div class="kpi-sub">unidades vendidas</div>
       </div>
     </div>
-    <div class="chart-wrap" id="chart-wrap">
-      <div class="state-msg" id="chart-state">
-        <div class="spinner"></div>
-        Carregando dados...
-      </div>
-    </div>
+    <div class="chart-wrap" id="chart-wrap"><div class="state-msg" id="chart-state"><div class="spinner"></div>Carregando dados...</div></div>
   </div>
 
-  <!-- TABELA -->
-  <div class="table-card">
-    <div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div>
-    <div id="table-body"><div class="no-data">Carregando...</div></div>
-  </div>
+  <div class="table-card"><div class="table-head"><div class="table-head-title">Detalhamento de Quantidade Vendida por Filial</div></div><div id="table-body"><div class="no-data">Carregando...</div></div></div>
 
-  <!-- GRÁFICO CATEGORIAS -->
-  <div class="chart-card" style="margin-top:20px">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Categorias Mais Vendidas</div>
-        <div class="chart-subtitle" id="cat1-sub">Todos os períodos</div>
-      </div>
-    </div>
-    <div class="chart-wrap" id="cat1-wrap" style="height:360px">
-      <div class="state-msg" id="cat1-state"><div class="spinner"></div>Carregando...</div>
-    </div>
-  </div>
+  <div class="chart-card" style="margin-top:20px"><div class="chart-header"><div><div class="chart-title">Categorias com Maior Venda</div><div class="chart-subtitle" id="cat1-sub">Todos os períodos</div></div></div><div class="chart-wrap" id="cat1-wrap" style="height:360px"><div class="state-msg" id="cat1-state"><div class="spinner"></div>Carregando...</div></div></div>
+  <div class="table-card" style="margin-top:20px"><div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div><div id="cat1-table-body"><div class="no-data">Carregando...</div></div></div>
 
-  <!-- TABELA CATEGORIAS -->
-  <div class="table-card" style="margin-top:20px">
-    <div class="table-head"><div class="table-head-title">Detalhamento por Categoria</div></div>
-    <div id="cat1-table-body"><div class="no-data">Carregando...</div></div>
-  </div>
-
-  <!-- GRÁFICO FAMÍLIAS -->
-  <div class="chart-card" style="margin-top:20px">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title">Famílias Mais Vendidas</div>
-        <div class="chart-subtitle" id="fam1-sub">Todos os períodos</div>
-      </div>
-    </div>
-    <div class="chart-wrap" id="fam1-wrap" style="height:360px">
-      <div class="state-msg" id="fam1-state"><div class="spinner"></div>Carregando...</div>
-    </div>
-  </div>
-
-  <!-- TABELA FAMÍLIAS -->
-  <div class="table-card" style="margin-top:20px">
-    <div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div>
-    <div id="fam1-table-body"><div class="no-data">Carregando...</div></div>
-  </div>
+  <div class="chart-card" style="margin-top:20px"><div class="chart-header"><div><div class="chart-title">Famílias com Maior Venda</div><div class="chart-subtitle" id="fam1-sub">Todos os períodos</div></div></div><div class="chart-wrap" id="fam1-wrap" style="height:360px"><div class="state-msg" id="fam1-state"><div class="spinner"></div>Carregando...</div></div></div>
+  <div class="table-card" style="margin-top:20px"><div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div><div id="fam1-table-body"><div class="no-data">Carregando...</div></div></div>
 </main>
 </div>
 <!-- /ABA 1 -->
+
+<!-- ABA SELL OUT X ESTOQUE -->
+<div id="tab-se" class="tab-panel">
+<main>
+  <h1 class="section-title">Sell Out x Estoque</h1>
+  <p class="section-sub" id="se-status-msg">Carregando dados...</p>
+
+  <div class="filters-row">
+    <div class="filter-group"><label>Ano</label><select id="se-ano"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>Mês</label><select id="se-mes"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>Data início</label><input type="date" id="se-di"></div>
+    <div class="filter-group"><label>Data fim</label><input type="date" id="se-df"></div>
+    <div class="filter-group"><label>Loja</label><select id="se-loja"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label>Categoria</label><select id="se-cat"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label>Família</label><select id="se-familia"><option value="">Todas</option></select></div>
+    <button class="btn-clear" onclick="seLimparFiltros()">↺ Limpar</button>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Sell Out Total</div><div class="kpi-value" id="se-kpi-sellout">—</div><div class="kpi-sub">unidades vendidas</div></div>
+    <div class="kpi-card"><div class="kpi-label">Estoque Total</div><div class="kpi-value" id="se-kpi-estoque">—</div><div class="kpi-sub">unidades em estoque</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header"><div><div class="chart-title">Sell Out x Estoque por Filial</div><div class="chart-subtitle" id="se-chart-sub">Todos os períodos</div></div></div>
+    <div class="chart-wrap" id="se-chart-wrap" style="height:420px"><div class="state-msg" id="se-chart-state"><div class="spinner"></div>Carregando dados...</div></div>
+  </div>
+
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento Sell Out x Estoque por Filial</div></div>
+    <div id="se-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
+</main>
+</div>
+<!-- /ABA SELL OUT X ESTOQUE -->
+
 
 <!-- ABA VALOR: VENDA VALOR (R$) -->
 <div id="tab-valor" class="tab-panel">
@@ -354,6 +327,25 @@
   <div class="table-card" style="margin-top:20px">
     <div class="table-head"><div class="table-head-title">Detalhamento por Categoria (R$)</div></div>
     <div id="v-cat1-table-body"><div class="no-data">Carregando...</div></div>
+  </div>
+
+  <!-- GRÁFICO FAMÍLIAS -->
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Famílias com Maior Venda</div>
+        <div class="chart-subtitle" id="v-fam1-sub">Todos os períodos</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="v-fam1-wrap" style="height:360px">
+      <div class="state-msg" id="v-fam1-state"><div class="spinner"></div>Carregando...</div>
+    </div>
+  </div>
+
+  <!-- TABELA FAMÍLIAS -->
+  <div class="table-card" style="margin-top:20px">
+    <div class="table-head"><div class="table-head-title">Detalhamento por Família</div></div>
+    <div id="v-fam1-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
 </div>
@@ -583,27 +575,65 @@ let d2Chart        = null;
 let cat1Chart      = null;
 let fam1Chart      = null;
 let vCat1Chart     = null;
+let vFam1Chart     = null;
 let cat2Chart      = null;
 let d3BarChart     = null;
 let d3LineChart    = null;
+let seChart        = null;
 let f_active       = { dim: null, val: null };
 let v_active       = { dim: null, val: null };
 let d2_active      = { dim: null, val: null };
 let d3_active      = { dim: null, val: null };
+let se_active      = { dim: null, val: null };
+let d2_table_active = { dim: null, val: null };
 let t1Sort         = { col: 'qty', dir: 'desc' };
+let cat1Sort       = { col: 'qty', dir: 'desc' };
+let fam1Sort       = { col: 'qty', dir: 'desc' };
 let vt1Sort        = { col: 'val', dir: 'desc' };
+let vCat1Sort      = { col: 'val', dir: 'desc' };
+let vFam1Sort      = { col: 'val', dir: 'desc' };
 let t2Sort         = { col: 'qty', dir: 'desc' };
+let cat2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
+let seSort         = { col: 'sellout', dir: 'desc' };
+let seRiskSort     = { col: 'sellout', dir: 'desc' };
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
+function normalizeFilterValue(val) {
+  return String(val ?? '').trim();
+}
+
+function toggleActiveFilter(active, dim, val) {
+  const normVal = normalizeFilterValue(val);
+  const activeVal = normalizeFilterValue(active.val);
+
+  if (active.dim === dim && activeVal === normVal) {
+    return { dim: null, val: null };
+  }
+
+  return { dim, val: normVal };
+}
+
 function setFilter(active, dim, val, renderFn) {
-  if (active.dim === dim && active.val === val) { active.dim = null; active.val = null; }
-  else { active.dim = dim; active.val = val; }
+  const next = toggleActiveFilter(active, dim, val);
+  active.dim = next.dim;
+  active.val = next.val;
   renderFn();
 }
 function fSetFilter(dim, val)  { setFilter(f_active,  dim, val, renderizar);  }
 function vSetFilter(dim, val)  { setFilter(v_active,  dim, val, vRenderizar); }
-function d2SetFilter(dim, val) { setFilter(d2_active, dim, val, d2Renderizar);}
+function d2SetFilter(dim, val) {
+  const novoValor = normalizeFilterValue(val);
+  const valorAtual = normalizeFilterValue(d2_active.val);
+
+  if (d2_active.dim === dim && valorAtual === novoValor) {
+    d2_active = { dim: null, val: null };
+  } else {
+    d2_active = { dim, val: novoValor };
+  }
+
+  d2Renderizar();
+}
 function d3SetFilter(dim, val) { setFilter(d3_active, dim, val, d3Renderizar);}
 
 function mostrarBanner(bannerId, active, labels, limparFn) {
@@ -617,6 +647,9 @@ function mostrarBanner(bannerId, active, labels, limparFn) {
 function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
+function d2FiltrarPorData(dataOriginal) {
+  d2SetFilter('data', dataOriginal);
+}
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
@@ -655,8 +688,8 @@ function parseCSV(text) {
 
 // ── FETCH CSV ─────────────────────────────────────────────────────────────────
 async function fetchCSV(gid) {
-  const url = `https://docs.google.com/spreadsheets/d/e/${PUBLISHED_ID}/pub?gid=${gid}&single=true&output=csv`;
-  const res = await fetch(url);
+  const url = `https://docs.google.com/spreadsheets/d/e/${PUBLISHED_ID}/pub?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status} — verifique se a planilha está publicada na web (Arquivo → Publicar na web).`);
   return res.text();
 }
@@ -685,7 +718,7 @@ async function init() {
         const codKey = keys.find(k => /codbarras/i.test(k) || /cod.*(barras?|barra)/i.test(k) || /^gtin$|^ean$|^plu$/i.test(k) || /gtin|ean/i.test(k)) || keys[0];
         const catKey = keys.find(k => /categ/i.test(k)) || keys[1];
         const famKey = keys.find(k => /famil/i.test(k)) || keys[2];
-        const ean    = (r[codKey] || '').trim();
+        const ean    = normalizarCodigoBarras(r[codKey]);
         if (!ean) return;
         if (catKey && r[catKey] && r[catKey].trim()) catMap[ean]     = r[catKey].trim();
         if (famKey && r[famKey] && r[famKey].trim()) familiaMap[ean] = r[famKey].trim();
@@ -712,6 +745,8 @@ async function init() {
     d2Renderizar();
     d3ConstruirFiltros();
     d3Renderizar();
+    seConstruirFiltros();
+    seRenderizar();
 
   } catch(err) {
     console.error(err);
@@ -732,16 +767,60 @@ function parseBR(raw) {
   return parseFloat((raw || '').replace(/R\$\s*/i, '').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
+function normalizarCodigoBarras(valor) {
+  return String(valor ?? '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/\.0$/, '')
+    .replace(/\D/g, '');
+}
+
+function parseDataBR(raw) {
+  if (!raw) return null;
+
+  const txt = String(raw).trim();
+  if (!txt) return null;
+
+  // Formato brasileiro: DD/MM/AAAA
+  const p = txt.split('/');
+  if (p.length === 3) {
+    const d = Number(p[0]);
+    const m = Number(p[1]);
+    const y = Number(p[2]);
+
+    if (!Number.isNaN(d) && !Number.isNaN(m) && !Number.isNaN(y)) {
+      const dt = new Date(y, m - 1, d);
+      return isNaN(dt) ? null : dt;
+    }
+  }
+
+  // Fallback para datas ISO ou formatos reconhecidos pelo navegador
+  const dt = new Date(txt);
+  return isNaN(dt) ? null : dt;
+}
+
+function dataParaISO(dt) {
+  if (!dt || isNaN(dt)) return '';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const d = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+
 function getCat(r) {
-  const ean = col(r, 'gtin', 'Gtin', 'GTIN', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
+  const ean = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
   if (ean && catMap[ean]) return catMap[ean];
   return col(r, 'Categoria', 'categoria', 'Categoria Kert', 'categoria kert', 'Kert', 'kert');
 }
 
 function getFamilia(r) {
-  const ean = col(r, 'gtin', 'Gtin', 'GTIN', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
-  if (ean && familiaMap[ean]) return familiaMap[ean];
-  return col(r, 'Familia', 'Família', 'familia', 'família', 'FAMILIA', 'FAMÍLIA');
+  // DE-PARA obrigatório:
+  // Aba CATEGORIA: CODBARRAS -> FAMILIA
+  // Aba DADOS BRUTOS: GTIN -> procura no familiaMap
+  const gtin = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
+  if (gtin && familiaMap[gtin]) return familiaMap[gtin];
+  return 'Sem família';
 }
 
 function setEstado(html) {
@@ -761,7 +840,7 @@ function construirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const sA = document.getElementById('f-ano');
@@ -815,12 +894,9 @@ function filtrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p = raw.split('/');
-        const dt = p.length === 3
-          ? new Date(+p[2], +p[0]-1, +p[1])
-          : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -838,8 +914,9 @@ function agruparPorLoja(data) {
     if (!loja) return;
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     const key = loja.trim();
+    if (!deParaMap[key]) return;
     if (!map[key]) {
-      map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
+      map[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     }
     map[key].qty += qty;
   });
@@ -857,14 +934,14 @@ function renderizar() {
     [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
   document.getElementById('loja-ativa').style.display = 'none';
 
-  // Cada gráfico recebe dados sem o próprio filtro ativo (para poder mostrar todos os itens com destaque)
-  // KPIs e tabelas recebem dados totalmente filtrados
+  // Gráficos/tabelas da dimensão selecionada mantêm todas as linhas visíveis e destacam a linha ativa.
+  // KPIs e demais visuais recebem o filtro ativo normalmente.
   const byLojaChart = agruparPorLoja(filtrar('loja'));
   const byLojaFull  = agruparPorLoja(filtrar());
 
   renderKPIs(byLojaFull);
   renderGrafico(byLojaChart);
-  renderTabela(byLojaFull);
+  renderTabela(byLojaChart);
   renderCat1(filtrar('cat'));
   renderFam1(filtrar('familia'));
 }
@@ -985,7 +1062,7 @@ function agruparPorCategoria(data) {
 }
 
 function renderCat1(data) {
-  const byCat = agruparPorCategoria(data);
+  let byCat = agruparPorCategoria(data);
   const total = byCat.reduce((s,r) => s + r.qty, 0);
 
   const ano = document.getElementById('f-ano').value;
@@ -995,6 +1072,16 @@ function renderCat1(data) {
   const state = document.getElementById('cat1-state');
   if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byCat = [...byCat].sort((a,b) => {
+    let va, vb;
+    if (cat1Sort.col === 'cat') { va = a.cat.toLowerCase(); vb = b.cat.toLowerCase(); }
+    else if (cat1Sort.col === 'pct') { va = total > 0 ? a.qty / total : 0; vb = total > 0 ? b.qty / total : 0; }
+    else { va = a.qty; vb = b.qty; }
+    if (va < vb) return cat1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return cat1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('cat1-canvas');
   if (!canvas) {
@@ -1011,8 +1098,8 @@ function renderCat1(data) {
       labels: byCat.map(r => r.cat),
       datasets: [{
         data: byCat.map(r => r.qty),
-        backgroundColor: byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byCat.map(r => selCat ? (r.cat===selCat ? PALETTE[byCat.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
+        backgroundColor: byCat.map((r,i) => selCat ? (r.cat===selCat ? PALETTE[i%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byCat.map((r,i) => selCat ? (r.cat===selCat ? PALETTE[i%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
@@ -1038,7 +1125,11 @@ function renderCat1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxQ = byCat[0]?.qty || 1;
+  const maxQ = Math.max(...byCat.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = cat1Sort.col === key ? ` class="sort-${cat1Sort.dir}"` : '';
+    return `<th${cls} onclick="cat1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
@@ -1053,9 +1144,15 @@ function renderCat1(data) {
     </tr>`;
   }).join('');
   document.getElementById('cat1-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Qtd Vendida','qty')}${th('Participação','pct')}</tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function cat1OrdenarPor(coluna) {
+  cat1Sort.dir = cat1Sort.col === coluna && cat1Sort.dir === 'desc' ? 'asc' : 'desc';
+  cat1Sort.col = coluna;
+  renderizar();
 }
 
 function agruparPorFamilia(data) {
@@ -1070,7 +1167,7 @@ function agruparPorFamilia(data) {
 }
 
 function renderFam1(data) {
-  const byFam = agruparPorFamilia(data);
+  let byFam = agruparPorFamilia(data);
   const total = byFam.reduce((s,r) => s + r.qty, 0);
 
   const ano = document.getElementById('f-ano').value;
@@ -1080,6 +1177,16 @@ function renderFam1(data) {
   const state = document.getElementById('fam1-state');
   if (byFam.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byFam = [...byFam].sort((a,b) => {
+    let va, vb;
+    if (fam1Sort.col === 'fam') { va = a.fam.toLowerCase(); vb = b.fam.toLowerCase(); }
+    else if (fam1Sort.col === 'pct') { va = total > 0 ? a.qty / total : 0; vb = total > 0 ? b.qty / total : 0; }
+    else { va = a.qty; vb = b.qty; }
+    if (va < vb) return fam1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return fam1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('fam1-canvas');
   if (!canvas) {
@@ -1096,8 +1203,8 @@ function renderFam1(data) {
       labels: byFam.map(r => r.fam),
       datasets: [{
         data: byFam.map(r => r.qty),
-        backgroundColor: byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[byFam.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byFam.map(r => selFam ? (r.fam===selFam ? PALETTE[byFam.indexOf(r)%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[byFam.indexOf(r)%PALETTE.length]),
+        backgroundColor: byFam.map((r,i) => selFam ? (r.fam===selFam ? PALETTE[i%PALETTE.length]+'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byFam.map((r,i) => selFam ? (r.fam===selFam ? PALETTE[i%PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth: 1.5, borderRadius: 6,
       }]
     },
@@ -1123,7 +1230,11 @@ function renderFam1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxQ = byFam[0]?.qty || 1;
+  const maxQ = Math.max(...byFam.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = fam1Sort.col === key ? ` class="sort-${fam1Sort.dir}"` : '';
+    return `<th${cls} onclick="fam1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byFam.map(r => {
     const pct  = total > 0 ? ((r.qty/total)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
@@ -1138,9 +1249,15 @@ function renderFam1(data) {
     </tr>`;
   }).join('');
   document.getElementById('fam1-table-body').innerHTML = `<table>
-    <thead><tr><th>Família</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Família','fam')}${th('Qtd Vendida','qty')}${th('Participação','pct')}</tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function fam1OrdenarPor(coluna) {
+  fam1Sort.dir = fam1Sort.col === coluna && fam1Sort.dir === 'desc' ? 'asc' : 'desc';
+  fam1Sort.col = coluna;
+  renderizar();
 }
 
 function t1OrdenarPor(coluna) {
@@ -1162,6 +1279,7 @@ function renderTabela(byLoja) {
     let va, vb;
     if (t1Sort.col === 'loja') { va = +a.loja; vb = +b.loja; }
     else if (t1Sort.col === 'nome') { va = a.nome.toLowerCase(); vb = b.nome.toLowerCase(); }
+    else if (t1Sort.col === 'pct') { va = total > 0 ? a.qty / total : 0; vb = total > 0 ? b.qty / total : 0; }
     else { va = a.qty; vb = b.qty; }
     if (va < vb) return t1Sort.dir === 'asc' ? -1 : 1;
     if (va > vb) return t1Sort.dir === 'asc' ? 1 : -1;
@@ -1200,7 +1318,7 @@ function renderTabela(byLoja) {
 
   container.innerHTML = `<table>
     <thead><tr>
-      ${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Qtd Vendida','qty')}<th>Participação</th>
+      ${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Qtd Vendida','qty')}${th('Participação','pct')}
     </tr></thead>
     <tbody>${linhas}${totalLinha}</tbody>
   </table>`;
@@ -1213,7 +1331,7 @@ function d2ConstruirFiltros() {
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
 
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1258,14 +1376,17 @@ function d2Filtrar(excl) {
     if (familia && getFamilia(r) !== familia) return false;
     if (d2_active.val && d2_active.dim !== excl) {
       if (d2_active.dim === 'cat' && getCat(r) !== d2_active.val) return false;
+      if (d2_active.dim === 'data') {
+        const dataOriginalAtiva = normalizeFilterValue(col(r,'Data','data'));
+        if (dataOriginalAtiva !== normalizeFilterValue(d2_active.val)) return false;
+      }
     }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1276,44 +1397,46 @@ function d2Filtrar(excl) {
 }
 
 function d2ParseData(raw) {
-  if (!raw) return null;
-  const p = raw.split('/');
-  if (p.length === 3) {
-    const d = new Date(+p[2], +p[0]-1, +p[1]);
-    return isNaN(d) ? null : d;
-  }
-  const d = new Date(raw);
-  return isNaN(d) ? null : d;
+  return parseDataBR(raw);
 }
 
 function d2AgruparPorDia(data) {
   const map = {};
   data.forEach(r => {
-    const dt = d2ParseData(col(r,'Data','data'));
-    if (!dt) return;
-    const key = dt.toISOString().split('T')[0];
+    const dataOriginal = String(col(r,'Data','data') || '').trim();
+    if (!dataOriginal) return;
+
+    const dt = d2ParseData(dataOriginal);
+    const iso = dt ? dataParaISO(dt) : dataOriginal;
+
+    // A chave segue a DATA ORIGINAL da aba Dados Brutos.
+    // Assim a tabela mostra exatamente o que está na coluna Data, sem converter para ISO.
+    const key = dataOriginal;
+
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
-    if (!map[key]) map[key] = { data: key, qty: 0 };
+    if (!map[key]) map[key] = { data: dataOriginal, iso, qty: 0 };
     map[key].qty += qty;
   });
-  return Object.values(map).sort((a,b) => a.data.localeCompare(b.data));
+
+  return Object.values(map).sort((a,b) => String(a.iso || a.data).localeCompare(String(b.iso || b.data)));
 }
 
-function d2FormatarData(iso) {
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+function d2FormatarData(valor) {
+  // Preserva a data exatamente como veio da coluna Data da aba Dados Brutos.
+  return valor;
 }
 
-function d2DiaSemana(iso) {
-  const [y,m,d] = iso.split('-');
-  const dt = new Date(+y, +m-1, +d);
+function d2DiaSemana(valor) {
+  const dt = d2ParseData(valor);
+  if (!dt) return '';
   return ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt.getDay()];
 }
 
 function d2Renderizar() {
-  mostrarBanner('d2-active-banner', d2_active, {cat:'CATEGORIA'}, 'd2LimparAtivo');
+  mostrarBanner('d2-active-banner', d2_active, {cat:'CATEGORIA', data:'DATA'}, 'd2LimparAtivo');
   const dados  = d2Filtrar();
   const porDia = d2AgruparPorDia(dados);
+  const porDiaTabela = d2AgruparPorDia(d2Filtrar('data'));
 
   const ano  = document.getElementById('d2-ano').value;
   const mes  = document.getElementById('d2-mes').value;
@@ -1404,18 +1527,19 @@ function d2Renderizar() {
     }
   });
 
-  const sorted2 = [...porDia].sort((a,b) => {
+  const sorted2 = [...porDiaTabela].sort((a,b) => {
     let va, vb;
     const ORD_DIA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    if (t2Sort.col === 'data') { va = a.data; vb = b.data; }
+    if (t2Sort.col === 'data') { va = a.iso || a.data; vb = b.iso || b.data; }
     else if (t2Sort.col === 'dia') { va = ORD_DIA.indexOf(d2DiaSemana(a.data)); vb = ORD_DIA.indexOf(d2DiaSemana(b.data)); }
+    else if (t2Sort.col === 'pct') { va = total > 0 ? a.qty / total : 0; vb = total > 0 ? b.qty / total : 0; }
     else { va = a.qty; vb = b.qty; }
     if (va < vb) return t2Sort.dir === 'asc' ? -1 : 1;
     if (va > vb) return t2Sort.dir === 'asc' ? 1 : -1;
     return 0;
   });
 
-  const maxQ2 = Math.max(...porDia.map(r => r.qty), 1);
+  const maxQ2 = Math.max(...porDiaTabela.map(r => r.qty), 1);
 
   const th2 = (label, key) => {
     const cls = t2Sort.col === key ? ` class="sort-${t2Sort.dir}"` : '';
@@ -1427,8 +1551,9 @@ function d2Renderizar() {
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
-    return `<tr>
-      <td class="td-loja">${d2FormatarData(r.data)}</td>
+    const ativoData = d2_active.dim === 'data' && normalizeFilterValue(d2_active.val) === normalizeFilterValue(r.data) ? ' row-active' : '';
+    return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData(this.dataset.v)" data-v="${String(r.data).replace(/"/g,'&quot;')}">
+      <td class="td-loja">${r.data}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
@@ -1446,7 +1571,7 @@ function d2Renderizar() {
   </tr>`;
 
   document.getElementById('d2-table-body').innerHTML = `<table>
-    <thead><tr>${th2('Data','data')}${th2('Dia','dia')}${th2('Qtd Vendida','qty')}<th>Participação</th></tr></thead>
+    <thead><tr>${th2('Data','data')}${th2('Dia','dia')}${th2('Qtd Vendida','qty')}${th2('Participação','pct')}</tr></thead>
     <tbody>${linhas2}${totalLinha2}</tbody>
   </table>`;
 
@@ -1463,7 +1588,7 @@ function renderCat2(data) {
   const cats = [...new Set(data.map(r => getCat(r)).filter(Boolean))].sort();
   const dias  = [...new Set(data.map(r => {
     const dt = d2ParseData(col(r,'Data','data'));
-    return dt ? dt.toISOString().split('T')[0] : null;
+    return dt ? dataParaISO(dt) : null;
   }).filter(Boolean))].sort();
 
   const state2 = document.getElementById('cat2-state');
@@ -1478,7 +1603,7 @@ function renderCat2(data) {
   data.forEach(r => {
     const c  = getCat(r); if (!c) return;
     const dt = d2ParseData(col(r,'Data','data')); if (!dt) return;
-    const dk = dt.toISOString().split('T')[0];
+    const dk = dataParaISO(dt);
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!mapCatDia[c]) mapCatDia[c] = {};
     mapCatDia[c][dk] = (mapCatDia[c][dk] || 0) + qty;
@@ -1531,13 +1656,28 @@ function renderCat2(data) {
   });
   canvas2.style.cursor = 'pointer';
 
-  const totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) })).sort((a,b)=>b.qty-a.qty);
+  let totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) }));
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
-  const maxQ = totCat[0]?.qty || 1;
+
+  totCat = [...totCat].sort((a,b) => {
+    let va, vb;
+    if (cat2Sort.col === 'cat') { va = a.cat.toLowerCase(); vb = b.cat.toLowerCase(); }
+    else if (cat2Sort.col === 'pct') { va = totalGeral > 0 ? a.qty / totalGeral : 0; vb = totalGeral > 0 ? b.qty / totalGeral : 0; }
+    else { va = a.qty; vb = b.qty; }
+    if (va < vb) return cat2Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return cat2Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const maxQ = Math.max(...totCat.map(r => r.qty), 1);
+  const th = (label, key) => {
+    const cls = cat2Sort.col === key ? ` class="sort-${cat2Sort.dir}"` : '';
+    return `<th${cls} onclick="cat2OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = totCat.map(r => {
     const pct  = totalGeral > 0 ? ((r.qty/totalGeral)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    const ativo = d2SelC === r.cat ? ' row-active' : '';
+    const ativo = normalizeFilterValue(d2SelC) === normalizeFilterValue(r.cat) ? ' row-active' : '';
     return `<tr class="clickable-row${ativo}" onclick="d2SetFilter('cat',this.dataset.v)" data-v="${r.cat.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.cat}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -1548,9 +1688,15 @@ function renderCat2(data) {
     </tr>`;
   }).join('');
   document.getElementById('cat2-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Qtd Vendida</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Qtd Vendida','qty')}${th('Participação','pct')}</tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
+}
+
+function cat2OrdenarPor(coluna) {
+  cat2Sort.dir = cat2Sort.col === coluna && cat2Sort.dir === 'desc' ? 'asc' : 'desc';
+  cat2Sort.col = coluna;
+  d2Renderizar();
 }
 
 function t2OrdenarPor(coluna) {
@@ -1565,7 +1711,7 @@ function d3ConstruirFiltros() {
   const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
   const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
-  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(Boolean))].sort((a,b) => +a - +b);
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[l]))].sort((a,b) => +a - +b);
   const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
 
   const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
@@ -1579,14 +1725,16 @@ function d3ConstruirFiltros() {
   document.getElementById('d3-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
   document.getElementById('d3-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
 
-  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'].forEach(id =>
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia',
+    'se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'].forEach(id =>
     document.getElementById(id).addEventListener('change', d3Renderizar)
   );
   document.getElementById('d3-status-msg').textContent = document.getElementById('status-msg').textContent;
 }
 
 function d3LimparFiltros() {
-  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia'].forEach(id => document.getElementById(id).value = '');
+  ['d3-ano','d3-mes','d3-di','d3-df','d3-loja','d3-cat','d3-familia',
+    'se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'].forEach(id => document.getElementById(id).value = '');
   d3_active = { dim: null, val: null };
   d3Renderizar();
 }
@@ -1612,10 +1760,9 @@ function d3Filtrar(excl) {
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1628,6 +1775,7 @@ function d3Filtrar(excl) {
 function d3Renderizar() {
   mostrarBanner('d3-active-banner', d3_active, {loja:'FILIAL'}, 'd3LimparAtivo');
   const dados = d3Filtrar();
+  const dadosTabela = d3Filtrar('loja');
   const ano   = document.getElementById('d3-ano').value;
   const mes   = document.getElementById('d3-mes').value;
   const loja  = document.getElementById('d3-loja').value;
@@ -1641,11 +1789,23 @@ function d3Renderizar() {
     const l   = col(r,'Loja','loja'); if (!l) return;
     const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
     const key = l.trim();
-    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, qty: 0 };
+    if (!deParaMap[key]) return;
+    if (!mapLoja[key]) mapLoja[key] = { loja: key, nome: deParaMap[key], qty: 0 };
     mapLoja[key].qty += est;
   });
 
   const byLoja = Object.values(mapLoja).sort((a,b) => b.qty - a.qty);
+
+  const mapLojaTabela = {};
+  dadosTabela.forEach(r => {
+    const l   = col(r,'Loja','loja'); if (!l) return;
+    const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
+    const key = l.trim();
+    if (!deParaMap[key]) return;
+    if (!mapLojaTabela[key]) mapLojaTabela[key] = { loja: key, nome: deParaMap[key], qty: 0 };
+    mapLojaTabela[key].qty += est;
+  });
+  const byLojaTabela = Object.values(mapLojaTabela).sort((a,b) => b.qty - a.qty);
   const total  = byLoja.reduce((s,r) => s + r.qty, 0);
   const ativas = byLoja.filter(r => r.qty > 0).length;
   const top    = byLoja[0];
@@ -1661,6 +1821,9 @@ function d3Renderizar() {
   const barState = document.getElementById('d3-chart-state');
   if (byLoja.length === 0) {
     if(barState) { barState.style.display='flex'; barState.innerHTML='Nenhum dado.'; }
+    if (d3BarChart) { d3BarChart.destroy(); d3BarChart = null; }
+    const oldBarCanvas = document.getElementById('d3-bar-canvas');
+    if (oldBarCanvas) oldBarCanvas.remove();
   } else {
     if(barState) barState.style.display = 'none';
     let c1 = document.getElementById('d3-bar-canvas');
@@ -1700,19 +1863,22 @@ function d3Renderizar() {
   }
 
   const dadosChart = d3Filtrar('loja');
-  const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dt.toISOString().split('T')[0]:null; }).filter(Boolean))].sort();
+  const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dataParaISO(dt):null; }).filter(Boolean))].sort();
   const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
   if (dias.length === 0) {
     if(lineState) { lineState.style.display='flex'; lineState.innerHTML='Nenhum dado.'; }
+    if (d3LineChart) { d3LineChart.destroy(); d3LineChart = null; }
+    const oldLineCanvas = document.getElementById('d3-line-canvas');
+    if (oldLineCanvas) oldLineCanvas.remove();
   } else {
     if(lineState) lineState.style.display = 'none';
     const mapLD = {};
     dadosChart.forEach(r => {
       const l   = col(r,'Loja','loja'); if (!l || !lojas.includes(l)) return;
       const dt  = d2ParseData(col(r,'Data','data')); if (!dt) return;
-      const dk  = dt.toISOString().split('T')[0];
+      const dk  = dataParaISO(dt);
       const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
       if (!mapLD[l]) mapLD[l] = {};
       mapLD[l][dk] = (mapLD[l][dk] || 0) + est;
@@ -1759,15 +1925,16 @@ function d3Renderizar() {
     c2.style.cursor = 'pointer';
   }
 
-  const maxQ = byLoja[0]?.qty || 1;
+  const maxQ = byLojaTabela[0]?.qty || 1;
   const th3 = (label, key) => {
     const cls = t3Sort.col === key ? ` class="sort-${t3Sort.dir}"` : '';
     return `<th${cls} onclick="t3OrdenarPor('${key}')">${label}</th>`;
   };
-  const sorted3 = [...byLoja].sort((a,b) => {
+  const sorted3 = [...byLojaTabela].sort((a,b) => {
     let va, vb;
     if (t3Sort.col === 'loja') { va=+a.loja; vb=+b.loja; }
     else if (t3Sort.col === 'nome') { va=a.nome.toLowerCase(); vb=b.nome.toLowerCase(); }
+    else if (t3Sort.col === 'volume') { va=a.qty; vb=b.qty; }
     else { va=a.qty; vb=b.qty; }
     if (va<vb) return t3Sort.dir==='asc'?-1:1;
     if (va>vb) return t3Sort.dir==='asc'?1:-1;
@@ -1786,15 +1953,313 @@ function d3Renderizar() {
       </div></td>
     </tr>`;
   }).join('');
-  document.getElementById('d3-table-body').innerHTML = byLoja.length === 0
+  document.getElementById('d3-table-body').innerHTML = byLojaTabela.length === 0
     ? '<div class="no-data">Nenhum dado para os filtros selecionados</div>'
-    : `<table><thead><tr>${th3('Filial','loja')}${th3('Nome Fantasia','nome')}${th3('Estoque Atual','qty')}<th>Volume</th></tr></thead><tbody>${linhas3}</tbody></table>`;
+    : `<table><thead><tr>${th3('Filial','loja')}${th3('Nome Fantasia','nome')}${th3('Estoque Atual','qty')}${th3('Volume','volume')}</tr></thead><tbody>${linhas3}</tbody></table>`;
 }
 
 function t3OrdenarPor(coluna) {
   t3Sort.dir = t3Sort.col === coluna && t3Sort.dir === 'desc' ? 'asc' : 'desc';
   t3Sort.col = coluna;
   d3Renderizar();
+}
+
+
+// ── ABA SELL OUT X ESTOQUE ───────────────────────────────────────────────────
+function seConstruirFiltros() {
+  const anos  = [...new Set(rawData.map(r => col(r,'Ano')).filter(Boolean))].sort();
+  const meses = [...new Set(rawData.map(r => col(r,'Mês','Mes')).filter(Boolean))];
+  const ORD   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.sort((a,b) => ORD.indexOf(a) - ORD.indexOf(b));
+
+  // Regra: só mostrar lojas existentes no De-Para
+  const lojas = [...new Set(rawData.map(r => col(r,'Loja','loja')).filter(l => l && deParaMap[String(l).trim()]))].sort((a,b) => +a - +b);
+  const cats  = [...new Set(rawData.map(r => getCat(r)).filter(Boolean))].sort();
+  const familias = [...new Set(rawData.map(r => getFamilia(r)).filter(Boolean))].sort();
+
+  document.getElementById('se-ano').innerHTML     = '<option value="">Todos</option>' + anos.map(a => `<option>${a}</option>`).join('');
+  document.getElementById('se-mes').innerHTML     = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  document.getElementById('se-loja').innerHTML    = '<option value="">Todas</option>' + lojas.map(l => `<option value="${l}">#${l} · ${deParaMap[String(l).trim()]}</option>`).join('');
+  document.getElementById('se-cat').innerHTML     = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('se-familia').innerHTML = '<option value="">Todas</option>' + familias.map(f => `<option value="${f}">${f}</option>`).join('');
+
+  ['se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'].forEach(id =>
+    document.getElementById(id).addEventListener('change', seRenderizar)
+  );
+
+  document.getElementById('se-status-msg').textContent =
+    `${rawData.length.toLocaleString('pt-BR')} registros carregados · ${Object.keys(deParaMap).length} lojas no de-para`;
+}
+
+function seLimparFiltros() {
+  ['se-ano','se-mes','se-di','se-df','se-loja','se-cat','se-familia'].forEach(id => document.getElementById(id).value = '');
+  se_active = { dim: null, val: null };
+  seRenderizar();
+}
+
+function seFiltrarPorLoja(loja) {
+  se_active = toggleActiveFilter(se_active, 'loja', loja);
+  seRenderizar();
+}
+
+function seFiltrar(excl) {
+  const ano     = document.getElementById('se-ano').value;
+  const mes     = document.getElementById('se-mes').value;
+  const di      = document.getElementById('se-di').value;
+  const df      = document.getElementById('se-df').value;
+  const loja    = document.getElementById('se-loja').value;
+  const cat     = document.getElementById('se-cat').value;
+  const familia = document.getElementById('se-familia').value;
+
+  return rawData.filter(r => {
+    const lojaRaw = col(r,'Loja','loja');
+    const lojaKey = String(lojaRaw || '').trim();
+
+    // Regra: loja fora do De-Para não existe para o painel
+    if (!lojaKey || !deParaMap[lojaKey]) return false;
+
+    if (ano     && col(r,'Ano') !== ano) return false;
+    if (mes     && col(r,'Mês','Mes') !== mes) return false;
+    if (loja    && lojaKey !== loja) return false;
+    if (cat     && getCat(r) !== cat) return false;
+    if (familia && getFamilia(r) !== familia) return false;
+
+    if (se_active.val && se_active.dim !== excl) {
+      if (se_active.dim === 'loja' && lojaKey !== se_active.val) return false;
+    }
+
+    if (di || df) {
+      const raw = col(r,'Data','data');
+      if (raw) {
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
+          if (di && s < di) return false;
+          if (df && s > df) return false;
+        }
+      }
+    }
+
+    return true;
+  });
+}
+
+function seAgruparPorLoja(data) {
+  const map = {};
+
+  data.forEach(r => {
+    const loja = String(col(r,'Loja','loja') || '').trim();
+    if (!loja || !deParaMap[loja]) return;
+
+    const sellout = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
+    const estoque = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
+
+    if (!map[loja]) {
+      map[loja] = {
+        loja,
+        nome: deParaMap[loja],
+        sellout: 0,
+        estoque: 0,
+        risco: ''
+      };
+    }
+
+    map[loja].sellout += sellout;
+    map[loja].estoque += estoque;
+  });
+
+  return Object.values(map).map(r => {
+    if (r.sellout > 0 && r.estoque <= 0) r.risco = 'Sem estoque';
+    else if (r.sellout > r.estoque) r.risco = 'Estoque menor que venda';
+    else if (r.sellout > 0) r.risco = 'OK';
+    else r.risco = 'Sem venda';
+
+    return r;
+  });
+}
+
+function seOrdenarPor(coluna) {
+  seSort.dir = seSort.col === coluna && seSort.dir === 'desc' ? 'asc' : 'desc';
+  seSort.col = coluna;
+  seRenderizar();
+}
+
+function seRiskOrdenarPor(coluna) {
+  seRiskSort.dir = seRiskSort.col === coluna && seRiskSort.dir === 'desc' ? 'asc' : 'desc';
+  seRiskSort.col = coluna;
+  seRenderizar();
+}
+
+function seAplicarSort(data, sortState) {
+  return [...data].sort((a,b) => {
+    let va = a[sortState.col];
+    let vb = b[sortState.col];
+
+    if (['loja','nome','risco'].includes(sortState.col)) {
+      va = String(va || '').toLowerCase();
+      vb = String(vb || '').toLowerCase();
+    } else {
+      va = Number(va || 0);
+      vb = Number(vb || 0);
+    }
+
+    if (va < vb) return sortState.dir === 'asc' ? -1 : 1;
+    if (va > vb) return sortState.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function seRenderizar() {
+  const dados = seFiltrar();
+  const dadosTabela = seFiltrar('loja');
+  const byLoja = seAgruparPorLoja(dados);
+  const byLojaTabela = seAgruparPorLoja(dadosTabela);
+
+  const ano = document.getElementById('se-ano').value;
+  const mes = document.getElementById('se-mes').value;
+  document.getElementById('se-chart-sub').textContent =
+    [ano, mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const totalSellout = byLoja.reduce((s,r) => s + r.sellout, 0);
+  const totalEstoque = byLoja.reduce((s,r) => s + r.estoque, 0);
+
+  document.getElementById('se-kpi-sellout').textContent = totalSellout.toLocaleString('pt-BR');
+  document.getElementById('se-kpi-estoque').textContent = totalEstoque.toLocaleString('pt-BR');
+  
+
+  seRenderGrafico(byLoja);
+  seRenderTabela(byLojaTabela);
+  seRenderRiskTabela(byLoja);
+}
+
+function seRenderGrafico(byLoja) {
+  const state = document.getElementById('se-chart-state');
+
+  if (byLoja.length === 0) {
+    if (state) { state.style.display = 'flex'; state.innerHTML = 'Nenhum dado para os filtros selecionados.'; }
+    if (seChart) { seChart.destroy(); seChart = null; }
+    const old = document.getElementById('se-chart-canvas');
+    if (old) old.remove();
+    return;
+  }
+
+  if (state) state.style.display = 'none';
+
+  const dadosGrafico = [...byLoja]
+    .sort((a,b) => b.sellout - a.sellout)
+    .slice(0, 30);
+
+  let canvas = document.getElementById('se-chart-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'se-chart-canvas';
+    document.getElementById('se-chart-wrap').appendChild(canvas);
+  }
+
+  if (seChart) seChart.destroy();
+
+  seChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: dadosGrafico.map(r => r.nome),
+      datasets: [
+        {
+          label: 'Sell Out',
+          data: dadosGrafico.map(r => r.sellout),
+          backgroundColor: 'rgba(200,241,53,0.75)',
+          borderColor: 'rgba(200,241,53,1)',
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+        {
+          label: 'Estoque',
+          data: dadosGrafico.map(r => r.estoque),
+          backgroundColor: 'rgba(79,255,176,0.55)',
+          borderColor: 'rgba(79,255,176,1)',
+          borderWidth: 1.5,
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      onClick: (evt, elements) => {
+        if (elements.length > 0) seFiltrarPorLoja(dadosGrafico[elements[0].index].loja);
+      },
+      plugins: {
+        legend: {
+          labels: { color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 }
+        },
+        tooltip: {
+          backgroundColor:'#1c2030',
+          borderColor:'#252a3a',
+          borderWidth:1,
+          titleColor:'#c8f135',
+          bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11},
+          bodyFont:{family:'Figtree',size:13},
+          padding:14,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('pt-BR')} un.`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:false },
+          grid:{color:'#1c2030'}
+        },
+        y: {
+          ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback:v=>v.toLocaleString('pt-BR') },
+          grid:{color:'#252a3a'}
+        }
+      }
+    }
+  });
+}
+
+function seRenderTabela(byLoja) {
+  const container = document.getElementById('se-table-body');
+
+  if (byLoja.length === 0) {
+    container.innerHTML = '<div class="no-data">Nenhum dado para os filtros selecionados</div>';
+    return;
+  }
+
+  const sorted = seAplicarSort(byLoja, seSort);
+  const th = (label, key) => {
+    const cls = seSort.col === key ? ` class="sort-${seSort.dir}"` : '';
+    return `<th${cls} onclick="seOrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = sorted.map(r => {
+    const ativo = se_active.dim === 'loja' && se_active.val === r.loja ? ' row-active' : '';
+    return `
+    <tr class="clickable-row${ativo}" onclick="seFiltrarPorLoja('${r.loja}')">
+      <td class="td-loja">#${r.loja}</td>
+      <td class="td-nome">${r.nome}</td>
+      <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
+      <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
+      
+    </tr>
+  `;
+  }).join('');
+
+  container.innerHTML = `<table>
+    <thead><tr>
+      ${th('Filial','loja')}
+      ${th('Nome Fantasia','nome')}
+      ${th('Sell Out','sellout')}
+      ${th('Estoque','estoque')}
+    </tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function seRenderRiskTabela(byLoja) {
+  // Ranking separado removido: a aba agora mostra apenas Sell Out, Estoque e Status.
 }
 
 // ── ABA VALOR: VENDA VALOR (R$) ───────────────────────────────────────────────
@@ -1846,14 +2311,14 @@ function vFiltrar(excl) {
     if (v_active.val && v_active.dim !== excl) {
       if (v_active.dim === 'loja' && col(r,'Loja','loja') !== v_active.val) return false;
       if (v_active.dim === 'cat'  && getCat(r) !== v_active.val) return false;
+      if (v_active.dim === 'familia' && getFamilia(r) !== v_active.val) return false;
     }
     if (di || df) {
       const raw = col(r,'Data','data');
       if (raw) {
-        const p  = raw.split('/');
-        const dt = p.length === 3 ? new Date(+p[2], +p[0]-1, +p[1]) : new Date(raw);
-        if (!isNaN(dt)) {
-          const s = dt.toISOString().split('T')[0];
+        const dt = parseDataBR(raw);
+        if (dt) {
+          const s = dataParaISO(dt);
           if (di && s < di) return false;
           if (df && s > df) return false;
         }
@@ -1870,7 +2335,8 @@ function vAgruparPorLoja(data) {
     if (!loja) return;
     const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     const key = loja.trim();
-    if (!map[key]) map[key] = { loja: key, nome: deParaMap[key] || `Filial ${key}`, val: 0 };
+    if (!deParaMap[key]) return;
+    if (!map[key]) map[key] = { loja: key, nome: deParaMap[key], val: 0 };
     map[key].val += val;
   });
   return Object.values(map).sort((a,b) => b.val - a.val);
@@ -1970,6 +2436,7 @@ function vRenderTabela(byLoja) {
     let va, vb;
     if (vt1Sort.col === 'loja') { va = +a.loja; vb = +b.loja; }
     else if (vt1Sort.col === 'nome') { va = a.nome.toLowerCase(); vb = b.nome.toLowerCase(); }
+    else if (vt1Sort.col === 'pct') { va = total > 0 ? a.val / total : 0; vb = total > 0 ? b.val / total : 0; }
     else { va = a.val; vb = b.val; }
     if (va < vb) return vt1Sort.dir === 'asc' ? -1 : 1;
     if (va > vb) return vt1Sort.dir === 'asc' ? 1 : -1;
@@ -2002,7 +2469,7 @@ function vRenderTabela(byLoja) {
     <td class="td-qty" style="color:var(--accent2)">${vFmtR(total)}</td>
     <td><span style="font-size:.78rem;color:var(--accent2);font-family:'DM Mono',monospace">100%</span></td>
   </tr>`;
-  container.innerHTML = `<table><thead><tr>${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Valor Vendido','val')}<th>Participação</th></tr></thead><tbody>${linhas}${totalLinha}</tbody></table>`;
+  container.innerHTML = `<table><thead><tr>${th('Filial','loja')}${th('Nome Fantasia','nome')}${th('Valor Vendido','val')}${th('Participação','pct')}</tr></thead><tbody>${linhas}${totalLinha}</tbody></table>`;
 }
 
 function vt1OrdenarPor(coluna) {
@@ -2019,7 +2486,7 @@ function vRenderCat1(data) {
     if (!map[cat]) map[cat] = { cat, val: 0 };
     map[cat].val += val;
   });
-  const byCat = Object.values(map).sort((a,b) => b.val - a.val);
+  let byCat = Object.values(map);
   const total = byCat.reduce((s,r) => s + r.val, 0);
 
   const ano = document.getElementById('v-ano').value;
@@ -2029,6 +2496,16 @@ function vRenderCat1(data) {
   const state = document.getElementById('v-cat1-state');
   if (byCat.length === 0) { if(state) { state.style.display='flex'; state.innerHTML='Nenhum dado.'; } return; }
   if (state) state.style.display = 'none';
+
+  byCat = [...byCat].sort((a,b) => {
+    let va, vb;
+    if (vCat1Sort.col === 'cat') { va = a.cat.toLowerCase(); vb = b.cat.toLowerCase(); }
+    else if (vCat1Sort.col === 'pct') { va = total > 0 ? a.val / total : 0; vb = total > 0 ? b.val / total : 0; }
+    else { va = a.val; vb = b.val; }
+    if (va < vb) return vCat1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return vCat1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   let canvas = document.getElementById('v-cat1-canvas');
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'v-cat1-canvas'; document.getElementById('v-cat1-wrap').appendChild(canvas); }
@@ -2040,8 +2517,8 @@ function vRenderCat1(data) {
     data: {
       labels: byCat.map(r => r.cat),
       datasets: [{ data: byCat.map(r => r.val),
-        backgroundColor: byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]+'ee':'rgba(37,42,58,0.45)') : PALETTE[byCat.indexOf(r)%PALETTE.length]+'cc'),
-        borderColor:     byCat.map(r => vSelC ? (r.cat===vSelC ? PALETTE[byCat.indexOf(r)%PALETTE.length]:'rgba(37,42,58,0.2)') : PALETTE[byCat.indexOf(r)%PALETTE.length]),
+        backgroundColor: byCat.map((r,i) => vSelC ? (r.cat===vSelC ? PALETTE[i%PALETTE.length]+'ee':'rgba(37,42,58,0.45)') : PALETTE[i%PALETTE.length]+'cc'),
+        borderColor:     byCat.map((r,i) => vSelC ? (r.cat===vSelC ? PALETTE[i%PALETTE.length]:'rgba(37,42,58,0.2)') : PALETTE[i%PALETTE.length]),
         borderWidth:1.5, borderRadius:6 }]
     },
     options: {
@@ -2063,7 +2540,11 @@ function vRenderCat1(data) {
   });
   canvas.style.cursor = 'pointer';
 
-  const maxV = byCat[0]?.val || 1;
+  const maxV = Math.max(...byCat.map(r => r.val), 1);
+  const th = (label, key) => {
+    const cls = vCat1Sort.col === key ? ` class="sort-${vCat1Sort.dir}"` : '';
+    return `<th${cls} onclick="vCat1OrdenarPor('${key}')">${label}</th>`;
+  };
   const linhas = byCat.map(r => {
     const pct  = total > 0 ? ((r.val/total)*100).toFixed(1) : 0;
     const barW = ((r.val/maxV)*100).toFixed(1);
@@ -2078,13 +2559,151 @@ function vRenderCat1(data) {
     </tr>`;
   }).join('');
   document.getElementById('v-cat1-table-body').innerHTML = `<table>
-    <thead><tr><th>Categoria</th><th>Valor Vendido</th><th>Participação</th></tr></thead>
+    <thead><tr>${th('Categoria','cat')}${th('Valor Vendido','val')}${th('Participação','pct')}</tr></thead>
     <tbody>${linhas}</tbody>
   </table>`;
 }
 
+function vCat1OrdenarPor(coluna) {
+  vCat1Sort.dir = vCat1Sort.col === coluna && vCat1Sort.dir === 'desc' ? 'asc' : 'desc';
+  vCat1Sort.col = coluna;
+  vRenderizar();
+}
+
+
+function vRenderFam1(data) {
+  const map = {};
+  data.forEach(r => {
+    const fam = getFamilia(r) || 'Sem família';
+    const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
+    if (!map[fam]) map[fam] = { fam, val: 0 };
+    map[fam].val += val;
+  });
+
+  let byFam = Object.values(map);
+  const total = byFam.reduce((s,r) => s + r.val, 0);
+
+  const ano = document.getElementById('v-ano').value;
+  const mes = document.getElementById('v-mes').value;
+  document.getElementById('v-fam1-sub').textContent = [ano,mes].filter(Boolean).join(' · ') || 'Todos os períodos';
+
+  const state = document.getElementById('v-fam1-state');
+  if (byFam.length === 0) {
+    if (state) { state.style.display = 'flex'; state.innerHTML = 'Nenhum dado.'; }
+    document.getElementById('v-fam1-table-body').innerHTML = '<div class="no-data">Nenhum dado</div>';
+    if (vFam1Chart) { vFam1Chart.destroy(); vFam1Chart = null; }
+    return;
+  }
+  if (state) state.style.display = 'none';
+
+  byFam = [...byFam].sort((a,b) => {
+    let va, vb;
+    if (vFam1Sort.col === 'fam') { va = a.fam.toLowerCase(); vb = b.fam.toLowerCase(); }
+    else if (vFam1Sort.col === 'pct') { va = total > 0 ? a.val / total : 0; vb = total > 0 ? b.val / total : 0; }
+    else { va = a.val; vb = b.val; }
+
+    if (va < vb) return vFam1Sort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return vFam1Sort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  let canvas = document.getElementById('v-fam1-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'v-fam1-canvas';
+    document.getElementById('v-fam1-wrap').appendChild(canvas);
+  }
+
+  if (vFam1Chart) vFam1Chart.destroy();
+
+  const vSelF = v_active.dim === 'familia' ? v_active.val : null;
+  vFam1Chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: byFam.map(r => r.fam),
+      datasets: [{
+        data: byFam.map(r => r.val),
+        backgroundColor: byFam.map((r,i) => vSelF ? (r.fam === vSelF ? PALETTE[i % PALETTE.length] + 'ee' : 'rgba(37,42,58,0.45)') : PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor: byFam.map((r,i) => vSelF ? (r.fam === vSelF ? PALETTE[i % PALETTE.length] : 'rgba(37,42,58,0.2)') : PALETTE[i % PALETTE.length]),
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length > 0) vSetFilter('familia', byFam[elements[0].index].fam);
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1c2030',
+          borderColor:'#252a3a',
+          borderWidth:1,
+          titleColor:'#4fffb0',
+          bodyColor:'#e8ecf5',
+          titleFont:{family:'DM Mono',size:11},
+          bodyFont:{family:'Figtree',size:13},
+          padding:14,
+          callbacks: { label: ctx => ' ' + vFmtR(ctx.parsed.y) }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: ctx => vSelF ? (byFam[ctx.index]?.fam === vSelF ? '#4fffb0' : '#3a4060') : '#8891aa',
+            font:{family:'DM Mono',size:9},
+            maxRotation:35,
+            autoSkip:false
+          },
+          grid:{color:'#1c2030'}
+        },
+        y: {
+          ticks:{ color:'#8891aa', font:{family:'DM Mono',size:11}, callback: v => 'R$ ' + v.toLocaleString('pt-BR') },
+          grid:{color:'#252a3a'}
+        }
+      }
+    }
+  });
+
+  canvas.style.cursor = 'pointer';
+
+  const maxV = Math.max(...byFam.map(r => r.val), 1);
+  const th = (label, key) => {
+    const cls = vFam1Sort.col === key ? ` class="sort-${vFam1Sort.dir}"` : '';
+    return `<th${cls} onclick="vFam1OrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = byFam.map(r => {
+    const pct  = total > 0 ? ((r.val / total) * 100).toFixed(1) : 0;
+    const barW = ((r.val / maxV) * 100).toFixed(1);
+    const ativo = normalizeFilterValue(vSelF) === normalizeFilterValue(r.fam) ? ' row-active' : '';
+
+    return `<tr class="clickable-row${ativo}" onclick="vSetFilter('familia',this.dataset.v)" data-v="${r.fam.replace(/"/g,'&quot;')}">
+      <td class="td-nome">${r.fam}</td>
+      <td class="td-qty" style="color:var(--accent2)">${vFmtR(r.val)}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="background:linear-gradient(90deg,var(--accent2),#38bdf8);width:${barW}%;max-width:150px"></div>
+        <span style="font-size:.78rem;color:var(--text-dim);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('v-fam1-table-body').innerHTML = `<table>
+    <thead><tr>${th('Família','fam')}${th('Valor Vendido','val')}${th('Participação','pct')}</tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function vFam1OrdenarPor(coluna) {
+  vFam1Sort.dir = vFam1Sort.col === coluna && vFam1Sort.dir === 'desc' ? 'asc' : 'desc';
+  vFam1Sort.col = coluna;
+  vRenderizar();
+}
+
 function vRenderizar() {
-  mostrarBanner('v-active-banner', v_active, {loja:'FILIAL', cat:'CATEGORIA'}, 'vLimparAtivo');
+  mostrarBanner('v-active-banner', v_active, {loja:'FILIAL', cat:'CATEGORIA', familia:'FAMÍLIA'}, 'vLimparAtivo');
 
   const ano = document.getElementById('v-ano').value;
   const mes = document.getElementById('v-mes').value;
@@ -2095,20 +2714,43 @@ function vRenderizar() {
   const byLojaFull  = vAgruparPorLoja(vFiltrar());
   vRenderKPIs(byLojaFull);
   vRenderGrafico(byLojaChart);
-  vRenderTabela(byLojaFull);
+  vRenderTabela(byLojaChart);
   vRenderCat1(vFiltrar('cat'));
+  vRenderFam1(vFiltrar('familia'));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
-function trocarAba(aba) {
+function trocarAba(aba, evt) {
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + aba).classList.add('active');
-  event.currentTarget.classList.add('active');
+  const btn = evt?.currentTarget || window.event?.currentTarget;
+  if (btn) btn.classList.add('active');
 }
+
+
+function atualizarStatusAtualizacao() {
+  const el = document.getElementById('status-update');
+  if (!el) return;
+
+  const agora = new Date();
+  const data = agora.toLocaleDateString('pt-BR');
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  el.innerHTML = `
+    <span style="color: var(--accent)">●</span>
+    Atualizado em: ${data} ${hora}
+  `;
+}
+
+
+// ── AUTO UPDATE DESATIVADO ───────────────────────────────────────────────
+// Monitoramento automático removido para evitar popups, tentativas externas e recarregamentos inesperados.
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
+atualizarStatusAtualizacao();
+
 </script>
 
 </body>
