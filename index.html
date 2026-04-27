@@ -578,11 +578,18 @@ let seSort         = { col: 'sellout', dir: 'desc' };
 let seRiskSort     = { col: 'sellout', dir: 'desc' };
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
+function normalizeFilterValue(val) {
+  return String(val ?? '').trim();
+}
+
 function toggleActiveFilter(active, dim, val) {
-  const normVal = String(val ?? '').trim();
-  if (active.dim === dim && String(active.val ?? '').trim() === normVal) {
+  const normVal = normalizeFilterValue(val);
+  const activeVal = normalizeFilterValue(active.val);
+
+  if (active.dim === dim && activeVal === normVal) {
     return { dim: null, val: null };
   }
+
   return { dim, val: normVal };
 }
 
@@ -594,7 +601,7 @@ function setFilter(active, dim, val, renderFn) {
 }
 function fSetFilter(dim, val)  { setFilter(f_active,  dim, val, renderizar);  }
 function vSetFilter(dim, val)  { setFilter(v_active,  dim, val, vRenderizar); }
-function d2SetFilter(dim, val) { setFilter(d2_active, dim, val, d2Renderizar);}
+function d2SetFilter(dim, val) { setFilter(d2_active, dim, val, d2Renderizar); }
 function d3SetFilter(dim, val) { setFilter(d3_active, dim, val, d3Renderizar);}
 
 function mostrarBanner(bannerId, active, labels, limparFn) {
@@ -1328,8 +1335,8 @@ function d2Filtrar(excl) {
     if (d2_active.val && d2_active.dim !== excl) {
       if (d2_active.dim === 'cat' && getCat(r) !== d2_active.val) return false;
       if (d2_active.dim === 'data') {
-        const dataOriginalAtiva = String(col(r,'Data','data') || '').trim();
-        if (dataOriginalAtiva !== d2_active.val) return false;
+        const dataOriginalAtiva = normalizeFilterValue(col(r,'Data','data'));
+        if (dataOriginalAtiva !== normalizeFilterValue(d2_active.val)) return false;
       }
     }
     if (di || df) {
@@ -1502,7 +1509,7 @@ function d2Renderizar() {
     const barW = ((r.qty/maxQ2)*100).toFixed(1);
     const dia  = d2DiaSemana(r.data);
     const fds  = dia === 'Sáb' || dia === 'Dom';
-    const ativoData = d2_active.dim === 'data' && d2_active.val === r.data ? ' row-active' : '';
+    const ativoData = d2_active.dim === 'data' && normalizeFilterValue(d2_active.val) === normalizeFilterValue(r.data) ? ' row-active' : '';
     return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData(this.dataset.v)" data-v="${String(r.data).replace(/"/g,'&quot;')}">
       <td class="td-loja">${r.data}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
@@ -1628,7 +1635,7 @@ function renderCat2(data) {
   const linhas = totCat.map(r => {
     const pct  = totalGeral > 0 ? ((r.qty/totalGeral)*100).toFixed(1) : 0;
     const barW = ((r.qty/maxQ)*100).toFixed(1);
-    const ativo = d2SelC === r.cat ? ' row-active' : '';
+    const ativo = normalizeFilterValue(d2SelC) === normalizeFilterValue(r.cat) ? ' row-active' : '';
     return `<tr class="clickable-row${ativo}" onclick="d2SetFilter('cat',this.dataset.v)" data-v="${r.cat.replace(/"/g,'&quot;')}">
       <td class="td-nome">${r.cat}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
@@ -2572,4 +2579,3 @@ atualizarStatusAtualizacao();
 
 </body>
 </html>
-
