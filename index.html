@@ -601,7 +601,18 @@ function setFilter(active, dim, val, renderFn) {
 }
 function fSetFilter(dim, val)  { setFilter(f_active,  dim, val, renderizar);  }
 function vSetFilter(dim, val)  { setFilter(v_active,  dim, val, vRenderizar); }
-function d2SetFilter(dim, val) { setFilter(d2_active, dim, val, d2Renderizar); }
+function d2SetFilter(dim, val) {
+  const novoValor = normalizeFilterValue(val);
+  const valorAtual = normalizeFilterValue(d2_active.val);
+
+  if (d2_active.dim === dim && valorAtual === novoValor) {
+    d2_active = { dim: null, val: null };
+  } else {
+    d2_active = { dim, val: novoValor };
+  }
+
+  d2Renderizar();
+}
 function d3SetFilter(dim, val) { setFilter(d3_active, dim, val, d3Renderizar);}
 
 function mostrarBanner(bannerId, active, labels, limparFn) {
@@ -616,7 +627,7 @@ function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
 function d2FiltrarPorData(dataOriginal) {
-  setFilter(d2_active, 'data', dataOriginal, d2Renderizar);
+  d2SetFilter('data', dataOriginal);
 }
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
