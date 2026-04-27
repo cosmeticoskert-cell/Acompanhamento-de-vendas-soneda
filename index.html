@@ -616,8 +616,7 @@ function fLimparAtivo()  { f_active  = {dim:null,val:null}; renderizar();  }
 function vLimparAtivo()  { v_active  = {dim:null,val:null}; vRenderizar(); }
 function d2LimparAtivo() { d2_active = {dim:null,val:null}; d2Renderizar();}
 function d2FiltrarPorData(dataOriginal) {
-  d2_active = toggleActiveFilter(d2_active, 'data', dataOriginal);
-  d2Renderizar();
+  setFilter(d2_active, 'data', dataOriginal, d2Renderizar);
 }
 function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
