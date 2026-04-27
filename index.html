@@ -836,17 +836,12 @@ function dataParaISO(dt) {
 
 function getCat(r) {
   const ean = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
-  if (ean && catMap[ean]) return catMap[ean];
-  return col(r, 'Categoria', 'categoria', 'Categoria Kert', 'categoria kert', 'Kert', 'kert');
+  return (ean && catMap[ean]) ? catMap[ean] : '';
 }
 
 function getFamilia(r) {
-  // DE-PARA obrigatório:
-  // Aba CATEGORIA: CODBARRAS -> FAMILIA
-  // Aba DADOS BRUTOS: GTIN -> procura no familiaMap
   const gtin = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
-  if (gtin && familiaMap[gtin]) return familiaMap[gtin];
-  return 'Sem família';
+  return (gtin && familiaMap[gtin]) ? familiaMap[gtin] : '';
 }
 
 function setEstado(html) {
