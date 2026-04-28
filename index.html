@@ -1,45 +1,149 @@
-<!-- INDEX ATUALIZADO COM LEGENDA DINÂMICA (HOVER TOOLTIP) -->
-<!-- Substitua no seu projeto conforme instruções já passadas -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Venda por Dia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#0f1522;
+      --border:#1c2436;
+      --text:#cbd3e3;
+      --muted:#8891aa;
+      --accent:#c8f135;
+      --accent2:#6fe3ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Figtree', sans-serif;
+    }
+    .container{
+      padding:20px;
+      max-width:1400px;
+      margin:auto;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:20px;
+    }
+    h2{
+      margin:0 0 10px 0;
+      font-weight:600;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:0.85rem;
+      margin-bottom:20px;
+    }
+    .chart-wrap{
+      width:100%;
+      height:420px;
+    }
+    #cat2-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px 18px;
+      margin-top:16px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      justify-content:flex-start;
+      width:100%;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="card">
+    <h2>Vendas por Categoria ao Longo do Tempo</h2>
+    <div class="sub">Todos os períodos · Todas as lojas</div>
+
+    <div class="chart-wrap">
+      <canvas id="cat2"></canvas>
+    </div>
+
+    <div id="cat2-legend"></div>
+  </div>
+
+</div>
 
 <script>
-function renderLegendaHover(idx = null) {
+const cats = ['COLORAÇÃO PERMANENTE KIT','TRATAMENTO','COLORAÇÃO PERMANENTE','OXIDANTE(0)','COLORAÇÃO TEMPORÁRIA'];
+const PALETTE = ['#ff6fae','#3ddc97','#4db8ff','#ff8a65','#9c88ff'];
+
+const labels = Array.from({length:20}, (_,i)=>'Mês '+(i+1));
+
+const seriesMap = {};
+const totCatMap = {};
+
+cats.forEach((c,i)=>{
+  seriesMap[c] = labels.map(()=>Math.floor(Math.random()*800));
+  totCatMap[c] = seriesMap[c].reduce((a,b)=>a+b,0);
+});
+
+const datasets = cats.map((c,i)=>({
+  label:c,
+  data:seriesMap[c],
+  borderColor:PALETTE[i],
+  tension:0.4
+}));
+
+const ctx = document.getElementById('cat2').getContext('2d');
+
+const chart = new Chart(ctx,{
+  type:'line',
+  data:{labels,datasets},
+  options:{
+    responsive:true,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{enabled:false}}
+  }
+});
+
+function renderLegendaHover(idx=null){
   const legend = document.getElementById('cat2-legend');
-  if (!legend) return;
 
-  const catAtiva = document.getElementById('d2-cat').value;
+  const sorted = [...cats].sort((a,b)=>totCatMap[b]-totCatMap[a]);
 
-  const sorted = [...cats].sort((a,b) => totCatMap[b]-totCatMap[a]);
-
-  legend.innerHTML = sorted.map((c) => {
-    const cor = PALETTE[cats.indexOf(c) % PALETTE.length];
-
-    let valor;
-
-    if (idx !== null && seriesMap[c] && seriesMap[c][idx] !== undefined) {
-      valor = seriesMap[c][idx];
-    } else {
-      valor = totCatMap[c];
-    }
-
-    const ativa = catAtiva === c;
+  legend.innerHTML = sorted.map((c)=>{
+    const cor = PALETTE[cats.indexOf(c)];
+    const valor = (idx!==null ? seriesMap[c][idx] : totCatMap[c]);
 
     return `
-      <div onclick="d2SetCatDropdown('${c.replace(/'/g,"\\'")}')"
-        style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border-radius:8px;
-        background:${ativa ? 'rgba(200,241,53,0.08)' : 'transparent'};
-        border:1px solid ${ativa ? 'rgba(200,241,53,0.3)' : 'transparent'};">
-
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;">
         <div style="width:8px;height:8px;border-radius:50%;background:${cor};"></div>
-
-        <span style="font-size:0.75rem;color:${ativa ? '#c8f135' : '#8891aa'};">
-          ${c}
-        </span>
-
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent2);">
-          ${Number(valor || 0).toLocaleString('pt-BR')}
+        <span style="font-size:0.75rem;color:#8891aa;">${c}</span>
+        <span style="font-family:'DM Mono';font-size:0.7rem;color:#6fe3ff;">
+          ${Number(valor).toLocaleString('pt-BR')}
         </span>
       </div>
     `;
   }).join('');
 }
+
+const canvas = document.getElementById('cat2');
+
+canvas.addEventListener('mousemove',(e)=>{
+  const points = chart.getElementsAtEventForMode(e,'index',{intersect:false},true);
+  if(points.length){
+    renderLegendaHover(points[0].index);
+  }
+});
+
+canvas.addEventListener('mouseleave',()=>renderLegendaHover());
+
+renderLegendaHover();
 </script>
+
+</body>
+</html>
