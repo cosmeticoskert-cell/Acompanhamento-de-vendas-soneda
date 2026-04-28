@@ -3624,7 +3624,12 @@ async function confirmarImporte() {
     return;
   }
 
+  // Envia também uma matriz de valores por posição de coluna.
+  // Isso evita erro de cabeçalho quando há espaços/caracteres invisíveis no CSV.
   const linhasParaEnviar = indicesValidos.map(idx => importOriginalRows[idx]);
+  const valoresParaEnviar = indicesValidos.map(idx =>
+    importCsvHeaders.map(h => importOriginalRows[idx][h] ?? '')
+  );
   const headersParaEnviar = importCsvHeaders;
   const confirmBtn = document.getElementById('import-confirm-btn');
   const textoOriginal = confirmBtn.innerHTML;
@@ -3638,7 +3643,9 @@ async function confirmarImporte() {
       body: JSON.stringify({
         targetSheet: 'DADOS BRUTOS',
         headers: headersParaEnviar,
-        rows: linhasParaEnviar
+        rows: linhasParaEnviar,
+        values: valoresParaEnviar,
+        mode: 'append_by_position'
       })
     });
 
@@ -3652,7 +3659,7 @@ async function confirmarImporte() {
     }
 
     fecharModalImporte();
-    alert(json.message || `${json.inserted || linhasParaEnviar.length} linhas adicionadas com sucesso.`);
+    alert(json.message || `${json.inserted || valoresParaEnviar.length} linhas adicionadas com sucesso.`);
     location.reload();
 
   } catch (err) {
