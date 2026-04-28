@@ -841,14 +841,8 @@ async function init() {
     document.getElementById('status-msg').textContent =
       `${rawData.length.toLocaleString('pt-BR')} registros carregados · ${Object.keys(deParaMap).length} lojas no de-para`;
 
-    // Constrói filtros de todas as abas (rápido — só monta dropdowns)
+    // Só a aba ativa: monta filtros e renderiza agora
     construirFiltros();
-    vConstruirFiltros();
-    d2ConstruirFiltros();
-    d3ConstruirFiltros();
-    seConstruirFiltros();
-
-    // Renderiza apenas a aba ativa agora; as demais renderizam ao primeiro clique
     renderizar();
     tabsRenderizadas.add('vendas');
 
@@ -3131,12 +3125,12 @@ function trocarAba(aba, evt) {
   const btn = evt?.currentTarget || window.event?.currentTarget;
   if (btn) btn.classList.add('active');
 
-  // Renderiza a aba apenas na primeira vez que for aberta
+  // Constrói filtros e renderiza apenas na primeira vez que a aba for aberta
   if (!tabsRenderizadas.has(aba) && rawData.length > 0) {
-    if (aba === 'valor')   vRenderizar();
-    if (aba === 'dia')     d2Renderizar();
-    if (aba === 'estoque') d3Renderizar();
-    if (aba === 'se')      seRenderizar();
+    if (aba === 'valor')   { vConstruirFiltros();  vRenderizar();  }
+    if (aba === 'dia')     { d2ConstruirFiltros(); d2Renderizar(); }
+    if (aba === 'estoque') { d3ConstruirFiltros(); d3Renderizar(); }
+    if (aba === 'se')      { seConstruirFiltros(); seRenderizar(); }
     tabsRenderizadas.add(aba);
   }
 }
