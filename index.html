@@ -880,20 +880,20 @@ function parseDataBR(raw) {
   const txt = String(raw).trim();
   if (!txt) return null;
 
-  // Formato brasileiro: DD/MM/AAAA
+  // Google Sheets exporta datas no formato americano M/D/AAAA (mês/dia/ano)
   const p = txt.split('/');
   if (p.length === 3) {
-    const d = Number(p[0]);
-    const m = Number(p[1]);
+    const m = Number(p[0]); // mês vem primeiro
+    const d = Number(p[1]); // dia vem segundo
     const y = Number(p[2]);
 
-    if (!Number.isNaN(d) && !Number.isNaN(m) && !Number.isNaN(y)) {
+    if (!Number.isNaN(m) && !Number.isNaN(d) && !Number.isNaN(y) && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
       const dt = new Date(y, m - 1, d);
       return isNaN(dt) ? null : dt;
     }
   }
 
-  // Fallback para datas ISO ou formatos reconhecidos pelo navegador
+  // Fallback para ISO (AAAA-MM-DD) ou outros formatos
   const dt = new Date(txt);
   return isNaN(dt) ? null : dt;
 }
@@ -1518,14 +1518,12 @@ function d2AgruparPorDia(data) {
 function d2FormatarData(valor) {
   if (!valor) return valor;
   const s = String(valor).trim();
-  // ISO YYYY-MM-DD → DD/MM/AAAA
+  // ISO YYYY-MM-DD → DD/MM/AAAA (sem ambiguidade)
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const [y, m, d] = s.split('-');
     return `${d}/${m}/${y}`;
   }
-  // Já está em DD/MM/AAAA
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-  // Qualquer outro formato: tenta parsear e formatar
+  // Qualquer outro formato (M/D/AAAA do Google Sheets, etc.): parseia e formata
   const dt = parseDataBR(s);
   if (dt && !isNaN(dt)) {
     const d = String(dt.getDate()).padStart(2, '0');
