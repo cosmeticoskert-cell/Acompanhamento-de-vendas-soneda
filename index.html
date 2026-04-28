@@ -1670,13 +1670,23 @@ function renderCat2(data) {
       },
       plugins: {
         legend: {
-          labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 },
+          position: 'bottom',
+          labels:{
+            color:'#8891aa', font:{family:'DM Mono',size:10},
+            usePointStyle: true, pointStyle: 'line',
+            boxWidth: 20, padding: 18,
+          },
           onClick: (e, item) => d2SetFilter('cat', item.text),
         },
         tooltip: {
           backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1,
           titleColor:'#c8f135', bodyColor:'#e8ecf5',
           titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:12}, padding:12,
+          filter: item => item.parsed.y > 0,
+          itemSort: (a, b) => b.parsed.y - a.parsed.y,
+          callbacks: {
+            label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('pt-BR')} un.`
+          }
         }
       },
       scales: {
