@@ -445,10 +445,10 @@
         <div class="chart-subtitle" id="cat2-sub">Todos os períodos · Todas as lojas</div>
       </div>
     </div>
-    <div class="chart-wrap" id="cat2-wrap" style="height:380px">
+    <div class="chart-wrap" id="cat2-wrap" style="height:420px">
       <div class="state-msg" id="cat2-state"><div class="spinner"></div>Carregando...</div>
     </div>
-    <div id="cat2-legend" style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"></div>
+    <div id="cat2-legend" style="display:flex;flex-wrap:wrap;gap:12px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);justify-content:flex-start;width:100%;align-items:flex-start"></div>
   </div>
 
   <!-- TABELA CATEGORIAS -->
@@ -1664,38 +1664,25 @@ function renderCat2(data) {
   cats.forEach(c => { totCatMap[c] = Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0); });
 
   function renderSidebarLegenda() {
-    const sidebar = document.getElementById('cat2-sidebar');
-    if (!sidebar) return;
-    const catAtiva = document.getElementById('d2-cat').value;
-    const sorted = [...cats].sort((a,b) => totCatMap[b]-totCatMap[a]);
-    sidebar.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Legenda · clique p/ filtrar</div>`
-      + sorted.map((c,i) => {
-          const cor = PALETTE[cats.indexOf(c) % PALETTE.length];
-          const tot = totCatMap[c].toLocaleString('pt-BR');
-          const ativa = catAtiva === c;
-          return `<div style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;border-radius:6px;background:${ativa ? 'rgba(200,241,53,0.08)' : 'transparent'};border:1px solid ${ativa ? 'rgba(200,241,53,0.3)' : 'transparent'}" onclick="d2SetCatDropdown('${c.replace(/'/g,"\\'")}')">
-            <div style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0"></div>
-            <span style="font-size:0.75rem;color:${ativa ? '#c8f135' : '#8891aa'};flex:1;font-family:'Figtree',sans-serif;line-height:1.3">${c}</span>
-            <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent2)">${tot}</span>
-          </div>`;
-        }).join('');
-  }
+    const legend = document.getElementById('cat2-legend');
+    if (!legend) return;
 
-  function renderSidebarHover(dataIndex) {
-    const sidebar = document.getElementById('cat2-sidebar');
-    if (!sidebar) return;
-    const label = dias[dataIndex] ? d2FormatarData(dias[dataIndex]) : '';
-    const entries = cats.map((c,i) => ({
-      c, val: mapCatDia[c]?.[dias[dataIndex]] || 0, cor: PALETTE[i % PALETTE.length]
-    })).filter(e => e.val > 0).sort((a,b) => b.val - a.val);
-    sidebar.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">${label}</div>`
-      + (entries.length === 0
-        ? `<div style="color:var(--muted);font-size:0.75rem;font-family:'DM Mono',monospace">Sem dados</div>`
-        : entries.map(e => `<div style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;border-radius:6px" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background='transparent'" onclick="d2SetCatDropdown('${e.c.replace(/'/g,"\\'")}')">
-            <div style="width:8px;height:8px;border-radius:50%;background:${e.cor};flex-shrink:0"></div>
-            <span style="font-size:0.75rem;color:#e8ecf5;flex:1;font-family:'Figtree',sans-serif;line-height:1.3">${e.c}</span>
-            <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent2)">${e.val.toLocaleString('pt-BR')}</span>
-          </div>`).join(''));
+    const catAtiva = document.getElementById('d2-cat').value;
+    const sorted = [...cats].sort((a,b) => totCatMap[b] - totCatMap[a]);
+
+    legend.innerHTML = sorted.map((c,i) => {
+      const cor = PALETTE[cats.indexOf(c) % PALETTE.length];
+      const tot = totCatMap[c].toLocaleString('pt-BR');
+      const ativa = catAtiva === c;
+      const safeClick = c.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const safeHtml = c.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+      return `<div onclick="d2SetCatDropdown('${safeClick}')" style="display:flex;align-items:center;gap:7px;padding:6px 10px;cursor:pointer;border-radius:8px;background:${ativa ? 'rgba(200,241,53,0.08)' : 'transparent'};border:1px solid ${ativa ? 'rgba(200,241,53,0.3)' : 'transparent'};min-width:fit-content">
+        <div style="width:9px;height:9px;border-radius:50%;background:${cor};flex-shrink:0"></div>
+        <span style="font-size:0.78rem;color:${ativa ? '#c8f135' : '#e8ecf5'};font-family:'Figtree',sans-serif;line-height:1.25">${safeHtml}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--accent2);margin-left:4px">${tot}</span>
+      </div>`;
+    }).join('');
   }
 
   renderSidebarLegenda();
@@ -1719,11 +1706,6 @@ function renderCat2(data) {
       onClick: (evt, elements) => {
         if (elements.length > 0) d2SetCatDropdown(cats[elements[0].datasetIndex]);
       },
-      onHover: (evt, elements) => {
-        if (elements && elements.length > 0) {
-          renderSidebarHover(elements[0].index);
-        }
-      },
       plugins: {
         legend: { display: false },
         tooltip: { enabled: false }
@@ -1735,7 +1717,6 @@ function renderCat2(data) {
     }
   });
   canvas2.style.cursor = 'pointer';
-  canvas2.addEventListener('mouseleave', renderSidebarLegenda);
 
   let totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) }));
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
