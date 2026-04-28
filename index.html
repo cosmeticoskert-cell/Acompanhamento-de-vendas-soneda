@@ -3308,32 +3308,29 @@ function atualizarStatusAtualizacao() {
 // Monitoramento automático removido para evitar popups, tentativas externas e recarregamentos inesperados.
 
 // ── IMPORTAÇÃO CSV ────────────────────────────────────────────────────────────
-// URL do Web App do Google Apps Script que grava na aba DADOS BRUTOS.
-// Depois de publicar o Apps Script, cole a URL entre as aspas abaixo.
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxB244g1w16IqMJVBfb80hqpNLLUhMjvXiLiLi7IdqGWut7DQoPlJVRubS9_NX9BK-5oA/exec';
 
-// Colunas obrigatórias: ao menos uma delas deve existir com esses nomes exatos
-const IMPORT_COLUNAS_OBRIGATORIAS = [
-  { label: 'Ano',          keys: ['Ano'] },
-  { label: 'Mês',          keys: ['Mês','Mes'] },
-  { label: 'Data',         keys: ['Data','data'] },
-  { label: 'Loja',         keys: ['Loja','loja'] },
-  { label: 'Venda (Qtd)',  keys: ['Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'] },
-  { label: 'Estoque',      keys: ['Estoque Diario','Estoque Diário','Estoque','estoque'] },
-];
-const IMPORT_COLUNAS_OPCIONAIS = [
-  { label: 'Venda (R$)',   keys: ['Venda (R$)','Venda(R$)','Venda R$','Venda Valor','Venda NF Valor','Venda PDV Valor'] },
-  { label: 'EAN / CodBarras', keys: ['EAN','CodBarras','Cod Barras','Codbarras','Cod. Barras'] },
+// Cabeçalho oficial da aba DADOS BRUTOS, na ordem exata da planilha.
+// A importação é feita por POSIÇÃO, para evitar erro com acentos, espaços invisíveis e colunas duplicadas como "Loja" e "Loja ".
+const IMPORT_HEADERS_OFICIAIS = [
+  'Ano','Categoria','Cód. Interno','compra_cons_contr_estoque_valor','Custo Estoque Icm Nf Valor','Custo Estoque Icm Pdv Valor',
+  'Data','Departamento','Dev Venda Pdv Qtde','Dev Venda Pdv Valor','Estoque Diario','Grupo','GTIN/PLU','Loja','Loja ',
+  'Lucro Bruto','Margem Bruta','Mes','Mês','Produto','remessa_troca_valor','retorno_remessa_troca_valor','Seção',
+  'Setor de Compra','Subgrupo','transformacao_entrada_quantidade','transformacao_entrada_valor','transformacao_saida_quantidade',
+  'transformacao_saida_valor','url_erp','Venda (Qtd)','Venda (R$)','Venda Dif Preco Pdv Valor','Venda Nf Quantidade',
+  'Venda Nf Valor','Venda Pdv Quantidade','Venda Pdv Valor'
 ];
 
 let importParsedRows = [];
-let importOriginalRows = [];
 let importCsvHeaders = [];
+let importCsvValues = [];
+let importSeparador = ';';
 
 function abrirModalImporte() {
   importParsedRows = [];
-  importOriginalRows = [];
   importCsvHeaders = [];
+  importCsvValues = [];
+  importSeparador = ';';
   document.getElementById('import-result').style.display = 'none';
   document.getElementById('import-confirm-btn').disabled = true;
   document.getElementById('import-drop-zone').classList.remove('drag-over');
@@ -3374,157 +3371,125 @@ function processarArquivoImporte(file) {
   const reader = new FileReader();
   reader.onload = e => processarTextoCSV(e.target.result);
   reader.onerror = () => mostrarErroImporte('Erro ao ler o arquivo. Tente novamente.');
-  // tenta UTF-8; se tiver BOM ele será tratado internamente
   reader.readAsText(file, 'utf-8');
 }
 
-// Detecta separador: Excel BR usa ; em vez de ,
 function detectarSeparador(text) {
-  const amostra = text.replace(/\r/g, '').split('\n').slice(0, 5).join('\n');
-  const nVirgulas  = (amostra.match(/,/g)  || []).length;
-  const nPontoVirg = (amostra.match(/;/g)  || []).length;
-  return nPontoVirg > nVirgulas ? ';' : ',';
+  const primeiraLinha = text.replace(/\r/g, '').split('\n').find(l => l.trim()) || '';
+  const nPontoVirg = (primeiraLinha.match(/;/g) || []).length;
+  const nVirgulas  = (primeiraLinha.match(/,/g) || []).length;
+  const nTabs      = (primeiraLinha.match(/\t/g) || []).length;
+  if (nTabs > nPontoVirg && nTabs > nVirgulas) return '\t';
+  return nPontoVirg >= nVirgulas ? ';' : ',';
 }
 
-// Parser CSV com separador configurável
-function parseCSVSep(text, sep) {
-  const lines = text.replace(/\r/g, '').split('\n');
-  function splitLine(line) {
-    const out = []; let cur = '', q = false;
-    for (const ch of line) {
-      if (ch === '"') { q = !q; }
-      else if (ch === sep && !q) { out.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    out.push(cur.trim());
-    return out;
-  }
-  let hi = 0;
-  for (let i = 0; i < Math.min(lines.length, 6); i++) {
-    if (splitLine(lines[i]).filter(c => c !== '').length > 1) { hi = i; break; }
-  }
-  const headers = splitLine(lines[hi]).map(h => h.replace(/^"|"$/g, '').trim());
-  const rows = [];
-  for (let i = hi + 1; i < lines.length; i++) {
-    const vals = splitLine(lines[i]);
-    if (vals.every(v => v === '')) continue;
-    const obj = {};
-    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim(); });
-    rows.push(obj);
-  }
-  return rows;
-}
-
-// Normaliza string para comparação: sem acento, minúsculas, sem espaços extras
-function normCol(h) {
-  return String(h ?? '')
-    .replace(/\uFEFF/g, '')
-    .replace(/[\u200B-\u200D\u2060]/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
+function limparCampoCSV(valor) {
+  return String(valor ?? '')
+    .replace(/^\uFEFF/, '')
+    .replace(/^"|"$/g, '')
     .trim();
 }
 
-function getHeadersBaseDadosBrutos() {
-  return rawData && rawData.length ? Object.keys(rawData[0]) : [];
-}
+function splitCSVLine(line, sep) {
+  const out = [];
+  let cur = '';
+  let q = false;
 
-function estruturaCsvBateComBase(csvHeaders) {
-  const baseHeaders = getHeadersBaseDadosBrutos();
-  if (!baseHeaders.length) return { ok: true, baseHeaders: csvHeaders, msg: '' };
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    const prox = line[i + 1];
 
-  const csvNorm  = csvHeaders.map(normCol);
-  const baseNorm = baseHeaders.map(normCol);
-
-  if (csvNorm.length !== baseNorm.length) {
-    return {
-      ok: false,
-      baseHeaders,
-      msg: `Quantidade de colunas diferente. CSV: ${csvNorm.length} · DADOS BRUTOS: ${baseNorm.length}`
-    };
+    if (ch === '"') {
+      if (q && prox === '"') {
+        cur += '"';
+        i++;
+      } else {
+        q = !q;
+      }
+    } else if (ch === sep && !q) {
+      out.push(limparCampoCSV(cur));
+      cur = '';
+    } else {
+      cur += ch;
+    }
   }
 
-  const diffs = [];
-  csvNorm.forEach((h, i) => {
-    if (h !== baseNorm[i]) {
-      diffs.push(`Coluna ${i + 1}: CSV "${csvHeaders[i]}" ≠ DADOS BRUTOS "${baseHeaders[i]}"`);
+  out.push(limparCampoCSV(cur));
+  return out;
+}
+
+function parseCSVImportacao(text, sep) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+  if (!lines.length) return { headers: [], rowValues: [], rows: [] };
+
+  let headerIndex = 0;
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    const cols = splitCSVLine(lines[i], sep);
+    if (cols.length > 5 && cols.some(c => normColImport(c) === 'ano')) {
+      headerIndex = i;
+      break;
     }
-  });
+  }
 
-  return {
-    ok: diffs.length === 0,
-    baseHeaders,
-    msg: diffs.slice(0, 6).join('<br>') + (diffs.length > 6 ? '<br>...' : '')
-  };
+  const headers = splitCSVLine(lines[headerIndex], sep);
+  const rowValues = [];
+  const rows = [];
+
+  for (let i = headerIndex + 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i], sep);
+    if (vals.every(v => v === '')) continue;
+
+    const ajustada = vals.slice(0, headers.length);
+    while (ajustada.length < headers.length) ajustada.push('');
+
+    rowValues.push(ajustada);
+
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = ajustada[idx] ?? ''; });
+    rows.push(obj);
+  }
+
+  return { headers, rowValues, rows };
 }
 
-function montarLinhasNaEstruturaDaBase(rowsOriginais, indicesValidos) {
-  const baseHeaders = getHeadersBaseDadosBrutos();
-  const headersDestino = baseHeaders.length ? baseHeaders : importCsvHeaders;
-  return indicesValidos.map(idx => {
-    const origem = rowsOriginais[idx];
-    const novo = {};
-    headersDestino.forEach((hDestino, i) => {
-      const hOrigem = importCsvHeaders[i];
-      novo[hDestino] = origem[hOrigem] ?? '';
-    });
-    return novo;
-  });
-}
-
-// Remapeia headers do CSV importado para os nomes canônicos que col() espera
-function remapearHeaders(rows) {
-  if (!rows.length) return rows;
-  const headers = Object.keys(rows[0]);
-  const mapa = [
-    { canon: 'Ano',            match: h => normCol(h) === 'ano' },
-    { canon: 'Mês',            match: h => /^m[eê]s$/.test(normCol(h)) },
-    { canon: 'Data',           match: h => normCol(h) === 'data' },
-    { canon: 'Loja',           match: h => normCol(h) === 'loja' },
-    { canon: 'Venda (Qtd)',    match: h => /venda.*(qtd|quant)/i.test(h) },
-    { canon: 'Estoque Diario', match: h => /estoque/i.test(h) },
-    { canon: 'Venda (R$)',     match: h => /venda.*(r\$|valor)/i.test(h) },
-  ];
-  const remapH = {};
-  headers.forEach(h => {
-    const m = mapa.find(mp => mp.match(h));
-    remapH[h] = m ? m.canon : h;
-  });
-  return rows.map(r => {
-    const novo = {};
-    Object.entries(r).forEach(([k, v]) => { novo[remapH[k] || k] = v; });
-    return novo;
-  });
+function normColImport(h) {
+  return String(h ?? '')
+    .replace(/\uFEFF/g, '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ');
 }
 
 function processarTextoCSV(text) {
-  // Remove BOM (U+FEFF) que Excel UTF-8 adiciona no início do arquivo
   const clean = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
-  const sep   = detectarSeparador(clean);
-  let rows;
+  const sep = detectarSeparador(clean);
+  importSeparador = sep;
+
+  let parsed;
   try {
-    rows = parseCSVSep(clean, sep);
+    parsed = parseCSVImportacao(clean, sep);
   } catch(e) {
     mostrarErroImporte('Erro ao interpretar o CSV: ' + e.message);
     return;
   }
-  if (rows.length === 0) {
+
+  if (!parsed.rows.length) {
     mostrarErroImporte('O arquivo está vazio ou não contém dados válidos.');
     return;
   }
-  if (Object.keys(rows[0]).length <= 1) {
-    const outroSep = sep === ',' ? ';' : ',';
-    mostrarErroImporte(`Apenas 1 coluna detectada com separador "${sep}". Tente salvar o arquivo com separador "${outroSep}".`);
+
+  if (parsed.headers.length <= 1) {
+    mostrarErroImporte(`Apenas 1 coluna detectada. O arquivo parece não estar separado corretamente. Separador detectado: "${sep}".`);
     return;
   }
-  // Guarda as linhas e headers originais para enviar exatamente na mesma estrutura da aba DADOS BRUTOS.
-  // As linhas remapeadas são usadas apenas para validação interna do painel.
-  importCsvHeaders = Object.keys(rows[0]);
-  importOriginalRows = rows;
-  importParsedRows = remapearHeaders(rows);
-  renderValidacaoImporte(rows, importCsvHeaders);
+
+  importCsvHeaders = parsed.headers;
+  importParsedRows = parsed.rows;
+  importCsvValues  = parsed.rowValues;
+
+  renderValidacaoImporte(importParsedRows, importCsvHeaders, importCsvValues);
 }
 
 function mostrarErroImporte(msg) {
@@ -3537,7 +3502,7 @@ function mostrarErroImporte(msg) {
   document.getElementById('import-confirm-btn').disabled = true;
 }
 
-function renderValidacaoImporte(rows, headers) {
+function renderValidacaoImporte(rows, headers, values) {
   const resultEl = document.getElementById('import-result');
   const gridEl   = document.getElementById('import-val-grid');
   const errEl    = document.getElementById('import-error-msg');
@@ -3548,129 +3513,105 @@ function renderValidacaoImporte(rows, headers) {
   errEl.style.display = 'none';
   gridEl.innerHTML = '';
 
-  // Verifica cada coluna — comparação sem acento, sem case
-  const normHeaders = headers.map(normCol);
-  let totalFalhas = 0;
-  const renderItem = (label, keys, obrigatorio) => {
-    const found = keys.find(k => normHeaders.some(nh => nh === normCol(k)));
-    const ok = !!found;
-    if (obrigatorio && !ok) totalFalhas++;
-    const cls = ok ? 'ok' : (obrigatorio ? 'fail' : 'optional');
-    const icon = ok ? '&#10003;' : (obrigatorio ? '&#10007;' : '&mdash;');
-    const badge = obrigatorio ? 'obrig.' : 'opcional';
-    const badgeColor = ok ? '#4fffb0' : (obrigatorio ? '#ff6b6b' : 'var(--muted)');
+  const qtdEsperada = IMPORT_HEADERS_OFICIAIS.length;
+  const qtdCsv = headers.length;
+  const mesmaQtd = qtdCsv === qtdEsperada;
+  const anoOk = normColImport(headers[0]) === 'ano';
+  const dataOk = normColImport(headers[6]) === 'data';
+  const gtinOk = normColImport(headers[12]) === 'gtin/plu';
+  const vendaQtdOk = normColImport(headers[30]) === 'venda (qtd)';
+  const vendaValorOk = normColImport(headers[31]) === 'venda (r$)';
+
+  const checks = [
+    { nome: `Qtd. colunas: ${qtdCsv}/${qtdEsperada}`, ok: mesmaQtd },
+    { nome: 'Coluna 1 = Ano', ok: anoOk },
+    { nome: 'Coluna 7 = Data', ok: dataOk },
+    { nome: 'Coluna 13 = GTIN/PLU', ok: gtinOk },
+    { nome: 'Coluna 31 = Venda (Qtd)', ok: vendaQtdOk },
+    { nome: 'Coluna 32 = Venda (R$)', ok: vendaValorOk },
+  ];
+
+  checks.forEach(c => {
+    const cls = c.ok ? 'ok' : 'fail';
+    const icon = c.ok ? '&#10003;' : '&#10007;';
+    const color = c.ok ? '#4fffb0' : '#ff6b6b';
     gridEl.innerHTML += `
       <div class="val-item ${cls}">
-        <span class="val-icon" style="color:${badgeColor}">${icon}</span>
-        <span class="val-name">${label}</span>
-        <span class="val-badge" style="color:${badgeColor}">${badge}</span>
+        <span class="val-icon" style="color:${color}">${icon}</span>
+        <span class="val-name">${c.nome}</span>
+        <span class="val-badge" style="color:${color}">${c.ok ? 'ok' : 'erro'}</span>
       </div>`;
-  };
-  IMPORT_COLUNAS_OBRIGATORIAS.forEach(c => renderItem(c.label, c.keys, true));
-  IMPORT_COLUNAS_OPCIONAIS.forEach(c => renderItem(c.label, c.keys, false));
+  });
 
-  if (totalFalhas > 0) {
-    errEl.innerHTML = `&#9888; ${totalFalhas} coluna(s) obrigatória(s) não encontrada(s). Verifique se o arquivo contém as colunas corretas.`;
+  const falhas = checks.filter(c => !c.ok);
+  if (falhas.length > 0) {
+    errEl.innerHTML = `&#9888; Estrutura diferente da aba DADOS BRUTOS. Nenhum dado foi importado.<br>` +
+      `Colunas detectadas: ${qtdCsv}. Esperado: ${qtdEsperada}.<br>` +
+      `Primeiras colunas detectadas: ${headers.slice(0, 8).join(' | ')}`;
     errEl.style.display = 'block';
     prevSec.style.display = 'none';
     confirmBtn.disabled = true;
     return;
   }
 
-  // A validação rígida de cabeçalho foi removida do front-end.
-  // O Apps Script faz a conferência final usando nomes normalizados e grava as colunas pelo cabeçalho da aba DADOS BRUTOS.
-  const estrutura = estruturaCsvBateComBase(headers);
-  if (!estrutura.ok) {
-    errEl.innerHTML = `&#9888; Atenção: detectei diferença visual de cabeçalho, mas a importação continuará porque o Apps Script fará o encaixe pelas colunas normalizadas.<br>${estrutura.msg}`;
-    errEl.style.display = 'block';
-  }
-
-  // Preview das primeiras 5 linhas
-  const preview5 = rows.slice(0, 5);
+  const preview5 = values.slice(0, 5);
   const theadEl = document.querySelector('#import-preview-table thead');
   const tbodyEl = document.querySelector('#import-preview-table tbody');
   theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-  tbodyEl.innerHTML = preview5.map(r =>
-    '<tr>' + headers.map(h => `<td>${r[h] ?? ''}</td>`).join('') + '</tr>'
+  tbodyEl.innerHTML = preview5.map(vals =>
+    '<tr>' + headers.map((_, idx) => `<td>${vals[idx] ?? ''}</td>`).join('') + '</tr>'
   ).join('');
 
-  // Resumo
-  const linhasValidas = importParsedRows.filter(r => /^\d{4}$/.test(col(r,'Ano'))).length;
+  const linhasValidas = values.filter(v => /^\d{4}$/.test(String(v[0] || '').trim())).length;
   document.getElementById('import-summary').innerHTML =
     `<strong>${rows.length.toLocaleString('pt-BR')}</strong> linhas encontradas &nbsp;·&nbsp; ` +
-    `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> com ano válido &nbsp;·&nbsp; ` +
-    `<strong>${headers.length}</strong> colunas detectadas`;
+    `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> linhas válidas &nbsp;·&nbsp; ` +
+    `<strong>${headers.length}</strong> colunas detectadas &nbsp;·&nbsp; ` +
+    `separador <strong>${importSeparador === '\t' ? 'TAB' : importSeparador}</strong>`;
 
   prevSec.style.display = 'block';
   confirmBtn.disabled = false;
 }
 
 async function confirmarImporte() {
-  if (importParsedRows.length === 0) return;
+  if (importCsvValues.length === 0) return;
 
-  if (!WEBAPP_URL || WEBAPP_URL === 'COLE_AQUI_A_URL_DO_APPS_SCRIPT') {
-    mostrarErroImporte('Cole a URL do Web App do Google Apps Script na constante WEBAPP_URL antes de importar.');
+  const novosValidos = importCsvValues.filter(v => /^\d{4}$/.test(String(v[0] || '').trim()));
+  if (novosValidos.length === 0) {
+    mostrarErroImporte('Nenhuma linha válida encontrada no arquivo. A primeira coluna precisa ser o Ano com 4 dígitos.');
     return;
   }
 
-  // Valida pela estrutura remapeada, mas envia os dados originais para manter exatamente as colunas do CSV/Sheets.
-  const indicesValidos = importParsedRows
-    .map((r, idx) => ({ r, idx }))
-    .filter(item => /^\d{4}$/.test(col(item.r, 'Ano')))
-    .map(item => item.idx);
-
-  if (indicesValidos.length === 0) {
-    mostrarErroImporte('Nenhuma linha válida encontrada no arquivo (coluna "Ano" ausente ou inválida).');
-    return;
-  }
-
-  // Envia também uma matriz de valores por posição de coluna.
-  // Isso evita erro de cabeçalho quando há espaços/caracteres invisíveis no CSV.
-  const linhasParaEnviar = indicesValidos.map(idx => importOriginalRows[idx]);
-  const valoresParaEnviar = indicesValidos.map(idx =>
-    importCsvHeaders.map(h => importOriginalRows[idx][h] ?? '')
-  );
-  const headersParaEnviar = importCsvHeaders;
-  const confirmBtn = document.getElementById('import-confirm-btn');
-  const textoOriginal = confirmBtn.innerHTML;
-  confirmBtn.disabled = true;
-  confirmBtn.innerHTML = 'Enviando...';
+  const btn = document.getElementById('import-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Importando...';
 
   try {
     const res = await fetch(WEBAPP_URL, {
       method: 'POST',
+      mode: 'cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        targetSheet: 'DADOS BRUTOS',
-        headers: headersParaEnviar,
-        rows: linhasParaEnviar,
-        values: valoresParaEnviar,
-        mode: 'append_by_position'
-      })
+      body: JSON.stringify({ values: novosValidos })
     });
 
     const json = await res.json();
 
     if (!json.ok) {
-      mostrarErroImporte(json.message || 'Importação cancelada pelo Apps Script.');
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = textoOriginal;
+      mostrarErroImporte(json.message || 'Erro ao importar dados para o Google Sheets.');
+      btn.textContent = '✓ Confirmar Importação';
+      btn.disabled = false;
       return;
     }
 
+    alert(json.message || 'Importação concluída com sucesso.');
     fecharModalImporte();
-    alert(json.message || `${json.inserted || valoresParaEnviar.length} linhas adicionadas com sucesso.`);
     location.reload();
 
   } catch (err) {
     mostrarErroImporte('Erro ao enviar para o Google Sheets: ' + err.message);
-    confirmBtn.disabled = false;
-    confirmBtn.innerHTML = textoOriginal;
+    btn.textContent = '✓ Confirmar Importação';
+    btn.disabled = false;
   }
-
-  importParsedRows = [];
-  importOriginalRows = [];
-  importCsvHeaders = [];
 }
 
 // ── START ─────────────────────────────────────────────────────────────────────
