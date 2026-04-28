@@ -1062,8 +1062,7 @@ function renderGrafico(byLoja) {
 function agruparPorCategoria(data) {
   const map = {};
   data.forEach(r => {
-    const cat = getCat(r);
-    if (!cat) return;
+    const cat = getCat(r) || 'SEM CATEGORIA';
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[cat]) map[cat] = { cat, qty: 0 };
     map[cat].qty += qty;
@@ -1168,8 +1167,7 @@ function cat1OrdenarPor(coluna) {
 function agruparPorFamilia(data) {
   const map = {};
   data.forEach(r => {
-    const fam = getFamilia(r);
-    if (!fam) return;
+    const fam = getFamilia(r) || 'SEM FAMÍLIA';
     const qty = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
     if (!map[fam]) map[fam] = { fam, qty: 0 };
     map[fam].qty += qty;
@@ -2492,8 +2490,7 @@ function vt1OrdenarPor(coluna) {
 function vRenderCat1(data) {
   const map = {};
   data.forEach(r => {
-    const cat = getCat(r);
-    if (!cat) return;
+    const cat = getCat(r) || 'SEM CATEGORIA';
     const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     if (!map[cat]) map[cat] = { cat, val: 0 };
     map[cat].val += val;
@@ -2586,8 +2583,7 @@ function vCat1OrdenarPor(coluna) {
 function vRenderFam1(data) {
   const map = {};
   data.forEach(r => {
-    const fam = getFamilia(r);
-    if (!fam) return;
+    const fam = getFamilia(r) || 'SEM FAMÍLIA';
     const val = parseBR(col(r,'Venda (R$)','Venda(R$)','Venda R$','venda (r$)','Venda Valor','Venda NF Valor','Venda PDV Valor','venda_valor','Valor Venda'));
     if (!map[fam]) map[fam] = { fam, val: 0 };
     map[fam].val += val;
