@@ -151,26 +151,145 @@
   tbody tr.clickable-row:hover { background:var(--surface2); }
   tbody tr.row-active { background:rgba(200,241,53,0.07) !important; outline:1px solid var(--accent); outline-offset:-1px; }
 
+  /* IMPORT MODAL */
+  .import-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .import-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 36px 40px;
+    position: relative;
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 4px; }
+  .modal-sub { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 28px; letter-spacing: 0.5px; }
+  .modal-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; line-height: 1; transition: color .2s; }
+  .modal-close:hover { color: var(--text); }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    margin-bottom: 24px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(200,241,53,0.04); }
+  .drop-zone-icon { font-size: 2rem; margin-bottom: 10px; }
+  .drop-zone-text { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted); line-height: 1.8; }
+  .drop-zone-text strong { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  #import-file-input { display: none; }
+
+  .validation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .val-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.75rem; border: 1px solid var(--border); background: var(--surface2); }
+  .val-item.ok   { border-color: rgba(79,255,176,0.35); }
+  .val-item.fail { border-color: rgba(255,107,107,0.35); }
+  .val-item.optional { border-color: rgba(90,96,128,0.4); opacity: 0.7; }
+  .val-icon { font-size: 0.9rem; flex-shrink: 0; }
+  .val-name { color: var(--text-dim); line-height: 1.2; flex: 1; }
+  .val-badge { font-size: 0.62rem; padding: 1px 6px; border-radius: 10px; background: var(--bg); color: var(--muted); letter-spacing: 0.3px; flex-shrink: 0; }
+
+  .preview-wrap { margin-bottom: 24px; overflow-x: auto; }
+  .preview-wrap table { font-size: 0.75rem; }
+  .preview-wrap thead th { font-size: 0.65rem; padding: 7px 12px; }
+  .preview-wrap tbody td { padding: 6px 12px; font-size: 0.74rem; }
+
+  .import-summary { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 20px; padding: 12px 16px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); line-height: 1.8; }
+  .import-summary strong { color: var(--accent); }
+  .import-error { color: #ff6b6b; font-family: 'DM Mono', monospace; font-size: 0.78rem; margin-bottom: 16px; padding: 12px 16px; background: rgba(255,107,107,0.06); border-radius: 8px; border: 1px solid rgba(255,107,107,0.3); }
+
+  .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px; }
+  .btn-cancel { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 10px 22px; border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.78rem; transition: all .2s; }
+  .btn-cancel:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-confirm { background: var(--accent); border: none; color: var(--bg); padding: 10px 28px; border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.78rem; font-weight: 600; transition: opacity .2s; }
+  .btn-confirm:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-confirm:not(:disabled):hover { opacity: 0.85; }
+  .section-divider { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Soneda<span>.</span></div>
-  <div style="display:flex; align-items:center; gap:16px">
-  <div id="status-update" style="
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 8px;
-      background: var(--bg);
-  ">
-    Atualizando...
+  <div style="display:flex; align-items:center; gap:12px">
+    <button class="import-btn" onclick="abrirModalImporte()">&#8593; Importar CSV</button>
+    <div id="status-update" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-dim);border:1px solid var(--border);padding:6px 12px;border-radius:8px;background:var(--bg);">
+      Atualizando...
+    </div>
+  </div>
+</header>
+
+<!-- MODAL IMPORTAR CSV -->
+<div class="modal-overlay" id="import-modal" onclick="fecharModalImporteOverlay(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModalImporte()" title="Fechar">&times;</button>
+    <div class="modal-title">Importar Dados CSV</div>
+    <div class="modal-sub">DADOS BRUTOS &middot; ARQUIVO .CSV DO MICROSOFT EXCEL</div>
+
+    <!-- Zona de arrastar/soltar -->
+    <div class="drop-zone" id="import-drop-zone"
+         onclick="document.getElementById('import-file-input').click()"
+         ondragover="importDragOver(event)"
+         ondragleave="importDragLeave(event)"
+         ondrop="importDrop(event)">
+      <div class="drop-zone-icon">&#128196;</div>
+      <div class="drop-zone-text">
+        Arraste um arquivo <strong>.csv</strong> aqui<br>
+        ou <strong onclick="event.stopPropagation();document.getElementById('import-file-input').click()">clique para selecionar</strong>
+      </div>
+    </div>
+    <input type="file" id="import-file-input" accept=".csv,text/csv" onchange="importFileSelected(this)">
+
+    <!-- Resultado da validação e preview (oculto até arquivo ser carregado) -->
+    <div id="import-result" style="display:none">
+      <div class="section-divider">Validação das Colunas</div>
+      <div class="validation-grid" id="import-val-grid"></div>
+      <div id="import-error-msg" class="import-error" style="display:none"></div>
+      <div id="import-preview-section" style="display:none">
+        <div class="section-divider">Pré-visualização (primeiras 5 linhas)</div>
+        <div class="preview-wrap">
+          <table id="import-preview-table"><thead></thead><tbody></tbody></table>
+        </div>
+        <div class="import-summary" id="import-summary"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModalImporte()">Cancelar</button>
+      <button class="btn-confirm" id="import-confirm-btn" disabled onclick="confirmarImporte()">&#10003; Confirmar Importação</button>
+    </div>
   </div>
 </div>
-</header>
 
 <nav class="tabs-nav">
   <button class="tab-btn active" onclick="trocarAba('vendas', event)">Vendas Sell Out</button>
@@ -3187,6 +3306,193 @@ function atualizarStatusAtualizacao() {
 
 // ── AUTO UPDATE DESATIVADO ───────────────────────────────────────────────
 // Monitoramento automático removido para evitar popups, tentativas externas e recarregamentos inesperados.
+
+// ── IMPORTAÇÃO CSV ────────────────────────────────────────────────────────────
+// Colunas obrigatórias: ao menos uma delas deve existir com esses nomes exatos
+const IMPORT_COLUNAS_OBRIGATORIAS = [
+  { label: 'Ano',          keys: ['Ano'] },
+  { label: 'Mês',          keys: ['Mês','Mes'] },
+  { label: 'Data',         keys: ['Data','data'] },
+  { label: 'Loja',         keys: ['Loja','loja'] },
+  { label: 'Venda (Qtd)',  keys: ['Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'] },
+  { label: 'Estoque',      keys: ['Estoque Diario','Estoque Diário','Estoque','estoque'] },
+];
+const IMPORT_COLUNAS_OPCIONAIS = [
+  { label: 'Venda (R$)',   keys: ['Venda (R$)','Venda(R$)','Venda R$','Venda Valor','Venda NF Valor','Venda PDV Valor'] },
+  { label: 'EAN / CodBarras', keys: ['EAN','CodBarras','Cod Barras','Codbarras','Cod. Barras'] },
+];
+
+let importParsedRows = [];
+let importCsvHeaders = [];
+
+function abrirModalImporte() {
+  importParsedRows = [];
+  importCsvHeaders = [];
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('import-confirm-btn').disabled = true;
+  document.getElementById('import-drop-zone').classList.remove('drag-over');
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-modal').classList.add('open');
+}
+
+function fecharModalImporte() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+function fecharModalImporteOverlay(e) {
+  if (e.target === document.getElementById('import-modal')) fecharModalImporte();
+}
+
+function importDragOver(e) {
+  e.preventDefault();
+  document.getElementById('import-drop-zone').classList.add('drag-over');
+}
+
+function importDragLeave(e) {
+  document.getElementById('import-drop-zone').classList.remove('drag-over');
+}
+
+function importDrop(e) {
+  e.preventDefault();
+  document.getElementById('import-drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) processarArquivoImporte(file);
+}
+
+function importFileSelected(input) {
+  const file = input.files?.[0];
+  if (file) processarArquivoImporte(file);
+}
+
+function processarArquivoImporte(file) {
+  if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv' && !file.type.includes('csv')) {
+    mostrarErroImporte('Arquivo inválido. Selecione um arquivo .csv exportado do Microsoft Excel.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => processarTextoCSV(e.target.result);
+  reader.onerror = () => mostrarErroImporte('Erro ao ler o arquivo. Tente novamente.');
+  reader.readAsText(file, 'utf-8');
+}
+
+function processarTextoCSV(text) {
+  let rows;
+  try {
+    rows = parseCSV(text);
+  } catch(e) {
+    mostrarErroImporte('Erro ao interpretar o CSV: ' + e.message);
+    return;
+  }
+  if (rows.length === 0) {
+    mostrarErroImporte('O arquivo está vazio ou não contém dados válidos.');
+    return;
+  }
+  importCsvHeaders = Object.keys(rows[0]);
+  importParsedRows = rows;
+  renderValidacaoImporte(rows, importCsvHeaders);
+}
+
+function mostrarErroImporte(msg) {
+  const el = document.getElementById('import-error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('import-result').style.display = 'block';
+  document.getElementById('import-val-grid').innerHTML = '';
+  document.getElementById('import-preview-section').style.display = 'none';
+  document.getElementById('import-confirm-btn').disabled = true;
+}
+
+function renderValidacaoImporte(rows, headers) {
+  const resultEl = document.getElementById('import-result');
+  const gridEl   = document.getElementById('import-val-grid');
+  const errEl    = document.getElementById('import-error-msg');
+  const prevSec  = document.getElementById('import-preview-section');
+  const confirmBtn = document.getElementById('import-confirm-btn');
+
+  resultEl.style.display = 'block';
+  errEl.style.display = 'none';
+  gridEl.innerHTML = '';
+
+  // Verifica cada coluna obrigatória
+  let totalFalhas = 0;
+  const renderItem = (label, keys, obrigatorio) => {
+    const found = keys.find(k => headers.some(h => h.trim() === k));
+    const ok = !!found;
+    if (obrigatorio && !ok) totalFalhas++;
+    const cls = ok ? 'ok' : (obrigatorio ? 'fail' : 'optional');
+    const icon = ok ? '&#10003;' : (obrigatorio ? '&#10007;' : '&mdash;');
+    const badge = obrigatorio ? 'obrig.' : 'opcional';
+    const badgeColor = ok ? '#4fffb0' : (obrigatorio ? '#ff6b6b' : 'var(--muted)');
+    gridEl.innerHTML += `
+      <div class="val-item ${cls}">
+        <span class="val-icon" style="color:${badgeColor}">${icon}</span>
+        <span class="val-name">${label}</span>
+        <span class="val-badge" style="color:${badgeColor}">${badge}</span>
+      </div>`;
+  };
+  IMPORT_COLUNAS_OBRIGATORIAS.forEach(c => renderItem(c.label, c.keys, true));
+  IMPORT_COLUNAS_OPCIONAIS.forEach(c => renderItem(c.label, c.keys, false));
+
+  if (totalFalhas > 0) {
+    errEl.innerHTML = `&#9888; ${totalFalhas} coluna(s) obrigatória(s) não encontrada(s). Verifique se o arquivo contém as colunas corretas.`;
+    errEl.style.display = 'block';
+    prevSec.style.display = 'none';
+    confirmBtn.disabled = true;
+    return;
+  }
+
+  // Preview das primeiras 5 linhas
+  const preview5 = rows.slice(0, 5);
+  const theadEl = document.querySelector('#import-preview-table thead');
+  const tbodyEl = document.querySelector('#import-preview-table tbody');
+  theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  tbodyEl.innerHTML = preview5.map(r =>
+    '<tr>' + headers.map(h => `<td>${r[h] ?? ''}</td>`).join('') + '</tr>'
+  ).join('');
+
+  // Resumo
+  const linhasValidas = rows.filter(r => /^\d{4}$/.test(col(r,'Ano'))).length;
+  document.getElementById('import-summary').innerHTML =
+    `<strong>${rows.length.toLocaleString('pt-BR')}</strong> linhas encontradas &nbsp;·&nbsp; ` +
+    `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> com ano válido &nbsp;·&nbsp; ` +
+    `<strong>${headers.length}</strong> colunas detectadas`;
+
+  prevSec.style.display = 'block';
+  confirmBtn.disabled = false;
+}
+
+function confirmarImporte() {
+  if (importParsedRows.length === 0) return;
+
+  // Mescla dados importados com os existentes, substituindo registros com mesma chave Data+Loja ou apenas adicionando
+  const novosValidos = importParsedRows.filter(r => /^\d{4}$/.test(col(r,'Ano')));
+  if (novosValidos.length === 0) {
+    mostrarErroImporte('Nenhuma linha válida encontrada no arquivo (coluna "Ano" ausente ou inválida).');
+    return;
+  }
+
+  // Cria índice dos dados existentes por Data+Loja para deduplicação
+  const chave = r => `${col(r,'Data','data')}|${col(r,'Loja','loja')}`;
+  const existentes = new Map(rawData.map(r => [chave(r), r]));
+  novosValidos.forEach(r => existentes.set(chave(r), r));
+  rawData = Array.from(existentes.values());
+
+  // Reseta todas as abas para re-renderizar com os novos dados
+  tabsRenderizadas.clear();
+  construirFiltros();
+  aplicarFiltroAtual('f');
+  renderizar();
+  tabsRenderizadas.add('vendas');
+
+  fecharModalImporte();
+
+  const statusEl = document.getElementById('status-msg');
+  if (statusEl) statusEl.textContent =
+    `${rawData.length.toLocaleString('pt-BR')} registros carregados (inclui ${novosValidos.length.toLocaleString('pt-BR')} importados)`;
+
+  importParsedRows = [];
+  importCsvHeaders = [];
+}
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
