@@ -675,9 +675,12 @@ function d3LimparAtivo() { d3_active = {dim:null,val:null}; d3Renderizar();}
 
 const PALETTE = ['#c8f135','#4fffb0','#38bdf8','#f472b6','#fb923c','#a78bfa','#facc15','#34d399','#f87171','#60a5fa','#e879f9','#fbbf24'];
 
-Chart.Tooltip.positioners.topRight = function() {
+Chart.Tooltip.positioners.topRight = function(items, eventPosition) {
   const ca = this.chart.chartArea;
-  return { x: ca.right - 6, y: ca.top + 6 };
+  const mid = (ca.left + ca.right) / 2;
+  return eventPosition.x > mid
+    ? { x: ca.left + 6,  y: ca.top + 6 }
+    : { x: ca.right - 6, y: ca.top + 6 };
 };
 
 // ── CSV PARSER ────────────────────────────────────────────────────────────────
@@ -1675,22 +1678,9 @@ function renderCat2(data) {
       },
       plugins: {
         legend: {
-          position: 'bottom',
-          labels:{
-            color:'#8891aa', font:{family:'DM Mono',size:9},
-            usePointStyle: true, pointStyle: 'line',
-            boxWidth: 20, padding: 14,
-            generateLabels: chart => chart.data.datasets.map((ds, i) => ({
-              text: ds.label.length > 26 ? ds.label.slice(0, 24) + '…' : ds.label,
-              fillStyle: ds.borderColor,
-              strokeStyle: ds.borderColor,
-              lineWidth: 2,
-              pointStyle: 'line',
-              hidden: !chart.isDatasetVisible(i),
-              datasetIndex: i,
-            })),
-          },
-          onClick: (e, item) => d2SetFilter('cat', cats[item.datasetIndex]),
+          align: 'start',
+          labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 },
+          onClick: (e, item) => d2SetFilter('cat', item.text),
         },
         tooltip: {
           position: 'topRight',
