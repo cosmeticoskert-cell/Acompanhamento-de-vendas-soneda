@@ -3543,7 +3543,7 @@ function renderValidacaoImporte(rows, headers) {
   confirmBtn.disabled = false;
 }
 
-function confirmarImporte() {
+async function confirmarImporte() {
   if (importParsedRows.length === 0) return;
 
   if (!WEBAPP_URL || WEBAPP_URL === 'COLE_AQUI_A_URL_DO_APPS_SCRIPT') {
