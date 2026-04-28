@@ -601,7 +601,7 @@
   </div>
 
   <!-- GRÁFICO ESTOQUE POR DIA (linha temporal) -->
-  <div class="chart-card" style="margin-top:20px">
+  <div class="chart-card timeline-card-horizontal" style="margin-top:20px">
     <div class="chart-header">
       <div>
         <div class="chart-title">Evolução do Estoque ao Longo do Tempo</div>
@@ -610,6 +610,9 @@
     </div>
     <div class="chart-wrap" id="d3-line-wrap" style="height:380px">
       <div class="state-msg" id="d3-line-state"><div class="spinner"></div>Carregando dados...</div>
+    </div>
+    <div class="horizontal-legend-box" id="d3-line-legend">
+      <div class="horizontal-legend-title">Legenda</div>
     </div>
   </div>
 
@@ -2107,11 +2110,13 @@ function d3Renderizar() {
   const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
 
   const lineState = document.getElementById('d3-line-state');
+  const d3LineLegendEl = document.getElementById('d3-line-legend');
   if (dias.length === 0) {
     if(lineState) { lineState.style.display='flex'; lineState.innerHTML='Nenhum dado.'; }
     if (d3LineChart) { d3LineChart.destroy(); d3LineChart = null; }
     const oldLineCanvas = document.getElementById('d3-line-canvas');
     if (oldLineCanvas) oldLineCanvas.remove();
+    if (d3LineLegendEl) d3LineLegendEl.innerHTML = '<div class="horizontal-legend-title">Legenda</div>';
   } else {
     if(lineState) lineState.style.display = 'none';
     const mapLD = {};
@@ -2124,11 +2129,38 @@ function d3Renderizar() {
       mapLD[l][dk] = (mapLD[l][dk] || 0) + est;
     });
 
+    function renderD3LineLegend(dataIndex) {
+      const legend = document.getElementById('d3-line-legend');
+      if (!legend) return;
+      const dataLabel = dataIndex != null && dias[dataIndex] ? d2FormatarData(dias[dataIndex]) : null;
+      let entries;
+      if (dataIndex != null && dias[dataIndex]) {
+        entries = lojas.map((l,i) => ({
+          nome: deParaMap[l] || `Filial ${l}`,
+          val:  mapLD[l]?.[dias[dataIndex]] || 0,
+          cor:  PALETTE[i % PALETTE.length]
+        })).filter(e => e.val > 0).sort((a,b) => b.val - a.val);
+      } else {
+        entries = lojas.map((l,i) => ({
+          nome: deParaMap[l] || `Filial ${l}`,
+          val:  Object.values(mapLD[l] || {}).reduce((s,v) => s+v, 0),
+          cor:  PALETTE[i % PALETTE.length]
+        })).sort((a,b) => b.val - a.val);
+      }
+      legend.innerHTML = `<div class="horizontal-legend-title">${dataLabel || 'Legenda'}</div>`
+        + entries.map(e => `<div class="horizontal-legend-item" style="cursor:default">
+            <span class="horizontal-legend-dot" style="background:${e.cor}"></span>
+            <span class="horizontal-legend-name">${e.nome}</span>
+            <span class="horizontal-legend-value">${e.val.toLocaleString('pt-BR')}</span>
+          </div>`).join('');
+    }
+
+    renderD3LineLegend();
+
     let c2 = document.getElementById('d3-line-canvas');
     if (!c2) { c2 = document.createElement('canvas'); c2.id = 'd3-line-canvas'; document.getElementById('d3-line-wrap').appendChild(c2); }
     if (d3LineChart) d3LineChart.destroy();
 
-    const d3SelL = d3_active.dim === 'loja' ? d3_active.val : null;
     d3LineChart = new Chart(c2, {
       type: 'line',
       data: {
@@ -2136,9 +2168,9 @@ function d3Renderizar() {
         datasets: lojas.map((l,i) => ({
           label: deParaMap[l] || `Filial ${l}`,
           data: dias.map(d => mapLD[l]?.[d] ?? null),
-          borderColor:     d3SelL ? (l===d3SelL ? PALETTE[i%PALETTE.length] : 'rgba(90,96,128,0.25)') : PALETTE[i%PALETTE.length],
-          backgroundColor: d3SelL ? (l===d3SelL ? PALETTE[i%PALETTE.length]+'22' : 'transparent') : PALETTE[i%PALETTE.length]+'22',
-          borderWidth: d3SelL ? (l===d3SelL ? 2.5 : 1) : 2,
+          borderColor:     PALETTE[i%PALETTE.length],
+          backgroundColor: PALETTE[i%PALETTE.length]+'22',
+          borderWidth: 2,
           pointRadius: dias.length <= 60 ? 2 : 0,
           pointHoverRadius: 4, tension: 0.3, fill: false, spanGaps: true,
         }))
@@ -2146,15 +2178,12 @@ function d3Renderizar() {
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode:'index', intersect:false },
-        onClick: (evt, elements) => {
-          if (elements.length > 0) d3SetFilter('loja', lojas[elements[0].datasetIndex]);
+        onHover: (evt, elements) => {
+          if (elements && elements.length > 0) renderD3LineLegend(elements[0].index);
         },
         plugins: {
-          legend: {
-            labels:{ color:'#8891aa', font:{family:'DM Mono',size:10}, boxWidth:10 },
-            onClick: (e, item) => d3SetFilter('loja', lojas[item.datasetIndex]),
-          },
-          tooltip: { backgroundColor:'#1c2030', borderColor:'#252a3a', borderWidth:1, titleColor:'#4fffb0', bodyColor:'#e8ecf5', titleFont:{family:'DM Mono',size:11}, bodyFont:{family:'Figtree',size:12}, padding:12 }
+          legend: { display: false },
+          tooltip: { enabled: false }
         },
         scales: {
           x: { ticks:{ color:'#8891aa', font:{family:'DM Mono',size:9}, maxRotation:45, minRotation:45, autoSkip:true, maxTicksLimit:30 }, grid:{color:'#1c2030'} },
@@ -2162,7 +2191,8 @@ function d3Renderizar() {
         }
       }
     });
-    c2.style.cursor = 'pointer';
+    c2.style.cursor = 'default';
+    c2.addEventListener('mouseleave', () => renderD3LineLegend());
   }
 
   const maxQ = byLojaTabela[0]?.qty || 1;
