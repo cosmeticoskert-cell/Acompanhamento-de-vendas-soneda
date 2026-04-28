@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -445,14 +445,10 @@
         <div class="chart-subtitle" id="cat2-sub">Todos os períodos · Todas as lojas</div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;align-items:flex-start">
-      <div class="chart-wrap" id="cat2-wrap" style="height:380px;flex:1;min-width:0">
-        <div class="state-msg" id="cat2-state"><div class="spinner"></div>Carregando...</div>
-      </div>
-      <div id="cat2-sidebar" style="width:220px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px" id="cat2-sidebar-title">Legenda</div>
-      </div>
+    <div class="chart-wrap" id="cat2-wrap" style="height:380px">
+      <div class="state-msg" id="cat2-state"><div class="spinner"></div>Carregando...</div>
     </div>
+    <div id="cat2-legend" style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"></div>
   </div>
 
   <!-- TABELA CATEGORIAS -->
