@@ -841,8 +841,9 @@ async function init() {
     document.getElementById('status-msg').textContent =
       `${rawData.length.toLocaleString('pt-BR')} registros carregados · ${Object.keys(deParaMap).length} lojas no de-para`;
 
-    // Só a aba ativa: monta filtros e renderiza agora
+    // Só a aba ativa: monta filtros, aplica mês atual e renderiza
     construirFiltros();
+    aplicarFiltroAtual('f');
     renderizar();
     tabsRenderizadas.add('vendas');
 
@@ -3130,6 +3131,26 @@ function vRenderizar() {
   vRenderFam1(vFiltrar('familia'));
 }
 
+// ── FILTRO DE MÊS/ANO ATUAL ───────────────────────────────────────────────────
+function aplicarFiltroAtual(prefix) {
+  const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const agora    = new Date();
+  const anoAtual = String(agora.getFullYear());
+  const mesAtual = MESES_ABREV[agora.getMonth()];
+
+  const elAno = document.getElementById(`${prefix}-ano`);
+  const elMes = document.getElementById(`${prefix}-mes`);
+
+  if (elAno) {
+    const temAno = [...elAno.options].some(o => o.value === anoAtual);
+    if (temAno) elAno.value = anoAtual;
+  }
+  if (elMes) {
+    const temMes = [...elMes.options].some(o => o.value === mesAtual);
+    if (temMes) elMes.value = mesAtual;
+  }
+}
+
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function trocarAba(aba, evt) {
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
@@ -3140,10 +3161,10 @@ function trocarAba(aba, evt) {
 
   // Constrói filtros e renderiza apenas na primeira vez que a aba for aberta
   if (!tabsRenderizadas.has(aba) && rawData.length > 0) {
-    if (aba === 'valor')   { vConstruirFiltros();  vRenderizar();  }
-    if (aba === 'dia')     { d2ConstruirFiltros(); d2Renderizar(); }
-    if (aba === 'estoque') { d3ConstruirFiltros(); d3Renderizar(); }
-    if (aba === 'se')      { seConstruirFiltros(); seRenderizar(); }
+    if (aba === 'valor')   { vConstruirFiltros();  aplicarFiltroAtual('v');  vRenderizar();  }
+    if (aba === 'dia')     { d2ConstruirFiltros(); aplicarFiltroAtual('d2'); d2Renderizar(); }
+    if (aba === 'estoque') { d3ConstruirFiltros(); aplicarFiltroAtual('d3'); d3Renderizar(); }
+    if (aba === 'se')      { seConstruirFiltros(); aplicarFiltroAtual('se'); seRenderizar(); }
     tabsRenderizadas.add(aba);
   }
 }
