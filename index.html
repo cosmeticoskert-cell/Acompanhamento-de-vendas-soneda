@@ -3417,7 +3417,61 @@ function parseCSVSep(text, sep) {
 
 // Normaliza string para comparação: sem acento, minúsculas, sem espaços extras
 function normCol(h) {
-  return String(h ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  return String(h ?? '')
+    .replace(/\uFEFF/g, '')
+    .replace(/[\u200B-\u200D\u2060]/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getHeadersBaseDadosBrutos() {
+  return rawData && rawData.length ? Object.keys(rawData[0]) : [];
+}
+
+function estruturaCsvBateComBase(csvHeaders) {
+  const baseHeaders = getHeadersBaseDadosBrutos();
+  if (!baseHeaders.length) return { ok: true, baseHeaders: csvHeaders, msg: '' };
+
+  const csvNorm  = csvHeaders.map(normCol);
+  const baseNorm = baseHeaders.map(normCol);
+
+  if (csvNorm.length !== baseNorm.length) {
+    return {
+      ok: false,
+      baseHeaders,
+      msg: `Quantidade de colunas diferente. CSV: ${csvNorm.length} · DADOS BRUTOS: ${baseNorm.length}`
+    };
+  }
+
+  const diffs = [];
+  csvNorm.forEach((h, i) => {
+    if (h !== baseNorm[i]) {
+      diffs.push(`Coluna ${i + 1}: CSV "${csvHeaders[i]}" ≠ DADOS BRUTOS "${baseHeaders[i]}"`);
+    }
+  });
+
+  return {
+    ok: diffs.length === 0,
+    baseHeaders,
+    msg: diffs.slice(0, 6).join('<br>') + (diffs.length > 6 ? '<br>...' : '')
+  };
+}
+
+function montarLinhasNaEstruturaDaBase(rowsOriginais, indicesValidos) {
+  const baseHeaders = getHeadersBaseDadosBrutos();
+  const headersDestino = baseHeaders.length ? baseHeaders : importCsvHeaders;
+  return indicesValidos.map(idx => {
+    const origem = rowsOriginais[idx];
+    const novo = {};
+    headersDestino.forEach((hDestino, i) => {
+      const hOrigem = importCsvHeaders[i];
+      novo[hDestino] = origem[hOrigem] ?? '';
+    });
+    return novo;
+  });
 }
 
 // Remapeia headers do CSV importado para os nomes canônicos que col() espera
@@ -3523,6 +3577,15 @@ function renderValidacaoImporte(rows, headers) {
     return;
   }
 
+  const estrutura = estruturaCsvBateComBase(headers);
+  if (!estrutura.ok) {
+    errEl.innerHTML = `&#9888; As colunas do CSV não batem com a aba DADOS BRUTOS.<br>${estrutura.msg}`;
+    errEl.style.display = 'block';
+    prevSec.style.display = 'none';
+    confirmBtn.disabled = true;
+    return;
+  }
+
   // Preview das primeiras 5 linhas
   const preview5 = rows.slice(0, 5);
   const theadEl = document.querySelector('#import-preview-table thead');
@@ -3533,7 +3596,7 @@ function renderValidacaoImporte(rows, headers) {
   ).join('');
 
   // Resumo
-  const linhasValidas = rows.filter(r => /^\d{4}$/.test(col(r,'Ano'))).length;
+  const linhasValidas = importParsedRows.filter(r => /^\d{4}$/.test(col(r,'Ano'))).length;
   document.getElementById('import-summary').innerHTML =
     `<strong>${rows.length.toLocaleString('pt-BR')}</strong> linhas encontradas &nbsp;·&nbsp; ` +
     `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> com ano válido &nbsp;·&nbsp; ` +
@@ -3562,7 +3625,8 @@ async function confirmarImporte() {
     return;
   }
 
-  const linhasParaEnviar = indicesValidos.map(idx => importOriginalRows[idx]);
+  const linhasParaEnviar = montarLinhasNaEstruturaDaBase(importOriginalRows, indicesValidos);
+  const headersParaEnviar = getHeadersBaseDadosBrutos().length ? getHeadersBaseDadosBrutos() : importCsvHeaders;
   const confirmBtn = document.getElementById('import-confirm-btn');
   const textoOriginal = confirmBtn.innerHTML;
   confirmBtn.disabled = true;
@@ -3574,7 +3638,7 @@ async function confirmarImporte() {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         targetSheet: 'DADOS BRUTOS',
-        headers: importCsvHeaders,
+        headers: headersParaEnviar,
         rows: linhasParaEnviar
       })
     });
