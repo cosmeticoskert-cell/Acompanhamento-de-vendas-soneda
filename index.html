@@ -3577,13 +3577,12 @@ function renderValidacaoImporte(rows, headers) {
     return;
   }
 
+  // A validação rígida de cabeçalho foi removida do front-end.
+  // O Apps Script faz a conferência final usando nomes normalizados e grava as colunas pelo cabeçalho da aba DADOS BRUTOS.
   const estrutura = estruturaCsvBateComBase(headers);
   if (!estrutura.ok) {
-    errEl.innerHTML = `&#9888; As colunas do CSV não batem com a aba DADOS BRUTOS.<br>${estrutura.msg}`;
+    errEl.innerHTML = `&#9888; Atenção: detectei diferença visual de cabeçalho, mas a importação continuará porque o Apps Script fará o encaixe pelas colunas normalizadas.<br>${estrutura.msg}`;
     errEl.style.display = 'block';
-    prevSec.style.display = 'none';
-    confirmBtn.disabled = true;
-    return;
   }
 
   // Preview das primeiras 5 linhas
@@ -3625,8 +3624,8 @@ async function confirmarImporte() {
     return;
   }
 
-  const linhasParaEnviar = montarLinhasNaEstruturaDaBase(importOriginalRows, indicesValidos);
-  const headersParaEnviar = getHeadersBaseDadosBrutos().length ? getHeadersBaseDadosBrutos() : importCsvHeaders;
+  const linhasParaEnviar = indicesValidos.map(idx => importOriginalRows[idx]);
+  const headersParaEnviar = importCsvHeaders;
   const confirmBtn = document.getElementById('import-confirm-btn');
   const textoOriginal = confirmBtn.innerHTML;
   confirmBtn.disabled = true;
