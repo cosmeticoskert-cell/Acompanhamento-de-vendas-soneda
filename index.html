@@ -259,7 +259,13 @@
   </div>
 
   <div class="table-card" style="margin-top:20px">
-    <div class="table-head"><div class="table-head-title">Detalhamento Sell Out x Estoque por Filial</div></div>
+    <div class="table-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div class="table-head-title" id="se-table-title">Detalhamento Sell Out x Estoque por Filial</div>
+      <div style="display:flex;gap:6px">
+        <button id="se-view-loja" onclick="seAlternarVisao('loja')" style="font-family:'DM Mono',monospace;font-size:0.72rem;padding:5px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--bg);cursor:pointer;letter-spacing:.5px">Por Filial</button>
+        <button id="se-view-data" onclick="seAlternarVisao('data')" style="font-family:'DM Mono',monospace;font-size:0.72rem;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;letter-spacing:.5px">Por Data</button>
+      </div>
+    </div>
     <div id="se-table-body"><div class="no-data">Carregando...</div></div>
   </div>
 </main>
@@ -666,6 +672,8 @@ let fam2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
 let seSort         = { col: 'sellout', dir: 'desc' };
 let seRiskSort     = { col: 'sellout', dir: 'desc' };
+let seViewMode     = 'loja';
+let seDataSort     = { col: 'data', dir: 'asc' };
 const tabsRenderizadas = new Set();
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
@@ -2412,7 +2420,11 @@ function seRenderizar() {
   
 
   seRenderGrafico(byLoja);
-  seRenderTabela(byLojaTabela);
+  if (seViewMode === 'data') {
+    seRenderTabelaData(seFiltrar());
+  } else {
+    seRenderTabela(byLojaTabela);
+  }
   seRenderRiskTabela(byLoja);
 }
 
@@ -2544,6 +2556,114 @@ function seRenderTabela(byLoja) {
 
 function seRenderRiskTabela(byLoja) {
   // Ranking separado removido: a aba agora mostra apenas Sell Out, Estoque e Status.
+}
+
+function seAgruparPorData(data) {
+  const map = {};
+  data.forEach(r => {
+    const loja = String(col(r,'Loja','loja') || '').trim();
+    if (!loja || !deParaMap[loja]) return;
+    const dataOriginal = String(col(r,'Data','data') || '').trim();
+    if (!dataOriginal) return;
+    const dt  = parseDataBR(dataOriginal);
+    const iso = dt ? dataParaISO(dt) : dataOriginal;
+    const sellout = parseBR(col(r,'Venda (Qtd)','Venda Nf Quantidade','Venda Pdv Quantidade'));
+    const estoque = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
+    if (!map[dataOriginal]) map[dataOriginal] = { data: dataOriginal, iso, sellout: 0, estoque: 0 };
+    map[dataOriginal].sellout += sellout;
+    map[dataOriginal].estoque += estoque;
+  });
+  return Object.values(map).sort((a,b) => String(a.iso).localeCompare(String(b.iso)));
+}
+
+function seDataOrdenarPor(coluna) {
+  seDataSort.dir = seDataSort.col === coluna && seDataSort.dir === 'desc' ? 'asc' : 'desc';
+  seDataSort.col = coluna;
+  seRenderizar();
+}
+
+function seAlternarVisao(modo) {
+  seViewMode = modo;
+  const btnLoja = document.getElementById('se-view-loja');
+  const btnData = document.getElementById('se-view-data');
+  if (btnLoja && btnData) {
+    const ativo   = 'border:1px solid var(--accent);background:var(--accent);color:var(--bg)';
+    const inativo = 'border:1px solid var(--border);background:transparent;color:var(--text-dim)';
+    btnLoja.style.cssText = `font-family:'DM Mono',monospace;font-size:0.72rem;padding:5px 14px;border-radius:6px;cursor:pointer;letter-spacing:.5px;${modo==='loja'?ativo:inativo}`;
+    btnData.style.cssText = `font-family:'DM Mono',monospace;font-size:0.72rem;padding:5px 14px;border-radius:6px;cursor:pointer;letter-spacing:.5px;${modo==='data'?ativo:inativo}`;
+  }
+  const titulo = document.getElementById('se-table-title');
+  if (titulo) titulo.textContent = modo === 'loja'
+    ? 'Detalhamento Sell Out x Estoque por Filial'
+    : 'Detalhamento Sell Out x Estoque por Data';
+  seRenderizar();
+}
+
+function seRenderTabelaData(data) {
+  const container = document.getElementById('se-table-body');
+  const porData = seAgruparPorData(data);
+
+  if (porData.length === 0) {
+    container.innerHTML = '<div class="no-data">Nenhum dado para os filtros selecionados</div>';
+    return;
+  }
+
+  const sorted = [...porData].sort((a,b) => {
+    let va, vb;
+    if (seDataSort.col === 'data') { va = a.iso; vb = b.iso; }
+    else if (seDataSort.col === 'dia') {
+      const ORD = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      va = ORD.indexOf(d2DiaSemana(a.data));
+      vb = ORD.indexOf(d2DiaSemana(b.data));
+    }
+    else { va = a[seDataSort.col]; vb = b[seDataSort.col]; }
+    if (va < vb) return seDataSort.dir === 'asc' ? -1 : 1;
+    if (va > vb) return seDataSort.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalSO  = sorted.reduce((s,r) => s + r.sellout, 0);
+  const totalEst = sorted.reduce((s,r) => s + r.estoque, 0);
+  const maxSO    = Math.max(...sorted.map(r => r.sellout), 1);
+
+  const th = (label, key) => {
+    const cls = seDataSort.col === key ? ` class="sort-${seDataSort.dir}"` : '';
+    return `<th${cls} onclick="seDataOrdenarPor('${key}')">${label}</th>`;
+  };
+
+  const linhas = sorted.map(r => {
+    const dia = d2DiaSemana(r.data);
+    const fds = dia === 'Sáb' || dia === 'Dom';
+    const barW = ((r.sellout / maxSO) * 100).toFixed(1);
+    return `<tr>
+      <td class="td-loja">${r.data}</td>
+      <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
+      <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
+      <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
+      <td><div class="td-bar-wrap">
+        <div class="td-bar" style="width:${barW}%;max-width:120px"></div>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const totalLinha = `<tr style="background:var(--surface2)">
+    <td class="td-loja" style="color:var(--accent)">TOTAL</td>
+    <td class="td-loja">—</td>
+    <td class="td-qty" style="color:var(--accent)">${totalSO.toLocaleString('pt-BR')}</td>
+    <td class="td-qty" style="color:var(--accent2)">${totalEst.toLocaleString('pt-BR')}</td>
+    <td></td>
+  </tr>`;
+
+  container.innerHTML = `<table>
+    <thead><tr>
+      ${th('Data','data')}
+      ${th('Dia','dia')}
+      ${th('Sell Out','sellout')}
+      ${th('Estoque','estoque')}
+      <th>Volume</th>
+    </tr></thead>
+    <tbody>${linhas}${totalLinha}</tbody>
+  </table>`;
 }
 
 // ── ABA VALOR: VENDA VALOR (R$) ───────────────────────────────────────────────
