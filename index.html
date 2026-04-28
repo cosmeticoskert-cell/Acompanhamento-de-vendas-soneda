@@ -1736,10 +1736,9 @@ function renderCat2(data) {
         }));
     }
 
-    legend.innerHTML = `<div class="horizontal-legend-title">${dataLabel || 'Legenda · clique para filtrar'}</div>`
+    legend.innerHTML = `<div class="horizontal-legend-title">${dataLabel || 'Legenda'}</div>`
       + entries.map(e => {
-        const ativa = catAtiva === e.cat;
-        return `<div class="horizontal-legend-item${ativa ? ' active' : ''}" onclick="d2SetCatDropdown('${escapeJS(e.cat)}')">
+        return `<div class="horizontal-legend-item" style="cursor:default">
           <span class="horizontal-legend-dot" style="background:${e.cor}"></span>
           <span class="horizontal-legend-name">${e.cat}</span>
           <span class="horizontal-legend-value">${e.val.toLocaleString('pt-BR')}</span>
@@ -1765,9 +1764,6 @@ function renderCat2(data) {
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode:'index', intersect:false },
-      onClick: (evt, elements) => {
-        if (elements.length > 0) d2SetCatDropdown(cats[elements[0].datasetIndex]);
-      },
       onHover: (evt, elements) => {
         if (elements && elements.length > 0) {
           renderHorizontalLegend(elements[0].index);
