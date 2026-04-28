@@ -1516,8 +1516,23 @@ function d2AgruparPorDia(data) {
 }
 
 function d2FormatarData(valor) {
-  // Preserva a data exatamente como veio da coluna Data da aba Dados Brutos.
-  return valor;
+  if (!valor) return valor;
+  const s = String(valor).trim();
+  // ISO YYYY-MM-DD → DD/MM/AAAA
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  // Já está em DD/MM/AAAA
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // Qualquer outro formato: tenta parsear e formatar
+  const dt = parseDataBR(s);
+  if (dt && !isNaN(dt)) {
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    return `${d}/${m}/${dt.getFullYear()}`;
+  }
+  return s;
 }
 
 function d2DiaSemana(valor) {
@@ -1647,7 +1662,7 @@ function d2Renderizar() {
     const fds  = dia === 'Sáb' || dia === 'Dom';
     const ativoData = d2_active.dim === 'data' && normalizeFilterValue(d2_active.val) === normalizeFilterValue(r.data) ? ' row-active' : '';
     return `<tr class="clickable-row${ativoData}" onclick="d2FiltrarPorData(this.dataset.v)" data-v="${String(r.data).replace(/"/g,'&quot;')}">
-      <td class="td-loja">${r.data}</td>
+      <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.qty.toLocaleString('pt-BR')}</td>
       <td><div class="td-bar-wrap">
@@ -2630,7 +2645,7 @@ function seRenderTabelaData(data) {
     const fds = dia === 'Sáb' || dia === 'Dom';
     const barW = ((r.sellout / maxSO) * 100).toFixed(1);
     return `<tr>
-      <td class="td-loja">${r.data}</td>
+      <td class="td-loja">${d2FormatarData(r.data)}</td>
       <td class="td-loja" style="color:${fds ? '#ff9f6b' : 'var(--muted)'}">${dia}</td>
       <td class="td-qty">${r.sellout.toLocaleString('pt-BR')}</td>
       <td class="td-qty" style="color:var(--accent2)">${r.estoque.toLocaleString('pt-BR')}</td>
