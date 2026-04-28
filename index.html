@@ -666,6 +666,7 @@ let fam2Sort       = { col: 'qty', dir: 'desc' };
 let t3Sort         = { col: 'qty', dir: 'desc' };
 let seSort         = { col: 'sellout', dir: 'desc' };
 let seRiskSort     = { col: 'sellout', dir: 'desc' };
+const tabsRenderizadas = new Set();
 
 // ── HELPERS DE FILTRO INTERATIVO ──────────────────────────────────────────────
 function normalizeFilterValue(val) {
@@ -774,46 +775,51 @@ async function fetchCSV(gid) {
 // ── INICIALIZAÇÃO ─────────────────────────────────────────────────────────────
 async function init() {
   try {
-    try {
-      const csv  = await fetchCSV(GID_DEPARA);
-      const rows = parseCSV(csv);
-      rows.forEach(r => {
-        const keys    = Object.keys(r);
-        const codKey  = keys.find(k => /cod.?loja|cod_loja/i.test(k))    || keys[0];
-        const nomeKey = keys.find(k => /nome.?fantasia|nome_fantasia/i.test(k)) || keys[1];
-        const cod  = (r[codKey]  || '').trim();
-        const nome = (r[nomeKey] || '').trim();
-        if (cod && nome) deParaMap[cod] = nome;
-      });
-    } catch(e) { console.warn('De-Para não carregado:', e.message); }
+    // Busca De-Para e Categorias em paralelo (eram sequenciais antes)
+    const [deParaRes, catRes] = await Promise.allSettled([
+      fetchCSV(GID_DEPARA),
+      fetchCSV(GID_CAT)
+    ]);
 
-    try {
-      const csv  = await fetchCSV(GID_CAT);
-      const rows = parseCSV(csv);
-      if (rows.length === 0) throw new Error('Aba Categorias vazia');
-      const semAcento = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-      // Detecta colunas uma única vez com base no cabeçalho da primeira linha
-      const keys  = Object.keys(rows[0]);
-      const nkeys = keys.map(semAcento);
-      // Chave do de-para: CODBARRAS (aba Categorias) ↔ GTIN (aba Dados Brutos)
-      const codIdx = nkeys.findIndex(nk => nk === 'codbarras' || /^cod.*(barra)/.test(nk));
-      const codKey = codIdx >= 0 ? keys[codIdx] : keys[0];
-      // Colunas de retorno: FAMILIA e CATEGORIA
-      const famIdx = nkeys.findIndex(nk => /^famil/.test(nk));
-      const catIdx = nkeys.findIndex(nk => /^categ/.test(nk));
-      const famKey = famIdx >= 0 ? keys[famIdx] : null;
-      const catKey = catIdx >= 0 ? keys[catIdx] : null;
-      const valido = v => v && v !== '-' && v !== '–' && v !== '—';
-      rows.forEach(r => {
-        const ean = normalizarCodigoBarras(r[codKey]);
-        if (!ean) return;
-        const vFam = famKey ? (r[famKey] || '').trim() : '';
-        const vCat = catKey ? (r[catKey] || '').trim() : '';
-        if (valido(vFam)) familiaMap[ean] = vFam;
-        if (valido(vCat)) catMap[ean]     = vCat;
-      });
-      console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para (CODBARRAS→GTIN)`);
-    } catch(e) { console.warn('Categorias não carregadas:', e.message); }
+    if (deParaRes.status === 'fulfilled') {
+      try {
+        const rows = parseCSV(deParaRes.value);
+        rows.forEach(r => {
+          const keys    = Object.keys(r);
+          const codKey  = keys.find(k => /cod.?loja|cod_loja/i.test(k))    || keys[0];
+          const nomeKey = keys.find(k => /nome.?fantasia|nome_fantasia/i.test(k)) || keys[1];
+          const cod  = (r[codKey]  || '').trim();
+          const nome = (r[nomeKey] || '').trim();
+          if (cod && nome) deParaMap[cod] = nome;
+        });
+      } catch(e) { console.warn('De-Para não carregado:', e.message); }
+    } else { console.warn('De-Para não carregado:', deParaRes.reason?.message); }
+
+    if (catRes.status === 'fulfilled') {
+      try {
+        const rows = parseCSV(catRes.value);
+        if (rows.length === 0) throw new Error('Aba Categorias vazia');
+        const semAcento = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+        const keys  = Object.keys(rows[0]);
+        const nkeys = keys.map(semAcento);
+        const codIdx = nkeys.findIndex(nk => nk === 'codbarras' || /^cod.*(barra)/.test(nk));
+        const codKey = codIdx >= 0 ? keys[codIdx] : keys[0];
+        const famIdx = nkeys.findIndex(nk => /^famil/.test(nk));
+        const catIdx = nkeys.findIndex(nk => /^categ/.test(nk));
+        const famKey = famIdx >= 0 ? keys[famIdx] : null;
+        const catKey = catIdx >= 0 ? keys[catIdx] : null;
+        const valido = v => v && v !== '-' && v !== '–' && v !== '—';
+        rows.forEach(r => {
+          const ean = normalizarCodigoBarras(r[codKey]);
+          if (!ean) return;
+          const vFam = famKey ? (r[famKey] || '').trim() : '';
+          const vCat = catKey ? (r[catKey] || '').trim() : '';
+          if (valido(vFam)) familiaMap[ean] = vFam;
+          if (valido(vCat)) catMap[ean]     = vCat;
+        });
+        console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas`);
+      } catch(e) { console.warn('Categorias não carregadas:', e.message); }
+    } else { console.warn('Categorias não carregadas:', catRes.reason?.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
     const todas = parseCSV(csv);
@@ -827,16 +833,16 @@ async function init() {
     document.getElementById('status-msg').textContent =
       `${rawData.length.toLocaleString('pt-BR')} registros carregados · ${Object.keys(deParaMap).length} lojas no de-para`;
 
+    // Constrói filtros de todas as abas (rápido — só monta dropdowns)
     construirFiltros();
-    renderizar();
     vConstruirFiltros();
-    vRenderizar();
     d2ConstruirFiltros();
-    d2Renderizar();
     d3ConstruirFiltros();
-    d3Renderizar();
     seConstruirFiltros();
-    seRenderizar();
+
+    // Renderiza apenas a aba ativa agora; as demais renderizam ao primeiro clique
+    renderizar();
+    tabsRenderizadas.add('vendas');
 
   } catch(err) {
     console.error(err);
@@ -3004,6 +3010,15 @@ function trocarAba(aba, evt) {
   document.getElementById('tab-' + aba).classList.add('active');
   const btn = evt?.currentTarget || window.event?.currentTarget;
   if (btn) btn.classList.add('active');
+
+  // Renderiza a aba apenas na primeira vez que for aberta
+  if (!tabsRenderizadas.has(aba) && rawData.length > 0) {
+    if (aba === 'valor')   vRenderizar();
+    if (aba === 'dia')     d2Renderizar();
+    if (aba === 'estoque') d3Renderizar();
+    if (aba === 'se')      seRenderizar();
+    tabsRenderizadas.add(aba);
+  }
 }
 
 
