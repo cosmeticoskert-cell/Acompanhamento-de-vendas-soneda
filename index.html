@@ -713,51 +713,29 @@ async function init() {
     try {
       const csv  = await fetchCSV(GID_CAT);
       const rows = parseCSV(csv);
-      // Remove acentos para comparação de nomes de colunas
+      if (rows.length === 0) throw new Error('Aba Categorias vazia');
       const semAcento = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+      // Detecta colunas uma única vez com base no cabeçalho da primeira linha
+      const keys  = Object.keys(rows[0]);
+      const nkeys = keys.map(semAcento);
+      // Chave do de-para: CODBARRAS (aba Categorias) ↔ GTIN (aba Dados Brutos)
+      const codIdx = nkeys.findIndex(nk => nk === 'codbarras' || /^cod.*(barra)/.test(nk));
+      const codKey = codIdx >= 0 ? keys[codIdx] : keys[0];
+      // Colunas de retorno: FAMILIA e CATEGORIA
+      const famIdx = nkeys.findIndex(nk => /^famil/.test(nk));
+      const catIdx = nkeys.findIndex(nk => /^categ/.test(nk));
+      const famKey = famIdx >= 0 ? keys[famIdx] : null;
+      const catKey = catIdx >= 0 ? keys[catIdx] : null;
+      const valido = v => v && v !== '-' && v !== '–' && v !== '—';
       rows.forEach(r => {
-        const keys  = Object.keys(r);
-        const nkeys = keys.map(semAcento);
-        const achar = (...pats) => {
-          for (const pat of pats) {
-            const i = nkeys.findIndex(nk => pat.test(nk));
-            if (i >= 0) return keys[i];
-          }
-          return null;
-        };
-
-        const codKey     = achar(/codbarras/, /cod.*(barras|barra)/, /^(gtin|ean|plu)$/, /gtin|ean/) || keys[0];
-        // Coluna combinada "FAMILIA/CATEGORIA" (ou "CATEGORIA/FAMILIA")
-        const famcatKey  = achar(/famil.*cat/, /cat.*famil/);
-
         const ean = normalizarCodigoBarras(r[codKey]);
-        // DEBUG: log primeiros 15 valores brutos de CODBARRAS
-        if (!window._dbgCod) window._dbgCod = 0;
-        if (window._dbgCod < 15) { console.log(`[DBG-CODBARRAS] raw="${r[codKey]}" key="${codKey}" → ean="${ean}"`); window._dbgCod++; }
         if (!ean) return;
-
-        const valido = v => v && v !== '-' && v !== '–' && v !== '—';
-        if (famcatKey) {
-          // Valor pode ser "FAMILIA/CATEGORIA" — divide na primeira barra
-          const val = (r[famcatKey] || '').trim();
-          const sep = val.indexOf('/');
-          const familia   = sep >= 0 ? val.slice(0, sep).trim()  : val;
-          const categoria = sep >= 0 ? val.slice(sep + 1).trim() : val;
-          if (valido(familia))   familiaMap[ean] = familia;
-          if (valido(categoria)) catMap[ean]     = categoria;
-        } else {
-          // Colunas separadas para FAMILIA e CATEGORIA
-          const catKey = achar(/categ/);
-          const famKey = achar(/famil/);
-          const vCat = catKey ? (r[catKey] || '').trim() : '';
-          const vFam = famKey ? (r[famKey] || '').trim() : '';
-          if (valido(vCat)) catMap[ean]     = vCat;
-          if (valido(vFam)) familiaMap[ean] = vFam;
-        }
+        const vFam = famKey ? (r[famKey] || '').trim() : '';
+        const vCat = catKey ? (r[catKey] || '').trim() : '';
+        if (valido(vFam)) familiaMap[ean] = vFam;
+        if (valido(vCat)) catMap[ean]     = vCat;
       });
-      console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para`);
-      console.log('[DBG-catMap primeiras chaves]', Object.keys(catMap).slice(0, 10));
-      console.log('[DBG-familiaMap primeiras chaves]', Object.keys(familiaMap).slice(0, 10));
+      console.log(`[Categorias] ${Object.keys(catMap).length} categorias e ${Object.keys(familiaMap).length} famílias carregadas via de-para (CODBARRAS→GTIN)`);
     } catch(e) { console.warn('Categorias não carregadas:', e.message); }
 
     const csv = await fetchCSV(GID_BRUTOS);
@@ -845,11 +823,7 @@ function dataParaISO(dt) {
 
 
 function getCat(r) {
-  const rawGtin = col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS');
-  const ean = normalizarCodigoBarras(rawGtin);
-  // DEBUG: log primeiros 10 valores brutos de GTIN
-  if (!window._dbgGtin) window._dbgGtin = 0;
-  if (window._dbgGtin < 10) { console.log(`[DBG-GTIN] raw="${rawGtin}" → ean="${ean}" → match=${!!catMap[ean]}`); window._dbgGtin++; }
+  const ean = normalizarCodigoBarras(col(r, 'GTIN', 'gtin', 'Gtin', 'GTIN/PLU', 'Gtin/Plu', 'gtin/plu', 'PLU', 'Ean', 'EAN', 'codbarras', 'CODBARRAS'));
   return (ean && catMap[ean]) ? catMap[ean] : '';
 }
 
