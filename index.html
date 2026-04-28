@@ -604,7 +604,7 @@
   <div class="chart-card timeline-card-horizontal" style="margin-top:20px">
     <div class="chart-header">
       <div>
-        <div class="chart-title">Evolução do Estoque ao Longo do Tempo</div>
+        <div class="chart-title">Estoque ao Longo do Tempo · 10 Maiores Estoques</div>
         <div class="chart-subtitle" id="d3-line-sub">Todos os períodos · Todas as lojas</div>
       </div>
     </div>
@@ -2107,7 +2107,15 @@ function d3Renderizar() {
 
   const dadosChart = d3Filtrar('loja');
   const dias = [...new Set(dadosChart.map(r => { const dt=d2ParseData(col(r,'Data','data')); return dt?dataParaISO(dt):null; }).filter(Boolean))].sort();
-  const lojas = loja ? [loja] : [...new Set(dadosChart.map(r=>col(r,'Loja','loja')).filter(Boolean))].sort((a,b)=>+a-+b).slice(0,10);
+  const lojas = loja ? [loja] : (() => {
+    const totPorLoja = {};
+    dadosChart.forEach(r => {
+      const l = col(r,'Loja','loja'); if (!l || !deParaMap[l]) return;
+      const est = parseBR(col(r,'Estoque Diario','Estoque Diário','Estoque','estoque'));
+      totPorLoja[l] = (totPorLoja[l] || 0) + est;
+    });
+    return Object.entries(totPorLoja).sort((a,b) => b[1]-a[1]).slice(0,10).map(([l]) => l);
+  })();
 
   const lineState = document.getElementById('d3-line-state');
   const d3LineLegendEl = document.getElementById('d3-line-legend');
