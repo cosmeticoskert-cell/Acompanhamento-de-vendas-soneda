@@ -3515,43 +3515,32 @@ function renderValidacaoImporte(rows, headers, values) {
 
   const qtdEsperada = IMPORT_HEADERS_OFICIAIS.length;
   const qtdCsv = headers.length;
-  const mesmaQtd = qtdCsv === qtdEsperada;
-  const anoOk = normColImport(headers[0]) === 'ano';
-  const dataOk = normColImport(headers[6]) === 'data';
-  const gtinOk = normColImport(headers[12]) === 'gtin/plu';
-  const vendaQtdOk = normColImport(headers[30]) === 'venda (qtd)';
-  const vendaValorOk = normColImport(headers[31]) === 'venda (r$)';
 
+  // IMPORTAÇÃO POR POSIÇÃO: não bloqueia por nome de cabeçalho.
+  // O arquivo é validado apenas para informar, mas a importação continua usando a ordem das colunas.
   const checks = [
-    { nome: `Qtd. colunas: ${qtdCsv}/${qtdEsperada}`, ok: mesmaQtd },
-    { nome: 'Coluna 1 = Ano', ok: anoOk },
-    { nome: 'Coluna 7 = Data', ok: dataOk },
-    { nome: 'Coluna 13 = GTIN/PLU', ok: gtinOk },
-    { nome: 'Coluna 31 = Venda (Qtd)', ok: vendaQtdOk },
-    { nome: 'Coluna 32 = Venda (R$)', ok: vendaValorOk },
+    { nome: `Colunas detectadas: ${qtdCsv}/${qtdEsperada}`, ok: qtdCsv === qtdEsperada },
+    { nome: `Separador: ${importSeparador === '\t' ? 'TAB' : importSeparador}`, ok: true },
+    { nome: 'Importação por posição', ok: true },
+    { nome: 'Dados serão adicionados no final', ok: true },
   ];
 
   checks.forEach(c => {
-    const cls = c.ok ? 'ok' : 'fail';
-    const icon = c.ok ? '&#10003;' : '&#10007;';
-    const color = c.ok ? '#4fffb0' : '#ff6b6b';
+    const cls = c.ok ? 'ok' : 'optional';
+    const icon = c.ok ? '&#10003;' : '&#9888;';
+    const color = c.ok ? '#4fffb0' : '#facc15';
     gridEl.innerHTML += `
       <div class="val-item ${cls}">
         <span class="val-icon" style="color:${color}">${icon}</span>
         <span class="val-name">${c.nome}</span>
-        <span class="val-badge" style="color:${color}">${c.ok ? 'ok' : 'erro'}</span>
+        <span class="val-badge" style="color:${color}">${c.ok ? 'ok' : 'aviso'}</span>
       </div>`;
   });
 
-  const falhas = checks.filter(c => !c.ok);
-  if (falhas.length > 0) {
-    errEl.innerHTML = `&#9888; Estrutura diferente da aba DADOS BRUTOS. Nenhum dado foi importado.<br>` +
-      `Colunas detectadas: ${qtdCsv}. Esperado: ${qtdEsperada}.<br>` +
-      `Primeiras colunas detectadas: ${headers.slice(0, 8).join(' | ')}`;
+  if (qtdCsv !== qtdEsperada) {
+    errEl.innerHTML = `&#9888; Aviso: o CSV tem ${qtdCsv} colunas e a base espera ${qtdEsperada}. ` +
+      `A importação continuará por posição: colunas extras serão ignoradas e colunas faltantes ficarão vazias.`;
     errEl.style.display = 'block';
-    prevSec.style.display = 'none';
-    confirmBtn.disabled = true;
-    return;
   }
 
   const preview5 = values.slice(0, 5);
@@ -3567,16 +3556,23 @@ function renderValidacaoImporte(rows, headers, values) {
     `<strong>${rows.length.toLocaleString('pt-BR')}</strong> linhas encontradas &nbsp;·&nbsp; ` +
     `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> linhas válidas &nbsp;·&nbsp; ` +
     `<strong>${headers.length}</strong> colunas detectadas &nbsp;·&nbsp; ` +
-    `separador <strong>${importSeparador === '\t' ? 'TAB' : importSeparador}</strong>`;
+    `separador <strong>${importSeparador === '\t' ? 'TAB' : importSeparador}</strong><br>` +
+    `Modo: <strong>adicionar ao final da aba DADOS BRUTOS, sem substituir dados existentes</strong>`;
 
   prevSec.style.display = 'block';
-  confirmBtn.disabled = false;
+  confirmBtn.disabled = linhasValidas === 0;
 }
-
 async function confirmarImporte() {
   if (importCsvValues.length === 0) return;
 
-  const novosValidos = importCsvValues.filter(v => /^\d{4}$/.test(String(v[0] || '').trim()));
+  const novosValidos = importCsvValues
+    .filter(v => /^\d{4}$/.test(String(v[0] || '').trim()))
+    .map(v => {
+      const linha = v.slice(0, IMPORT_HEADERS_OFICIAIS.length);
+      while (linha.length < IMPORT_HEADERS_OFICIAIS.length) linha.push('');
+      return linha;
+    });
+
   if (novosValidos.length === 0) {
     mostrarErroImporte('Nenhuma linha válida encontrada no arquivo. A primeira coluna precisa ser o Ano com 4 dígitos.');
     return;
