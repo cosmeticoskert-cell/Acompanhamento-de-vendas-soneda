@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -492,7 +492,11 @@
     <div class="chart-wrap" id="cat2-wrap" style="height:380px">
       <div class="state-msg" id="cat2-state"><div class="spinner"></div>Carregando...</div>
     </div>
+<<<<<<< HEAD
     <div id="cat2-legend" class="horizontal-legend-box"></div>
+=======
+    <div id="cat2-legend" style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"></div>
+>>>>>>> c7c4147a132a6366191e1e5d1c4c2a0146668092
   </div>
 
   <!-- TABELA CATEGORIAS -->
@@ -1779,8 +1783,13 @@ function renderCat2(data) {
       }
     }
   });
+<<<<<<< HEAD
   canvas2.style.cursor = 'pointer';
   canvas2.addEventListener('mouseleave', () => renderHorizontalLegend());
+=======
+  canvas2.style.cursor = 'default';
+  canvas2.addEventListener('mouseleave', renderSidebarLegenda);
+>>>>>>> c7c4147a132a6366191e1e5d1c4c2a0146668092
 
   let totCat = cats.map(c => ({ cat: c, qty: Object.values(mapCatDia[c] || {}).reduce((s,v)=>s+v,0) }));
   const totalGeral = totCat.reduce((s,r)=>s+r.qty,0);
