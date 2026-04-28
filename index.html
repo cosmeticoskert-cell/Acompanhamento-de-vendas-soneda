@@ -3308,6 +3308,10 @@ function atualizarStatusAtualizacao() {
 // Monitoramento automático removido para evitar popups, tentativas externas e recarregamentos inesperados.
 
 // ── IMPORTAÇÃO CSV ────────────────────────────────────────────────────────────
+// URL do Web App do Google Apps Script que grava na aba DADOS BRUTOS.
+// Depois de publicar o Apps Script, cole a URL entre as aspas abaixo.
+const WEBAPP_URL = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+
 // Colunas obrigatórias: ao menos uma delas deve existir com esses nomes exatos
 const IMPORT_COLUNAS_OBRIGATORIAS = [
   { label: 'Ano',          keys: ['Ano'] },
@@ -3323,10 +3327,12 @@ const IMPORT_COLUNAS_OPCIONAIS = [
 ];
 
 let importParsedRows = [];
+let importOriginalRows = [];
 let importCsvHeaders = [];
 
 function abrirModalImporte() {
   importParsedRows = [];
+  importOriginalRows = [];
   importCsvHeaders = [];
   document.getElementById('import-result').style.display = 'none';
   document.getElementById('import-confirm-btn').disabled = true;
@@ -3459,8 +3465,10 @@ function processarTextoCSV(text) {
     mostrarErroImporte(`Apenas 1 coluna detectada com separador "${sep}". Tente salvar o arquivo com separador "${outroSep}".`);
     return;
   }
-  // Guarda headers originais para exibição, mas os rows já ficam com nomes canônicos
+  // Guarda as linhas e headers originais para enviar exatamente na mesma estrutura da aba DADOS BRUTOS.
+  // As linhas remapeadas são usadas apenas para validação interna do painel.
   importCsvHeaders = Object.keys(rows[0]);
+  importOriginalRows = rows;
   importParsedRows = remapearHeaders(rows);
   renderValidacaoImporte(rows, importCsvHeaders);
 }
@@ -3538,33 +3546,60 @@ function renderValidacaoImporte(rows, headers) {
 function confirmarImporte() {
   if (importParsedRows.length === 0) return;
 
-  // Mescla dados importados com os existentes, substituindo registros com mesma chave Data+Loja ou apenas adicionando
-  const novosValidos = importParsedRows.filter(r => /^\d{4}$/.test(col(r,'Ano')));
-  if (novosValidos.length === 0) {
+  if (!WEBAPP_URL || WEBAPP_URL === 'COLE_AQUI_A_URL_DO_APPS_SCRIPT') {
+    mostrarErroImporte('Cole a URL do Web App do Google Apps Script na constante WEBAPP_URL antes de importar.');
+    return;
+  }
+
+  // Valida pela estrutura remapeada, mas envia os dados originais para manter exatamente as colunas do CSV/Sheets.
+  const indicesValidos = importParsedRows
+    .map((r, idx) => ({ r, idx }))
+    .filter(item => /^\d{4}$/.test(col(item.r, 'Ano')))
+    .map(item => item.idx);
+
+  if (indicesValidos.length === 0) {
     mostrarErroImporte('Nenhuma linha válida encontrada no arquivo (coluna "Ano" ausente ou inválida).');
     return;
   }
 
-  // Cria índice dos dados existentes por Data+Loja para deduplicação
-  const chave = r => `${col(r,'Data','data')}|${col(r,'Loja','loja')}`;
-  const existentes = new Map(rawData.map(r => [chave(r), r]));
-  novosValidos.forEach(r => existentes.set(chave(r), r));
-  rawData = Array.from(existentes.values());
+  const linhasParaEnviar = indicesValidos.map(idx => importOriginalRows[idx]);
+  const confirmBtn = document.getElementById('import-confirm-btn');
+  const textoOriginal = confirmBtn.innerHTML;
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = 'Enviando...';
 
-  // Reseta todas as abas para re-renderizar com os novos dados
-  tabsRenderizadas.clear();
-  construirFiltros();
-  aplicarFiltroAtual('f');
-  renderizar();
-  tabsRenderizadas.add('vendas');
+  try {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        targetSheet: 'DADOS BRUTOS',
+        headers: importCsvHeaders,
+        rows: linhasParaEnviar
+      })
+    });
 
-  fecharModalImporte();
+    const json = await res.json();
 
-  const statusEl = document.getElementById('status-msg');
-  if (statusEl) statusEl.textContent =
-    `${rawData.length.toLocaleString('pt-BR')} registros carregados (inclui ${novosValidos.length.toLocaleString('pt-BR')} importados)`;
+    if (!json.ok) {
+      mostrarErroImporte(json.message || 'Importação cancelada pelo Apps Script.');
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = textoOriginal;
+      return;
+    }
+
+    fecharModalImporte();
+    alert(json.message || `${json.inserted || linhasParaEnviar.length} linhas adicionadas com sucesso.`);
+    location.reload();
+
+  } catch (err) {
+    mostrarErroImporte('Erro ao enviar para o Google Sheets: ' + err.message);
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = textoOriginal;
+  }
 
   importParsedRows = [];
+  importOriginalRows = [];
   importCsvHeaders = [];
 }
 
