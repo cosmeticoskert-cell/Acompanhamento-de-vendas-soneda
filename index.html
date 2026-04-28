@@ -3365,20 +3365,87 @@ function importFileSelected(input) {
 }
 
 function processarArquivoImporte(file) {
-  if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv' && !file.type.includes('csv')) {
-    mostrarErroImporte('Arquivo inválido. Selecione um arquivo .csv exportado do Microsoft Excel.');
-    return;
-  }
   const reader = new FileReader();
   reader.onload = e => processarTextoCSV(e.target.result);
   reader.onerror = () => mostrarErroImporte('Erro ao ler o arquivo. Tente novamente.');
+  // tenta UTF-8; se tiver BOM ele será tratado internamente
   reader.readAsText(file, 'utf-8');
 }
 
+// Detecta separador: Excel BR usa ; em vez de ,
+function detectarSeparador(text) {
+  const amostra = text.replace(/\r/g, '').split('\n').slice(0, 5).join('\n');
+  const nVirgulas  = (amostra.match(/,/g)  || []).length;
+  const nPontoVirg = (amostra.match(/;/g)  || []).length;
+  return nPontoVirg > nVirgulas ? ';' : ',';
+}
+
+// Parser CSV com separador configurável
+function parseCSVSep(text, sep) {
+  const lines = text.replace(/\r/g, '').split('\n');
+  function splitLine(line) {
+    const out = []; let cur = '', q = false;
+    for (const ch of line) {
+      if (ch === '"') { q = !q; }
+      else if (ch === sep && !q) { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+  let hi = 0;
+  for (let i = 0; i < Math.min(lines.length, 6); i++) {
+    if (splitLine(lines[i]).filter(c => c !== '').length > 1) { hi = i; break; }
+  }
+  const headers = splitLine(lines[hi]).map(h => h.replace(/^"|"$/g, '').trim());
+  const rows = [];
+  for (let i = hi + 1; i < lines.length; i++) {
+    const vals = splitLine(lines[i]);
+    if (vals.every(v => v === '')) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+// Normaliza string para comparação: sem acento, minúsculas, sem espaços extras
+function normCol(h) {
+  return String(h ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+// Remapeia headers do CSV importado para os nomes canônicos que col() espera
+function remapearHeaders(rows) {
+  if (!rows.length) return rows;
+  const headers = Object.keys(rows[0]);
+  const mapa = [
+    { canon: 'Ano',            match: h => normCol(h) === 'ano' },
+    { canon: 'Mês',            match: h => /^m[eê]s$/.test(normCol(h)) },
+    { canon: 'Data',           match: h => normCol(h) === 'data' },
+    { canon: 'Loja',           match: h => normCol(h) === 'loja' },
+    { canon: 'Venda (Qtd)',    match: h => /venda.*(qtd|quant)/i.test(h) },
+    { canon: 'Estoque Diario', match: h => /estoque/i.test(h) },
+    { canon: 'Venda (R$)',     match: h => /venda.*(r\$|valor)/i.test(h) },
+  ];
+  const remapH = {};
+  headers.forEach(h => {
+    const m = mapa.find(mp => mp.match(h));
+    remapH[h] = m ? m.canon : h;
+  });
+  return rows.map(r => {
+    const novo = {};
+    Object.entries(r).forEach(([k, v]) => { novo[remapH[k] || k] = v; });
+    return novo;
+  });
+}
+
 function processarTextoCSV(text) {
+  // Remove BOM (U+FEFF) que Excel UTF-8 adiciona no início do arquivo
+  const clean = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+  const sep   = detectarSeparador(clean);
   let rows;
   try {
-    rows = parseCSV(text);
+    rows = parseCSVSep(clean, sep);
   } catch(e) {
     mostrarErroImporte('Erro ao interpretar o CSV: ' + e.message);
     return;
@@ -3387,8 +3454,14 @@ function processarTextoCSV(text) {
     mostrarErroImporte('O arquivo está vazio ou não contém dados válidos.');
     return;
   }
+  if (Object.keys(rows[0]).length <= 1) {
+    const outroSep = sep === ',' ? ';' : ',';
+    mostrarErroImporte(`Apenas 1 coluna detectada com separador "${sep}". Tente salvar o arquivo com separador "${outroSep}".`);
+    return;
+  }
+  // Guarda headers originais para exibição, mas os rows já ficam com nomes canônicos
   importCsvHeaders = Object.keys(rows[0]);
-  importParsedRows = rows;
+  importParsedRows = remapearHeaders(rows);
   renderValidacaoImporte(rows, importCsvHeaders);
 }
 
@@ -3413,10 +3486,11 @@ function renderValidacaoImporte(rows, headers) {
   errEl.style.display = 'none';
   gridEl.innerHTML = '';
 
-  // Verifica cada coluna obrigatória
+  // Verifica cada coluna — comparação sem acento, sem case
+  const normHeaders = headers.map(normCol);
   let totalFalhas = 0;
   const renderItem = (label, keys, obrigatorio) => {
-    const found = keys.find(k => headers.some(h => h.trim() === k));
+    const found = keys.find(k => normHeaders.some(nh => nh === normCol(k)));
     const ok = !!found;
     if (obrigatorio && !ok) totalFalhas++;
     const cls = ok ? 'ok' : (obrigatorio ? 'fail' : 'optional');
