@@ -3551,30 +3551,49 @@ function renderValidacaoImporte(rows, headers, values) {
     '<tr>' + headers.map((_, idx) => `<td>${vals[idx] ?? ''}</td>`).join('') + '</tr>'
   ).join('');
 
-  const linhasValidas = values.filter(v => /^\d{4}$/.test(String(v[0] || '').trim())).length;
+  const anoColIdx = headers.map(normColImport).indexOf(normColImport('Ano'));
+  const linhasValidas = values.filter(v => /^\d{4}$/.test(String(v[anoColIdx >= 0 ? anoColIdx : 0] || '').trim())).length;
+
+  if (anoColIdx < 0) {
+    errEl.innerHTML = (errEl.style.display === 'block' ? errEl.innerHTML + '<br>' : '') +
+      '&#9888; Coluna "Ano" não encontrada no CSV — verifique o cabeçalho do arquivo.';
+    errEl.style.display = 'block';
+  }
+
   document.getElementById('import-summary').innerHTML =
     `<strong>${rows.length.toLocaleString('pt-BR')}</strong> linhas encontradas &nbsp;·&nbsp; ` +
     `<strong>${linhasValidas.toLocaleString('pt-BR')}</strong> linhas válidas &nbsp;·&nbsp; ` +
     `<strong>${headers.length}</strong> colunas detectadas &nbsp;·&nbsp; ` +
     `separador <strong>${importSeparador === '\t' ? 'TAB' : importSeparador}</strong><br>` +
-    `Modo: <strong>adicionar ao final da aba DADOS BRUTOS, sem substituir dados existentes</strong>`;
+    `Modo: <strong>adicionar ao final da aba DADOS BRUTOS, sem substituir dados existentes · mapeamento por nome de coluna</strong>`;
 
   prevSec.style.display = 'block';
   confirmBtn.disabled = linhasValidas === 0;
 }
 async function confirmarImporte() {
-  if (importCsvValues.length === 0) return;
+  if (importParsedRows.length === 0) return;
 
-  const novosValidos = importCsvValues
-    .filter(v => /^\d{4}$/.test(String(v[0] || '').trim()))
-    .map(v => {
-      const linha = v.slice(0, IMPORT_HEADERS_OFICIAIS.length);
-      while (linha.length < IMPORT_HEADERS_OFICIAIS.length) linha.push('');
-      return linha;
+  // Monta lookup: nome normalizado do CSV → nome original do CSV
+  const csvHeaderNorm = {};
+  importCsvHeaders.forEach(h => {
+    csvHeaderNorm[normColImport(h)] = h;
+  });
+
+  // Encontra coluna Ano por nome
+  const anoKey = csvHeaderNorm[normColImport('Ano')];
+
+  // Mapeia cada linha do CSV para a ordem oficial, por nome de coluna
+  const novosValidos = importParsedRows
+    .filter(r => /^\d{4}$/.test(String(anoKey ? r[anoKey] : '').trim()))
+    .map(r => {
+      return IMPORT_HEADERS_OFICIAIS.map(h => {
+        const csvKey = csvHeaderNorm[normColImport(h)];
+        return csvKey !== undefined ? (r[csvKey] ?? '') : '';
+      });
     });
 
   if (novosValidos.length === 0) {
-    mostrarErroImporte('Nenhuma linha válida encontrada no arquivo. A primeira coluna precisa ser o Ano com 4 dígitos.');
+    mostrarErroImporte('Nenhuma linha válida encontrada. Verifique se o arquivo tem a coluna "Ano" com valores de 4 dígitos.');
     return;
   }
 
@@ -3590,7 +3609,13 @@ async function confirmarImporte() {
       body: JSON.stringify({ values: novosValidos })
     });
 
-    const json = await res.json();
+    const resText = await res.text();
+    let json;
+    try {
+      json = JSON.parse(resText);
+    } catch(_) {
+      throw new Error(`Resposta inválida do servidor (status ${res.status})${resText ? ': ' + resText.slice(0, 200) : ''}`);
+    }
 
     if (!json.ok) {
       mostrarErroImporte(json.message || 'Erro ao importar dados para o Google Sheets.');
